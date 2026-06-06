@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+.venv/
+*.py[cod]
+*$py.class
+
+# LaTeX
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.pdf
+*.toc
+*.bbl
+*.blg
+*.lof
+*.lot
+
