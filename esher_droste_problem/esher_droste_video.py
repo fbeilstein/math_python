@@ -48,66 +48,36 @@ def droste_field(frame, rect):
     
     cx = x0 + w / 2.0
     cy = y0 + h / 2.0
+    import implementation_tasks
+    c, bound_x, bound_y, S_true, Bx, By = implementation_tasks.calculate_mathematical_bounds(H, W, cx, cy, w, h)
     
-    # 1. Calculate the largest symmetric boundary that perfectly matches the phone's aspect ratio
-    # AND never exceeds the physical boundaries of the camera feed.
-    max_w_half = min(cx, W - cx)
-    max_h_half = min(cy, H - cy)
-    
-    # 'c' is the scale factor from the phone size to the maximum cropped size
-    c_x = max_w_half / (w / 2.0) if w > 0 else 1
-    c_y = max_h_half / (h / 2.0) if h > 0 else 1
-    c = min(c_x, c_y)
-    
-    # The outer boundary is now exactly proportional to the phone AND strictly inside the camera
-    bound_x = c * (w / 2.0)
-    bound_y = c * (h / 2.0)
-    
-    S = max(bound_x, bound_y)
-    Bx = bound_x / S
-    By = bound_y / S
-    
-    # Because Bx and By are exactly proportional to the phone, m_x and m_y are identical!
-    # This guarantees the nested spiral perfectly fills the phone with no gaps.
-    m = c
-    if m <= 1.01:
-        m = 2.0 # Fallback safety
-        
-    y_grid, x_grid = np.meshgrid(np.arange(H), np.arange(W), indexing='ij')
-    
-    nx = (x_grid - cx) / S
-    ny = (y_grid - cy) / S
-    
-    Z = nx + 1j * ny
-    Z = np.where(Z == 0, 1e-8 + 1j*1e-8, Z)
-    
-    # 2. Pure Smooth Escher Conformal Transformation
+    m = c if c > 1.01 else 2.0
     alpha = np.log(m) / (2 * np.pi)
+    r_0 = (h / 2.0) / S_true
+    exact_rotation = -alpha * np.log(r_0)
     C = 1.0 + 1j * alpha
     
-    Z_map = np.exp(C * np.log(Z))
+    y_grid, x_grid = np.meshgrid(np.arange(H), np.arange(W), indexing='ij')
+    Z = (x_grid - cx) / S_true + 1j * (y_grid - cy) / S_true
+    Z = np.where(Z == 0, 1e-8 + 1j*1e-8, Z)
     
-    # Exact rotation to keep the inner phone upright
-    r_0 = (h / 2.0) / S 
-    exact_rotation = -alpha * np.log(r_0)
-    Z_map = Z_map * np.exp(1j * exact_rotation)
+    try:
+        Z_new = implementation_tasks.backward_step_2_log_polar(Z)
+        Z = Z_new if Z_new is not None else Z
+        
+        Z_new = implementation_tasks.backward_step_3_conformal_twist(Z, C)
+        Z = Z_new if Z_new is not None else Z
+        
+        Z_new = implementation_tasks.backward_step_4_exponentiation(Z)
+        Z = Z_new if Z_new is not None else Z
+        
+        Z_new = implementation_tasks.backward_step_5_droste_fold(Z, m, exact_rotation, Bx, By)
+        Z = Z_new if Z_new is not None else Z
+    except Exception:
+        pass
+        
+    src_x, src_y = implementation_tasks.denormalize(Z, cx, cy, S_true)
     
-    # 3. ReplicateRegion Fold
-    X_map = np.real(Z_map)
-    Y_map = np.imag(Z_map)
-    
-    R_rect = np.maximum(np.abs(X_map) / Bx, np.abs(Y_map) / By)
-    R_rect = np.where(R_rect == 0, 1e-8, R_rect)
-    
-    k = np.ceil(np.log(R_rect) / np.log(m))
-    
-    Z_folded = Z_map * (m ** -k)
-    
-    src_x = (np.real(Z_folded) * S + cx).astype(np.float32)
-    src_y = (np.imag(Z_folded) * S + cy).astype(np.float32)
-    
-    # Since we perfectly clamped the boundaries, src_x and src_y will NEVER go out of bounds.
-    # BORDER_CONSTANT with black will prove that no out-of-bounds lookups ever happen.
     return cv2.remap(frame, src_x, src_y, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
 
 
@@ -193,8 +163,14 @@ while True:
         cv2.putText(view, "Saved!", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3)
 
     cv2.imshow("Droste", view)
-
+    
     key = cv2.waitKey(1)
+    
+    try:
+        if cv2.getWindowProperty("Droste", cv2.WND_PROP_VISIBLE) < 1:
+            break
+    except Exception:
+        break
     if key == 27:  # ESC to quit
         break
     elif key == ord('s') or key == 32:  # 's' or spacebar to start timer

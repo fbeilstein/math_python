@@ -1,0 +1,131 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Physics Lab: Complex Analysis and Escher's Print Gallery \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Consider the files given.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core complex math operations and scaling parameters intended for student implementation. \\
+\lstinline|droste_lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging individual conformal steps through an interactive UI. \\
+\lstinline|esher_droste_video.py| & \textbf{May be run standalone after you solve all levels.} The main simulation engine; connects to your webcam and applies the full continuous Droste effect using the math you implement in \lstinline|implementation_tasks.py|. \\ \midrule
+\bottomrule
+\end{tabularx}
+\end{center}
+
+
+Run the file \lstinline|droste_lab_dashboard.py|. You should see the window with a checkerboard and blue rectangle.
+
+Now use any editor to open the file \lstinline|implementation_tasks.py|. You should see the API for functions you must implement.
+
+\begin{lstlisting}
+import numpy as np
+
+def calculate_mathematical_bounds(H, W, cx, cy, w, h):
+    pass
+
+<<<< MORE CODE >>>>
+\end{lstlisting}
+
+Now proceed with the following problems. First solve the math part so you get the equation. Then implement. After implementation press the "Reload Code" button. Click the button with the appropriate task to get visuals, adjust the blue bounding box, and see how the mathematical domain is stretched and rotated.
+
+\section*{Problem 1: Calculate Mathematical Bounds}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The screen dimensions ($H, W$), the selected center point ($c_x, c_y$), and the dimensions of the user-drawn inner boundary ($w, h$). \\
+\textbf{Derive:} The maximum scalar $S_{true}$ that uniformly scales the region so the outer boundary is mathematically bounded by $1.0$, while perfectly maintaining the aspect ratio of the drawn rectangle. Calculate $B_x$ and $B_y$.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} a function \lstinline|calculate_mathematical_bounds(H, W, cx, cy, w, h)| that returns the scaling multiplier $c$, outer bounds $bound\_x, bound\_y$, the unified scalar $S_{true}$, and the normalized bounds $B_x, B_y$.
+
+\section*{Problem 2: Normalization (L1)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A display scalar $S_{disp}$ and physical display dimensions $H, W$. \\
+\textbf{Derive:} The normalized complex grid $Z_{out} = X + iY$ centered strictly at the origin $0,0$ corresponding to the center of the screen $W/2, H/2$. 
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} a function \lstinline|backward_step_1_normalize(H, W, S_disp)| that generates the complex meshgrid. Make sure to prevent $0+0i$ division errors by adding a tiny epsilon if $Z_{out} == 0$.
+
+\section*{Problem 3: Log-Polar Transform (L2)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The mathematical strip coordinate $W_{out}$. \\
+\textbf{Derive:} The inverse of the logarithmic transformation. Note that moving forward through the pipeline, the complex plane is mapped to a strip via $W = \ln(Z)$. Therefore, moving backward from the screen grid $W_{out}$ to the source image $Z$, the mathematical inverse is exponentiation.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} a function \lstinline|backward_step_2_log_polar(W_out)|.
+
+\section*{Problem 4: Conformal Twist (L3)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The straight log-polar strip $W_{straight}$ and the twist parameter $C = 1 + i \alpha$, where $\alpha = \frac{\ln(m)}{2\pi}$. \\
+\textbf{Derive:} The sheared strip. To twist the domain so that the top and bottom align, you apply a linear conformal twist. Moving backward, this is a multiplication.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} a function \lstinline|backward_step_3_conformal_twist(W_straight, C)|.
+
+\section*{Problem 5: Exponentiation (L4)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The twisted coordinate $Z_{out}$. \\
+\textbf{Derive:} The inverse operation that wraps the twisted strip back into an annulus (a spiral in the destination). 
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} a function \lstinline|backward_step_4_exponentiation(Z_out)|.
+
+\section*{Problem 6: The Droste Fold (L5)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The coiled spiral $Z_{spiral}$, the zoom multiplier $m$, the exact initial rotation $exact\_rotation$, and the normalized bounds $B_x, B_y$. \\
+\textbf{Derive:} The piecewise fold that replicates the fundamental region identically over the infinite complex plane. Use the maximum norm of the rectangle $\max(|X|/B_x, |Y|/B_y)$ to determine the fold index $k$, and scale $Z_{spiral}$ by $m^{-k}$.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} a function \lstinline|backward_step_5_droste_fold(Z_spiral, m, exact_rotation, Bx, By)|. Ensure you first rotate the space using $exact\_rotation$ to guarantee the corners align seamlessly.
+
+\section*{Problem 7: Run Physical Simulation}
+
+Once you have verified your mathematical implementation using the Lab Dashboard, you are ready to observe the full Escher Droste recursion mapping. Use the "Run Main Demo" button to initialize the video feed. Hold your phone up to the camera and frame the blue box over the screen of the phone to create infinite recursion.
+
+\section*{\textcolor{red}{Submission}}
+
+Submit the file \texttt{implementation\_tasks.py} and the screenshots for experimental problems.
+
+\end{document}
