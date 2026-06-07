@@ -1,0 +1,106 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Math Lab: Abstract Algebra and QR Codes \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Consider the files given.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core abstract algebra (Galois Fields) and Reed-Solomon coding logic intended for student implementation. \\
+\lstinline|qr_lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging individual math levels through an interactive UI. \\
+\lstinline|qr_code_demo.py| & \textbf{May be run standalone after you solve levels 1-9.} The main engine that ties all your math together to generate a fully functioning, scannable physical QR code. \\
+\lstinline|levels/level_*.py| & Unittests and graphical representation for each specific problem. \textbf{Can be run standalone.} Use \lstinline|python levels/level_*.py| for the graphical debugger or \lstinline|python levels/level_*.py --no-graphics| for unittests only. \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
+\lstinline|levels/base_level.py| & Base class for graphical debuggers. \\
+\lstinline|qr_code.py| & Pre-baked ISO formatting logic (BCH codes, masking) that utilizes your math. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Run the file \lstinline|qr_lab_dashboard.py|. You should see the interactive dashboard.
+Now use any editor to open the file \lstinline|implementation_tasks.py|. You should see the API for the functions you must implement.
+
+\begin{lstlisting}
+# =============================================================
+#  STUDENT IMPLEMENTATION 
+# =============================================================
+
+def gfp_add(a, b, p):
+    pass
+
+def gfp_mul(a, b, p):
+    pass
+
+<<<< MORE CODE >>>>
+\end{lstlisting}
+
+Proceed with the following problems. First solve the math part so you understand the underlying finite fields. Then implement the code. After implementation, click "Run All Tests" in the dashboard. If a light turns green, your math is correct. Click the level buttons to see a visual derivation of your logic.
+
+\section*{Problem 1: Prime Fields GF(p)}
+\textbf{Mathematical part:} Implement modular arithmetic for a prime field $GF(p)$. Ensure division handles the modular inverse correctly using Fermat's Little Theorem or the Extended Euclidean Algorithm. \\
+\textbf{Implementation part:} Implement \lstinline|gfp_add|, \lstinline|gfp_sub|, \lstinline|gfp_mul|, and \lstinline|gfp_div|.
+
+\section*{Problem 2: Primitive Polynomials}
+\textbf{Mathematical part:} A polynomial is primitive over $GF(p)$ if it is irreducible and its roots generate the multiplicative group of the extension field. \\
+\textbf{Implementation part:} Implement \lstinline|gfp_poly_divide| and \lstinline|is_primitive| to find valid generators for $GF(p^n)$.
+
+\section*{Problem 3: Extension Fields GF(p\textsuperscript{n}) Tables}
+\textbf{Mathematical part:} To quickly multiply in $GF(p^n)$, we construct Exponential and Logarithm tables using a chosen primitive polynomial. \\
+\textbf{Implementation part:} Implement \lstinline|generate_gfpn_tables|.
+
+\section*{Problem 4: Polynomial Arithmetic in GF(p\textsuperscript{n})}
+\textbf{Implementation part:} Implement polynomial multiplication and division over $GF(p^n)$ using the tables you just generated.
+
+\section*{Problem 5: Reed-Solomon Encoding}
+\textbf{Mathematical part:} The Reed-Solomon generator polynomial has roots $\alpha^0, \alpha^1, \dots, \alpha^{2t-1}$. The encoded message is the data shifted by $x^{2t}$ plus the remainder when divided by the generator. \\
+\textbf{Implementation part:} Implement \lstinline|get_generator_poly| and \lstinline|encode_text|.
+
+\section*{Problems 6-8: Reed-Solomon Decoding}
+\textbf{Mathematical part:} Implement the decoding pipeline:
+\begin{enumerate}
+    \item \textbf{Syndromes (L6):} Evaluate the received polynomial at the roots of the generator.
+    \item \textbf{Berlekamp-Massey (L7):} Solve the LFSR to find the Error Locator Polynomial $\Lambda(x)$.
+    \item \textbf{Chien Search \& Forney (L8):} Find the roots of $\Lambda(x)$ and calculate the error magnitudes to recover the corrupted bytes.
+\end{enumerate}
+
+\section*{Problem 9: The QR Matrix}
+\textbf{Implementation part:} Route your robustly encoded Reed-Solomon bitstream into the physical 2D matrix of a QR code, avoiding the finder patterns. Run \lstinline|qr_code_demo.py| to test your final matrix with a real smartphone camera!
+
+\end{document}
