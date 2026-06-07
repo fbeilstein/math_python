@@ -58,6 +58,9 @@ class HomologyDashboard(tk.Tk):
         self.btn3 = tk.Button(btn_frame, text="Connections: OFF", command=self.toggle_connections)
         self.btn3.pack(side=tk.LEFT, padx=5)
         
+        self.btn_details = tk.Button(btn_frame, text="Show Details", command=self.show_details)
+        self.btn_details.pack(side=tk.LEFT, padx=5)
+        
         info_text = (
             "Drag&drop vertices/triangles, close vertices glue together\n"
             "SHIFT+drag: Drag vertices without gluing\n"
@@ -223,6 +226,7 @@ class HomologyDashboard(tk.Tk):
         d = 70
         m, n = 3, 3
         vertices = [[Vertex(x + d * i, y + d * j, self.allocator.get_label()) for j in range(n + 1)] for i in range(m + 1)]
+            
         for i in range(m):
             for j in range(n):
                 self.triangles.append(Triangle(vertices[i][j], vertices[i+1][j], vertices[i+1][j+1]))
@@ -248,6 +252,7 @@ class HomologyDashboard(tk.Tk):
                 else:
                     if self.can_glue(self.glue_candidate_1, self.current_point):
                         self.glue(self.glue_candidate_1, self.current_point)
+                        self.recalculate_math()
                     self.triangles[self.glue_candidate_1[0]].vertices[self.glue_candidate_1[1]].picked = False
                     self.glue_candidate_1 = None
         else:
@@ -350,9 +355,9 @@ class HomologyDashboard(tk.Tk):
                     c = colors[color_idx % len(colors)]
                     color_idx += 1
                     for i in range(len(pts)):
-                        self.canvas.create_oval(pts[i][0]-5, pts[i][1]-5, pts[i][0]+5, pts[i][1]+5, fill=c, outline=c)
+                        self.canvas.create_oval(pts[i][0]-6, pts[i][1]-6, pts[i][0]+6, pts[i][1]+6, fill=c, outline="black")
                         for j in range(i+1, len(pts)):
-                            self.canvas.create_line(pts[i][0], pts[i][1], pts[j][0], pts[j][1], fill=c)
+                            self.canvas.create_line(pts[i][0], pts[i][1], pts[j][0], pts[j][1], fill=c, width=3, dash=(6, 4))
 
         # Draw Vertices
         if self.show_labels:
@@ -389,8 +394,12 @@ class HomologyDashboard(tk.Tk):
         
         h0, h1, h2, torsion = tasks.compute_homology(len(ch0), len(ch1), len(ch2), b1['rank'], b2['rank'], b2['torsion'])
         
-        out_txt = f"Triangles: {', '.join(tt)}\n\n"
-        out_txt += "Homology Groups:\n"
+        self.last_math_data = {
+            'tt': tt, 'ch0': ch0, 'ch1': ch1, 'ch2': ch2,
+            'b1': b1, 'b2': b2
+        }
+        
+        out_txt = "Homology Groups:\n"
         out_txt += f"$H_0(K) \\cong \\mathbb{{Z}}^{h0}$\n"
         out_txt += f"$H_1(K) \\cong \\mathbb{{Z}}^{h1}$"
         if torsion:
@@ -401,8 +410,71 @@ class HomologyDashboard(tk.Tk):
         out_txt += f"Holes: {h1}\n"
         out_txt += f"Voids: {h2}\n"
         
-        self.ax.text(0.1, 0.9, out_txt, fontsize=14, va="top", wrap=True)
+        self.ax.text(0.05, 0.9, out_txt, fontsize=14, va="top", wrap=True)
+        
+        ch_str = (
+            r"$\underset{\mathrm{dim}=0}{\emptyset} "
+            r"\underset{\mathrm{rank}=0}{\overset{\partial_3}{\longrightarrow}} "
+            r"\underset{\mathrm{dim}=" + str(len(ch2)) + r"}{C_2} "
+            r"\underset{\mathrm{rank}=" + str(b2['rank']) + r"}{\overset{\partial_2}{\longrightarrow}} "
+            r"\underset{\mathrm{dim}=" + str(len(ch1)) + r"}{C_1} "
+            r"\underset{\mathrm{rank}=" + str(b1['rank']) + r"}{\overset{\partial_1}{\longrightarrow}} "
+            r"\underset{\mathrm{dim}=" + str(len(ch0)) + r"}{C_0} "
+            r"\underset{\mathrm{rank}=0}{\overset{\partial_0}{\longrightarrow}} "
+            r"\underset{\mathrm{dim}=0}{\{0\}}$"
+        )
+        self.ax.text(0.05, 0.3, ch_str, fontsize=14, va="top")
+        
         self.mpl_canvas.draw()
+
+    def show_details(self):
+        if not hasattr(self, 'last_math_data'):
+            return
+            
+        data = self.last_math_data
+        tt = data['tt']
+        ch0, ch1, ch2 = data['ch0'], data['ch1'], data['ch2']
+        b1, b2 = data['b1'], data['b2']
+        
+        top = tk.Toplevel(self)
+        top.title("Homology Details")
+        top.geometry("800x600")
+        
+        text = tk.Text(top, font=("Courier", 12), wrap=tk.NONE)
+        text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        scrollbar = tk.Scrollbar(top, command=text.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        text.config(yscrollcommand=scrollbar.set)
+        
+        details = f"Triangles: {', '.join(tt)}\n\n"
+        details += f"0-chain: {', '.join(ch0)}\n"
+        details += f"1-chain: {', '.join(ch1)}\n"
+        details += f"2-chain: {', '.join(ch2)}\n\n"
+        details += "0-boundary: 0\n\n"
+        
+        def format_matrix(m, v, k):
+            if not m or not m[0]: return "0\n"
+            import numpy as np
+            # Create row labels
+            row_labels = [f"k_{x}" for x in v]
+            # Create col labels
+            col_labels = "       " + " ".join([f"{x:>4}" for x in k]) + "\n"
+            
+            s = col_labels
+            s += "-------" + "-" * (5 * len(k)) + "\n"
+            for i in range(len(m)):
+                row_str = " ".join([f"{val:>4}" for val in m[i]])
+                s += f"{row_labels[i]:<5} | {row_str}\n"
+            return s + "\n"
+
+        details += "1-boundary:\n" + format_matrix(b1['m'], b1['v'], b1['k'])
+        details += f"Smith = {b1['smith_invs']}\n\n"
+        details += "2-boundary:\n" + format_matrix(b2['m'], b2['v'], b2['k'])
+        details += f"Smith = {b2['smith_invs']}\n"
+        
+        text.insert(tk.END, details)
+        text.config(state=tk.DISABLED)
 
 if __name__ == "__main__":
     app = HomologyDashboard()
