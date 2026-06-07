@@ -16,17 +16,17 @@ def decode_text(bytes_array):
 # L1: GF(p) Polynomial Arithmetic
 # ---------------------------------------------------------
 
-def extended_gcd(a, b):
+def extended_gcd(a, b): #contains solution
     if a == 0: return (b, 0, 1)
     g, y, x = extended_gcd(b % a, a)
     return (g, x - (b // a) * y, y)
 
-def mod_inverse(a, m):
+def mod_inverse(a, m): #contains solution
     g, x, y = extended_gcd(a, m)
     if g != 1: raise Exception('modular inverse does not exist')
     return x % m
 
-def gfp_poly_divide(dividend, divisor, p):
+def gfp_poly_divide(dividend, divisor, p): #contains solution
     """
     L1: Polynomial long division over GF(p).
     Both polynomials are lists of integer coefficients from highest degree to lowest.
@@ -62,7 +62,7 @@ def gfp_poly_divide(dividend, divisor, p):
 # L2: General Primitive Polynomial Search
 # ---------------------------------------------------------
 
-def prime_factors(n):
+def prime_factors(n): #contains solution
     i = 2
     factors = []
     while i * i <= n:
@@ -73,14 +73,14 @@ def prime_factors(n):
     if n > 1 and n not in factors: factors.append(n)
     return factors
 
-def gfp_poly_multiply(a, b, p):
+def gfp_poly_multiply(a, b, p): #contains solution
     res = [0] * (len(a) + len(b) - 1)
     for i in range(len(a)):
         for j in range(len(b)):
             res[i+j] = (res[i+j] + a[i] * b[j]) % p
     return res
 
-def is_primitive(poly, p, n):
+def is_primitive(poly, p, n): #contains solution
     """
     L2: Prove a polynomial of degree n is primitive over GF(p).
     Check that x^(p^n - 1) == 1 mod poly, and x^k != 1 mod poly for all proper divisors k.
@@ -117,7 +117,7 @@ def is_primitive(poly, p, n):
 # L3: GF(p^n) Field Generation
 # ---------------------------------------------------------
 
-def generate_gfpn_tables(p, n, primitive_poly):
+def generate_gfpn_tables(p, n, primitive_poly): #contains solution
     """
     L3: Construct the Exponential and Logarithmic lookup tables for GF(p^n).
     """
@@ -147,30 +147,30 @@ def generate_gfpn_tables(p, n, primitive_poly):
 # L4: GF(p^n) Polynomial Arithmetic
 # ---------------------------------------------------------
 
-def gfpn_add(a, b, p, n):
+def gfpn_add(a, b, p, n): #contains solution
     res = 0; mult = 1
     for _ in range(n):
         res += ((a % p + b % p) % p) * mult
         mult *= p; a //= p; b //= p
     return res
 
-def gfpn_sub(a, b, p, n):
+def gfpn_sub(a, b, p, n): #contains solution
     res = 0; mult = 1
     for _ in range(n):
         res += ((a % p - b % p) % p) * mult
         mult *= p; a //= p; b //= p
     return res
 
-def gfpn_mul(a, b, log_table, exp_table, p, n):
+def gfpn_mul(a, b, log_table, exp_table, p, n): #contains solution
     if a == 0 or b == 0: return 0
     return exp_table[(log_table[a] + log_table[b]) % (p**n - 1)]
     
-def gfpn_div(a, b, log_table, exp_table, p, n):
+def gfpn_div(a, b, log_table, exp_table, p, n): #contains solution
     if b == 0: raise ZeroDivisionError()
     if a == 0: return 0
     return exp_table[(log_table[a] - log_table[b]) % (p**n - 1)]
 
-def gfpn_poly_multiply(poly1, poly2, log_table, exp_table, p, n):
+def gfpn_poly_multiply(poly1, poly2, log_table, exp_table, p, n): #contains solution
     """L4: Multiply polynomials over GF(p^n)."""
     res = [0] * (len(poly1) + len(poly2) - 1)
     for i in range(len(poly1)):
@@ -180,7 +180,7 @@ def gfpn_poly_multiply(poly1, poly2, log_table, exp_table, p, n):
     while len(res) > 0 and res[0] == 0: res.pop(0)
     return res if res else [0]
 
-def gfpn_poly_remainder(dividend, divisor, log_table, exp_table, p, n):
+def gfpn_poly_remainder(dividend, divisor, log_table, exp_table, p, n): #contains solution
     """L4: Find the remainder of polynomial division over GF(p^n)."""
     dividend = list(dividend)
     divisor = list(divisor)
@@ -208,7 +208,7 @@ def gfpn_poly_remainder(dividend, divisor, log_table, exp_table, p, n):
 # L5: RS Encoding
 # ---------------------------------------------------------
 
-def get_generator_poly(num_ec_bytes, log_table, exp_table, p, n):
+def get_generator_poly(num_ec_bytes, log_table, exp_table, p, n): #contains solution
     """L5: Calculate the Reed-Solomon Generator Polynomial."""
     gen = [1]
     for i in range(num_ec_bytes):
@@ -220,7 +220,7 @@ def get_generator_poly(num_ec_bytes, log_table, exp_table, p, n):
 # L6: RS Decoding I (Syndromes)
 # ---------------------------------------------------------
 
-def calculate_syndromes(message, num_ec, log_table, exp_table, p, n):
+def calculate_syndromes(message, num_ec, log_table, exp_table, p, n): #contains solution
     """L6: Evaluate the message at the roots of the generator polynomial."""
     syndromes = []
     for i in range(num_ec):
@@ -236,7 +236,7 @@ def calculate_syndromes(message, num_ec, log_table, exp_table, p, n):
 # L7: RS Decoding II (Berlekamp-Massey)
 # ---------------------------------------------------------
 
-def berlekamp_massey(syndromes, log_table, exp_table, p, n):
+def berlekamp_massey(syndromes, log_table, exp_table, p, n): #contains solution
     """L7: Find the Error Locator Polynomial."""
     C = [1]
     B = [1]
@@ -275,7 +275,7 @@ def berlekamp_massey(syndromes, log_table, exp_table, p, n):
 # L8: RS Decoding III (Chien & Forney)
 # ---------------------------------------------------------
 
-def chien_search(err_loc, msg_len, log_table, exp_table, p, n):
+def chien_search(err_loc, msg_len, log_table, exp_table, p, n): #contains solution
     """L8.1: Find the roots of the Error Locator Polynomial to pinpoint errors."""
     err_pos = []
     for i in range(msg_len):
@@ -288,7 +288,7 @@ def chien_search(err_loc, msg_len, log_table, exp_table, p, n):
             err_pos.append(msg_len - 1 - i)
     return err_pos
 
-def forney_algorithm(syndromes, err_loc, err_pos, msg_len, log_table, exp_table, p, n):
+def forney_algorithm(syndromes, err_loc, err_pos, msg_len, log_table, exp_table, p, n): #contains solution
     """L8.2: Calculate the magnitude of each error."""
     S_low = syndromes
     Lambda_low = list(reversed(err_loc))
@@ -329,7 +329,7 @@ def forney_algorithm(syndromes, err_loc, err_pos, msg_len, log_table, exp_table,
 # L9: QR Code Specialization (The Matrix)
 # ---------------------------------------------------------
 
-def build_qr_matrix(version, all_bits, get_format_string):
+def build_qr_matrix(version, all_bits, get_format_string): #contains solution
     """L9: Route the data into the physical QR matrix. (ISO formatting pre-applied)."""
     size = 4 * version + 17
     matrix = np.full((size, size), -1, dtype=int)
