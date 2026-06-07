@@ -19,6 +19,8 @@ done
 
 echo "Preparing release for $problem..."
 
+ORIG_DIR=$(pwd)
+
 # Create a staging directory
 staging_dir=$(mktemp -d)
 release_dir="$staging_dir/$problem"
@@ -135,8 +137,8 @@ cd "$staging_dir"
 zip_file="${problem}.zip"
 zip -r "$zip_file" "$problem" > /dev/null
 
-# Move the zip file back to the current working directory
-cd - > /dev/null
+# Move the zip file back to the original working directory
+cd "$ORIG_DIR" || exit 1
 mv "$staging_dir/$zip_file" .
 rm -rf "$staging_dir"
 
