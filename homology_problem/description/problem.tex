@@ -1,0 +1,258 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Topology Lab: Simplicial Homology Computation \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Consider the files given.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core algebraic topology logic (boundary matrices, Smith Normal Form, Homology) intended for student implementation. \\
+\lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging individual algebra and topology levels through an interactive UI. \\
+\lstinline|homology_explorer.py| & \textbf{May be run standalone after you solve levels 1-5.} The main visual topology engine; allows for the creation and dynamic gluing of simplicial complexes, and computes their Homology Groups on the fly. \\
+\lstinline|levels/level_*.py| & Unittests and graphical representation for each specific problem. \textbf{Can be run standalone.} You can use \lstinline|python levels/level_*.py| for the graphical debugger or \lstinline|python levels/level_*.py --no-graphics| for unittests only. \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
+\lstinline|levels/base_level.py| & Base class for textual and visual debuggers.\\
+\lstinline|levels/homology_base.py| & Contains the interactive Mesh Editor used in levels 3, 4, and 5 to dynamically draw and analyze 2D topological surfaces.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Run the file \lstinline|lab_dashboard.py|. Now use any editor to open the file \lstinline|implementation_tasks.py|. You should see the API for functions you should implement.
+
+\begin{lstlisting}
+import numpy as np
+
+# =====================================================================
+# STUDENT IMPLEMENTATION (Homology)
+# =====================================================================
+
+def z_div(a, b):
+    pass
+
+def z_gcdex(a, b):
+    pass
+
+<<<< MORE CODE >>>>
+\end{lstlisting}
+
+Now proceed with the following problems. First solve the math part so you understand the underlying algorithms. Then implement. After implementation press "Reload \& Retest" button and see if the bulb near the appropriate task becomes green, if not there are probably some issues with your implementation. Click the button with the appropriate task to use the interactive visual debugger to help track down bugs.
+
+
+
+\section*{Problem 1: Extended Euclidean Algorithm}
+
+\subsubsection*{Mathematical part}
+The Euclidean Algorithm relies on the principle that the greatest common divisor of two numbers does not change if the larger number is replaced by its difference with the smaller number. By tracking the quotients during standard Euclidean division, we can "run the algorithm backwards" to express the GCD as a linear combination of the original two numbers.
+
+\textbf{Given:} Two integers $a$ and $b$. \\
+\textbf{Derive:} The Greatest Common Divisor $g = \gcd(a, b)$ and the coefficients $x$ and $y$ such that the Bézout identity is satisfied:
+$$a \cdot x + b \cdot y = g$$
+Note that we strictly define the GCD to be non-negative ($g \ge 0$).
+
+\vspace{0.5cm}
+\noindent\textbf{Worked Example: Compute $\gcd(46, 14)$} \\
+First, perform standard Euclidean division until the remainder is $0$:
+\begin{align*}
+46 &= 3 \cdot 14 + 4 \\
+14 &= 3 \cdot 4 + 2 \\
+4 &= 2 \cdot 2 + 0 \quad (\text{The last non-zero remainder is } 2, \text{ so } g=2)
+\end{align*}
+Next, isolate the remainders from the equations above:
+\begin{align}
+4 &= 46 - 3 \cdot 14 \\
+2 &= 14 - 3 \cdot 4
+\end{align}
+Finally, substitute the remainders backward, starting from the equation for $g=2$:
+\begin{align*}
+2 &= 14 - 3 \cdot (\mathbf{4}) \\
+2 &= 14 - 3 \cdot (\mathbf{46 - 3 \cdot 14}) \quad \text{(Substitute equation 1 into equation 2)} \\
+2 &= 14 - 3 \cdot 46 + 9 \cdot 14 \quad \text{(Distribute the }-3\text{)} \\
+2 &= (-3) \cdot 46 + 10 \cdot 14 \quad \text{(Group the }14\text{s together)}
+\end{align*}
+Therefore, the Bézout coefficients are $x = -3$, $y = 10$, and $g = 2$.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} a function \lstinline|z_gcdex(a, b)| that returns $(x, y, g)$ as a tuple of integers.
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c }
+\toprule
+\textbf{Math Symbol} & $a$ & $b$ & $(x, y, g)$ \\ \midrule
+\textbf{Argument} & \lstinline|a| & \lstinline|b| & \lstinline|return| \\ \midrule
+\textbf{Type} & \lstinline|int| & \lstinline|int| & \lstinline|tuple(int, int, int)| \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} Press "Reload \& Retest" button. Use the "L1 Extended GCD" button in the visual debugger to manually test pairs of numbers.
+
+
+\section*{Problem 2: Elementary Matrix Operations}
+
+\subsubsection*{Mathematical part}
+Over a continuous field like the real numbers ($\mathbb{R}$), we use division to reduce matrix pivot elements to $1$. Over the integers ($\mathbb{Z}$), division is not generally possible because fractions are not allowed. Instead, we use the Bézout coefficients $(x, y)$ from the Extended Euclidean Algorithm to perform linear combinations of rows or columns, clearing entries strictly within integer bounds.
+
+\textbf{Given:} An $n \times m$ matrix of integers. \\
+\textbf{Derive:} Row and column operations that zero out specific elements.
+
+\vspace{0.5cm}
+\noindent\textbf{Worked Example: Clearing an Entry} \\
+Suppose we want to clear the first element of $\text{Row}_i$ using $\text{Row}_0$. Let $m_{00} = 4$ and $m_{i0} = 6$.
+\begin{enumerate}
+    \item Calculate $\text{z\_gcdex}(4, 6) \implies x = -1, y = 1, g = 2$.
+    \item Update $\text{Row}_0 \leftarrow x\cdot\text{Row}_0 + y\cdot\text{Row}_i$. The new pivot becomes $(-1)(4) + (1)(6) = 2$.
+    \item Because $g = 2$ divides $6$, we can now eliminate $m_{i0}$ using simple subtraction.
+    \item Update $\text{Row}_i \leftarrow \frac{6}{2}\cdot\text{Row}_0 - \frac{2}{2}\cdot\text{Row}_i = 3\cdot\text{Row}_0 - \text{Row}_i$. The new $m_{i0}$ becomes $3(2) - 6 = 0$.
+\end{enumerate}
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} functions for elementary operations. The most complex are \lstinline|clear_column(m)| and \lstinline|clear_row(m)|. These functions must zero out the entire first column (or row) of the matrix \textbf{except} the top-left pivot element \lstinline|m[0][0]|. They should modify the matrix in-place and return it.
+
+\textbf{Hint for clear\_column(m):} Iterate through the first column. For any non-zero element $m_{i0}$, use \lstinline|z_gcdex(m_{00}, m_{i0})| to find $(x, y, g)$, and apply the operations from the worked example across the entire row.
+
+\textbf{Test:} Press "Reload \& Retest". Use the "L2 Matrix Operations" button in the debugger to manually type a matrix and test your clearing functions.
+
+
+
+
+
+
+
+
+
+\section*{Problem 3: Smith Normal Form}
+
+\subsubsection*{Mathematical part}
+The Smith Normal Form (SNF) isolates the structure of a finitely generated abelian group. When boundary matrices are reduced to SNF, the diagonal entries immediately reveal the free rank (number of 1s) and the torsion components (entries $> 1$).
+
+\textbf{Given:} An integer matrix $M$. \\
+\textbf{Derive:} Its Smith Normal Form, a diagonal matrix $D$ such that $D = P M Q$ where $P$ and $Q$ are invertible integer matrices. The diagonal elements $a_i$ (invariant factors) must satisfy $a_i \mid a_{i+1}$.
+
+\vspace{0.5cm}
+\noindent\textbf{Worked Example: Computing SNF} \\
+Reduce a messy starting matrix: $M = \begin{pmatrix} 3 & 5 \\ 4 & 6 \end{pmatrix}$.
+\begin{enumerate}
+    \item \textbf{Clear the first column:} The pivot $3$ does not evenly divide the $4$ below it. We use the Extended Euclidean Algorithm to find a linear combination. \\
+    $\text{z\_gcdex}(3, 4) \implies x = -1, y = 1, g = 1$.
+    \item Update $\text{Row}_0 \leftarrow (-1)\text{Row}_0 + (1)\text{Row}_1$. \\
+    $\text{Row}_0 = (-3, -5) + (4, 6) = (1, 1)$. \\
+    The matrix is now $\begin{pmatrix} 1 & 1 \\ 4 & 6 \end{pmatrix}$.
+    \item We now have a beautiful pivot of $1$. We use it to clear the rest of the column via simple subtraction. \\
+    $\text{Row}_1 \leftarrow \text{Row}_1 - 4 \cdot \text{Row}_0$. \\
+    $\text{Row}_1 = (4, 6) - (4, 4) = (0, 2)$. \\
+    The matrix is now $\begin{pmatrix} 1 & 1 \\ 0 & 2 \end{pmatrix}$.
+    \item \textbf{Clear the first row:} Use the pivot $1$ to clear the $1$ next to it. \\
+    $\text{Col}_1 \leftarrow \text{Col}_1 - 1 \cdot \text{Col}_0$. \\
+    The matrix is now $\begin{pmatrix} 1 & 0 \\ 0 & 2 \end{pmatrix}$.
+    \item \textbf{Check Divisibility:} The matrix is diagonal. Does $1$ divide $2$? Yes. We are done.
+\end{enumerate}
+The invariant factors are $1$ and $2$.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} a function \lstinline|invariant_factors(m)| that returns a list of the diagonal integer elements $a_i$.
+
+\textbf{Hint:} Use a recursive approach. Bring a non-zero element to the top-left, call \lstinline|clear_column| and \lstinline|clear_row| until the pivot is isolated. If the resulting diagonal does not satisfy $a_i \mid a_{i+1}$, add the offending column to the previous column and repeat the clearing process. Finally, recurse on the remaining lower-right submatrix.
+
+\textbf{Test:} Press "Reload \& Retest". Select "L3 Smith Normal Form" in the debugger. Draw some triangles to automatically generate a boundary matrix and observe your SNF algorithm diagonalizing it in real-time.
+
+
+
+
+
+
+\section*{Problem 4: Boundary Matrices}
+
+\subsubsection*{Mathematical part}
+The fundamental lemma of homology states that the boundary of a boundary is zero ($\partial_{k-1} \circ \partial_k = 0$). This happens mathematically because the alternating sum formulation ensures every lower-dimensional face appears exactly twice with opposite signs.
+
+\textbf{Given:} A topological surface defined as a set of 2-simplices (triangles). \\
+\textbf{Derive:} The chain groups $C_0$ (vertices), $C_1$ (edges), and $C_2$ (faces), and the boundary operators $\partial_k : C_k \to C_{k-1}$. The boundary of a simplex $[v_0, v_1, \dots, v_k]$ is given by:
+$$ \partial_k([v_0, \dots, v_k]) = \sum_{i=0}^k (-1)^i [v_0, \dots, \hat{v}_i, \dots, v_k] $$
+*(Note: $\hat{v}_i$ means the $i$-th vertex is omitted).*
+
+\vspace{0.5cm}
+\noindent\textbf{Worked Example: Simplex Boundary} \\
+Consider a filled 2-simplex (triangle) defined by vertices $[0, 1, 2]$.
+$$ \partial_2([0, 1, 2]) = +[1, 2] - [0, 2] + [0, 1] $$
+If our complex has a $C_2$ basis of $\{ [0, 1, 2] \}$ and a $C_1$ basis sorted as $\{ [0,1], [0,2], [1,2] \}$, the boundary operator $\partial_2$ translates exactly to the column vector $\begin{pmatrix} 1 & -1 & 1 \end{pmatrix}^T$.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|get_complex(tt)| to extract all unique simplices, and \lstinline|calculate_boundary(chain, all_simplices_lower_dim)| to construct the integer boundary matrix and compute its rank and torsion coefficients using your SNF function.
+
+\textbf{Test:} Use the "L4 Boundary Matrices" debugger. Draw triangles and observe the exact $C_1, C_2$ strings and the alternating signs in the generated boundary matrices.
+
+
+\section*{Problem 5: Homology Computation}
+
+\subsubsection*{Mathematical part}
+This is where the Smith Normal Form (SNF) from Problem 3 becomes the engine of topological discovery. The Betti numbers $h_k$ (free topological "holes") and the torsion coefficients (topological "twists") are extracted directly from the SNF diagonals of your boundary matrices.
+
+Here is the exact mathematical link:
+\begin{itemize}
+    \item \textbf{Rank:} The rank of a boundary matrix $\partial_k$ is simply the number of non-zero entries on its SNF diagonal. This rank equals $\dim(\text{im } \partial_k)$.
+    \item \textbf{Torsion:} Any diagonal entry strictly greater than $1$ in the SNF of $\partial_{k+1}$ represents a torsion coefficient for the homology group $H_k$.
+\end{itemize}
+
+To find the Betti numbers $h_k$ (which count connected components, circular holes, and voids), we use the Rank-Nullity theorem. The formula becomes a simple addition and subtraction of the dimensions and the SNF ranks:
+$$ h_k = \dim(C_k) - \text{rank}(\partial_k) - \text{rank}(\partial_{k+1}) $$
+
+\vspace{0.5cm}
+\noindent\textbf{Worked Example: SNF and the Real Projective Plane} \\
+Suppose you compute the boundary matrices for a triangulated Real Projective Plane. You find $\dim(C_1) = 15$ edges and $\dim(C_2) = 10$ faces.
+\begin{enumerate}
+    \item You run your \lstinline|invariant_factors| function on $\partial_1$ and count $9$ non-zero entries on the diagonal. So, $\text{rank}(\partial_1) = 9$.
+    \item You run it on $\partial_2$ and the diagonal returned is $[1, 1, 1, 1, 1, 2, 0, 0, 0, 0]$.
+    \item Because there are $6$ non-zero entries on that diagonal, $\text{rank}(\partial_2) = 6$.
+    \item Because there is a $2$ on the diagonal, $H_1$ has a torsion coefficient of $2$ (denoted algebraically as $\mathbb{Z}_2$).
+    \item Calculate the 1D holes using the formula: \\
+    $h_1 = \dim(C_1) - \text{rank}(\partial_1) - \text{rank}(\partial_2) = 15 - 9 - 6 = 0$.
+\end{enumerate}
+\textbf{Result:} $h_1 = 0$, but there is $\mathbb{Z}_2$ torsion. The space has no "free" circular holes, but it contains a twisted loop that only bounds a face if you travel around it twice!
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|compute_homology(num_c0, num_c1, num_c2, rank_d1, rank_d2, torsion_d2)| that computes $h_0, h_1, h_2$ using standard integer arithmetic based on the formula above.
+
+\textbf{Test:} Use the "L5 Homology Computation" debugger. Draw closed surfaces to verify your Betti numbers are correct.
+
+
+\section*{\textcolor{red}{Submission}}
+
+Submit the file \texttt{implementation\_tasks.py} and screenshots of your final Torus and Klein Bottle configurations from the main simulation.
+
+\end{document}
