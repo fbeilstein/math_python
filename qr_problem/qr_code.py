@@ -15,10 +15,12 @@ QR_SPECS = {
     6: (108, 4, 27, 16)
 }
 
-def determine_version(data_length):
+def determine_version(text):
     """Finds the smallest QR version that can hold the message."""
+    required_bits = 4 + 8 + len(text) * 8
+    required_bytes = (required_bits + 7) // 8
     for version, specs in QR_SPECS.items():
-        if data_length <= specs[0]:
+        if required_bytes <= specs[0]:
             return version, specs
     raise ValueError(f"Message too long! Max capacity is {QR_SPECS[6][0]} characters.")
 
@@ -244,7 +246,7 @@ def main():
     print(f"Message Length: {len(message)} characters.")
     
     # Dynamic Promotion
-    version, specs = determine_version(len(message))
+    version, specs = determine_version(message)
     print(f"-> Automatically selected Version {version} (Capacity: {specs[0]} bytes)")
     
     # Encoding & Math
