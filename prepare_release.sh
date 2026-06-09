@@ -110,7 +110,15 @@ def process(filepath):
                 in_func = False
                 if not added_pass:
                     out.append(" " * (base_indent + 4) + "pass\n")
-                out.append(line)
+                
+                # Re-evaluate line as not in_func
+                if stripped.startswith("def ") and "#contains solution" in line:
+                    out.append(line.replace("#contains solution", "").rstrip() + "\n")
+                    in_func = True
+                    base_indent = indent
+                    added_pass = False
+                else:
+                    out.append(line)
 
     # If the file ended while still inside a function
     if in_func and not added_pass:
