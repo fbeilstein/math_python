@@ -11,3 +11,6 @@
 ### Problem Set: Compute Homologies
 - [Download the Problem Set (Compute Homologies)](https://github.com/fbeilstein/math_python/releases/download/homology_v0/homology_problem.zip)
 
+### Problem Set: Compute Autodiff with Dual Numbers
+- [Download the Problem Set (Compute Autodiff with Dual Numbers)](https://github.com/fbeilstein/math_python/releases/download/autodiff_v0/autodiff_duals_problem.zip)
+
