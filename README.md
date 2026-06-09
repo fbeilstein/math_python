@@ -17,3 +17,6 @@
 ### Problem Set: Kinematics with Hypercomplex Numbers
 - [Download the Problem Set (Kinematics with Hypercomplex Numbers)](https://github.com/fbeilstein/math_python/releases/download/kinematics_v0/kinematics_problem.zip)
 
+### Problem Set: Drawing Fractals
+- [Download the Problem Set (Drawing Fractals)](https://github.com/fbeilstein/math_python/releases/download/fractals_v0/fractals_problem.zip)
+
