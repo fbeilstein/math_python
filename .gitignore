@@ -4,6 +4,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Generated
+*.mp4
+
 # LaTeX
 *.aux
 *.fdb_latexmk
