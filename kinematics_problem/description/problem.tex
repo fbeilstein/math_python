@@ -1,0 +1,128 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Physics Lab: Hypercomplex Kinematics \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Consider the files given.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core math logic for \lstinline|SplitComplex|, \lstinline|Quaternion|, and \lstinline|DualQuaternion| numbers, as well as the \lstinline|sclerp| function intended for student implementation. \\
+\lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging individual math levels through an interactive UI. \\
+\lstinline|main_demo.py| & \textbf{The Kinematics Engine.} The main standalone demo where you can visually compare different interpolation strategies like ScLERP and Matrix LERP. \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
+\lstinline|levels/base_level.py| & Base class for graphical debuggers.\\
+\lstinline|levels/level_*.py| & Subproblem interfaces for 2D transforms and 3D Quaternions. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Now use any editor to open the file \lstinline|implementation_tasks.py|. You should see API for functions you should implement.
+
+\section*{Problem 1: 2D Hypercomplex Transformations}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A generalized 2D coordinate $(x, y)$ mapped to a hypercomplex number $P = x + yX$, and a transformation number $Z = a + bX$. \\
+\textbf{Derive:} The formula for multiplication $P' = P \cdot Z$. Show how the rule for $X^2$ completely changes the resulting geometric transformation:
+\begin{itemize}
+    \item \textbf{Complex} ($X^2 = -1$): Causes Euclidean Rotation + Scaling.
+    \item \textbf{Dual} ($X^2 = 0$): Causes Galilean Shear + Scaling.
+    \item \textbf{Split-Complex} ($X^2 = 1$): Causes Lorentz Boost + Scaling.
+\end{itemize}
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} The \lstinline|__mul__| magic method for the \lstinline|SplitComplex| class. (The \lstinline|Dual| class is already completed from previous assignments).
+
+\textbf{Test:} Run \lstinline|lab_dashboard.py| and use "L1: 2D Transforms" to check your multiplication logic against the visualizer.
+
+\section*{Problem 2: 3D Quaternions}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} Two Quaternions $q_1 = w_1 + x_1i + y_1j + z_1k$ and $q_2 = w_2 + x_2i + y_2j + z_2k$. \\
+\textbf{Derive:} The non-commutative Hamilton product $q_1 \cdot q_2$.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} The \lstinline|__mul__| method in the \lstinline|Quaternion| class.
+
+\textbf{Test:} Use "L2: 3D Quaternions" in the dashboard. Use the Euler angle sliders (Roll, Pitch, Yaw) to rotate the 3D coordinate frame. If your multiplication is correct, the frame will rotate smoothly without distorting.
+
+\section*{Problem 3: Chasles' Theorem}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A 3D affine transformation composed of a rotation matrix $R$ and a translation vector $\mathbf{t}$. \\
+\textbf{Derive:} Prove Chasles' Theorem, which states that any such displacement can be expressed as a rotation about a specific line in space, followed by a translation along that same line (a screw motion). 
+
+\textbf{Hint:} First, find the invariant rotation axis $\mathbf{v}$ by solving $R\mathbf{v} = \mathbf{v}$. Then, decompose the translation $\mathbf{t}$ into a component parallel to $\mathbf{v}$ ($\mathbf{t}_{\parallel}$) and a component orthogonal to $\mathbf{v}$ ($\mathbf{t}_{\perp}$). Finally, show that you can find a point $\mathbf{p}$ such that rotating the origin about the axis passing through $\mathbf{p}$ exactly accounts for the orthogonal translation $\mathbf{t}_{\perp}$ by solving $\mathbf{p} - R\mathbf{p} = \mathbf{t}_{\perp}$.
+
+\section*{Problem 4: The Algebra of Screw Motions}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} Chasles' Theorem guarantees a screw axis line $L$, a rotation angle $\theta$, and a translation distance $d$. The Dual Quaternion geometrically encodes this screw as:
+$$ \hat{q} = \cos(\hat{\theta}/2) + \mathbf{\hat{n}}\sin(\hat{\theta}/2) $$
+where $\hat{\theta} = \theta + d\epsilon$ and $\mathbf{\hat{n}} = \mathbf{n} + \mathbf{m}\epsilon$ is the Plücker representation of line $L$. \\
+\textbf{Derive:} Prove that any standard dual quaternion constructed from a translation vector $\mathbf{t}$ and a standard rotation quaternion $q_r$, defined as $\hat{q} = q_r + \frac{1}{2}\mathbf{t}q_r\epsilon$, can be algebraically factored into the pure screw form $\cos(\hat{\theta}/2) + \mathbf{\hat{n}}\sin(\hat{\theta}/2)$. 
+
+\textbf{Hint:} Use the Taylor series expansion for Dual numbers $f(x+y\epsilon) = f(x) + f'(x)y\epsilon$ on $\cos$ and $\sin$ to factor out $d$ and $\theta$.
+
+\section*{Problem 5: Simultaneous 3D Transformation (Dual Quaternions)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} Two Dual Quaternions $\hat{A} = A_r + A_d\epsilon$ and $\hat{B} = B_r + B_d\epsilon$, where $A_r, B_r, A_d, B_d$ are standard Quaternions, and $\epsilon^2 = 0$. \\
+\textbf{Derive:} The multiplication $\hat{A} \cdot \hat{B}$ and the translation extraction $t = 2 q_d q_r^*$.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} The \lstinline|__mul__| and \lstinline|to_translation_rotation| methods in the \lstinline|DualQuaternion| class.
+
+\textbf{Test:} Use "L3: 3D Dual Quaternions" in the dashboard. Ensure that adjusting translation and rotation sliders perfectly manipulates the 3D frame simultaneously.
+
+\section*{Problem 6: ScLERP Kinematics}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A starting Dual Quaternion $\hat{q}_1$, a target $\hat{q}_2$, and a time $t \in [0, 1]$.\\
+\textbf{Derive:} Screw Linear Interpolation (ScLERP). Because extracting the exact screw parameters using logarithms is complex, we use the normalized linear blend approximation:
+$$ \hat{q}(t) = \frac{\hat{q}_1(1-t) + \hat{q}_2t}{||\hat{q}_1(1-t) + \hat{q}_2t||} $$
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} The \lstinline|sclerp(dq1, dq2, t)| function. Note: you must check the dot product of the real quaternion parts and negate $\hat{q}_2$ if the dot product is negative to ensure shortest-path interpolation!
+
+\textbf{Test:} Launch "L4: ScLERP Kinematics Demo". Use the sliders to define a target pose, and move the Time slider. Toggle between ScLERP, Independent Interpolation, and Matrix LERP. Notice how Matrix LERP physically "shrinks" the coordinate frame mid-movement, while ScLERP maintains perfect rigid-body constraints.
+
+\section*{\textcolor{red}{Submission}}
+Submit the file \texttt{implementation\_tasks.py}.
+
+\end{document}
