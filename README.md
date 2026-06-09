@@ -14,3 +14,6 @@
 ### Problem Set: Compute Autodiff with Dual Numbers
 - [Download the Problem Set (Compute Autodiff with Dual Numbers)](https://github.com/fbeilstein/math_python/releases/download/autodiff_v0/autodiff_duals_problem.zip)
 
+### Problem Set: Kinematics with Hypercomplex Numbers
+- [Download the Problem Set (Kinematics with Hypercomplex Numbers)](https://github.com/fbeilstein/math_python/releases/download/kinematics_v0/kinematics_problem.zip)
+
