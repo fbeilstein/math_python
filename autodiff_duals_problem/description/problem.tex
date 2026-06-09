@@ -1,0 +1,105 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Physics Lab: Automatic Differentiation \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Consider the files given.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core math logic for Dual Numbers ($a + b\epsilon$) intended for student implementation. \\
+\lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging individual math levels through an interactive UI. \\
+\lstinline|main_demo.py| & \textbf{The AutoDiff Engine.} The main standalone demo where you can write multiline Python code with cycles and conditionals, and plot their exact derivatives. \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
+\lstinline|levels/base_level.py| & Base class for graphical debuggers.\\
+\lstinline|levels/level_*.py| & Subproblem interfaces for arithmetic, Taylor truncation, and transcendental functions. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Now use any editor to open the file \lstinline|implementation_tasks.py|. You should see API for functions you should implement.
+\begin{lstlisting}
+import numpy as np
+import math
+import unittest
+
+class Dual:
+    """Dual number: a + b*eps where eps^2 = 0."""
+    def __init__(self, real, dual):
+        self.real = float(real)
+        self.dual = float(dual)
+
+    def __add__(self, other):
+        pass
+
+<<<< MORE CODE >>>>
+\end{lstlisting}
+
+\section*{Problem 1: Dual Number Arithmetic}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} Two dual numbers $X = a + b\epsilon$ and $Y = c + d\epsilon$, where $\epsilon^2 = 0$. \\
+\textbf{Derive:} The formulas for addition, subtraction, multiplication, and division.
+For example, for multiplication:
+$$ X \cdot Y = (a + b\epsilon)(c + d\epsilon) = ac + (ad + bc)\epsilon + bd\epsilon^2 $$
+Since $\epsilon^2 = 0$, this simplifies to:
+$$ X \cdot Y = ac + (ad + bc)\epsilon $$
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} The standard Python magic methods \lstinline|__add__|, \lstinline|__sub__|, \lstinline|__mul__|, \lstinline|__truediv__|, and \lstinline|__pow__| in the \lstinline|Dual| class. Make sure to handle operations where \lstinline|other| is a standard float/int.
+
+\textbf{Test:} Run \lstinline|lab_dashboard.py| and use "L1: Elementary Arithmetic" to check your symbolic derivations. Ensure unittests pass.
+
+\section*{Problem 2: Transcendental Functions (Chain Rule)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A dual number $x = a + b\epsilon$. \\
+\textbf{Derive:} The Taylor expansion of $f(x)$ centered around $a$. Show that because $\epsilon^2 = 0$, the infinite series truncates exactly to $f(a) + f'(a)b\epsilon$. Use this to derive the definitions of $\sin(x)$, $\cos(x)$, $\tan(x)$, $\exp(x)$, and $\log(x)$ for Dual numbers.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} The standalone functions \lstinline|sin(x)|, \lstinline|cos(x)|, \lstinline|tan(x)|, \lstinline|exp(x)|, and \lstinline|log(x)|. They should check if \lstinline|x| is a \lstinline|Dual| number; if so, apply your derived formulas. If not, fallback to standard \lstinline|math| functions.
+
+\textbf{Test:} Use "L3: Elementary Functions" in the dashboard. Ensure that the dual component ($\epsilon$) plotted perfectly matches the analytical derivative.
+
+\section*{Problem 3: The AutoDiff Demo}
+Once your core math engine is passing all tests, launch the Main Demo using the dashboard or by running \lstinline|python3 main_demo.py|. Write an arbitrary, complex iterative algorithm using standard Python logic (loops, conditionals) in the text box. The underlying Dual number engine will flow through your logic and plot the perfect analytical derivative of your algorithm automatically!
+
+\section*{\textcolor{red}{Submission}}
+Submit the file \texttt{implementation\_tasks.py}.
+
+\end{document}
