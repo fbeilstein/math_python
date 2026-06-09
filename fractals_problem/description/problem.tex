@@ -1,0 +1,95 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Physics Lab: Hypercomplex Fractals \\ \large Vectorized Dynamic Algebra}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Consider the files given.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the vectorized math logic for \lstinline|VectorizedDual| and \lstinline|VectorizedSplit| numbers, as well as the dynamic \lstinline|render_fractal| evaluator function. \\
+\lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox containing all levels for debugging and rendering. \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
+\lstinline|levels/level_1_vectorized_math.py| & Debugger to test single-number formula evaluation. \\
+\lstinline|levels/level_2_fractal_explorer.py| & Main interactive Mandelbrot \& Julia explorer. \\
+\lstinline|levels/level_3_video_renderer.py| & The wandering dragon video generator tool. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Open the file \lstinline|implementation_tasks.py|.
+
+\section*{Problem 1: Vectorized Hypercomplex Algebra}
+
+\subsubsection*{Mathematical part}
+In previous labs, we used scalar implementations of hypercomplex numbers. However, rendering a fractal requires evaluating an equation over a massive grid of points (e.g., $400 \times 400 = 160,000$ points) up to 30 times. Doing this with scalar Python objects would take seconds or even minutes per frame. 
+
+To achieve real-time 60FPS rendering, we must use \textbf{Vectorized Math}. Instead of a \lstinline|Dual| number holding two floats, a \lstinline|VectorizedDual| holds two \textbf{NumPy arrays}.
+
+\textbf{Given:} Two vectorized dual numbers $A = a + b\epsilon$ and $B = c + d\epsilon$. \\
+\textbf{Derive:} The formula for multiplication $A \cdot B$ and power $A^n$. Notice how the algebraic rules ($\epsilon^2 = 0$) do not change, but they are now applied to entire arrays simultaneously.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} The \lstinline|__mul__| and \lstinline|__pow__| magic methods for the \lstinline|VectorizedDual| and \lstinline|VectorizedSplit| classes in \lstinline|implementation_tasks.py|. Use standard NumPy operations (e.g., \lstinline|self.real * other.real|).
+
+\textbf{Test:} Run \lstinline|lab_dashboard.py| and use "L1: Vectorized Math Debugger". Type in arbitrary formulas and verify that the results for Dual and Split-Complex algebras evaluate without crashing and match theoretical expectations.
+
+\section*{Problem 2: Dynamic Fractal Evaluator}
+
+\subsubsection*{Mathematical part}
+The classic Mandelbrot set iterates the function $z_{n+1} = z_n^2 + c$. However, the fractal space is infinitely rich, and we want to explore arbitrary iterations like $z_{n+1} = z_n^3 - z_n + c$. 
+
+Because we implemented our hypercomplex grids as fully-featured Python objects with overloaded operators (\lstinline|__add__|, \lstinline|__mul__|, etc.), we can use Python's built-in \lstinline|eval()| function to parse and execute \textit{any arbitrary mathematical string} directly on our vectorized grid.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} Complete the \lstinline|render_fractal| function. Use \lstinline|eval(formula_str, {"z": z[active], "c": c[active], "np": np})| to step the active points forward in time. Ensure you correctly apply the escape condition by checking if the absolute value exceeds 2.
+
+\textbf{Test:} Switch to "L2: Fractal Explorer". Type in \lstinline|z**3 + c| and render the Mandelbrot set. Click on different regions to see the 3-lobed Julia "dragons". Switch between Complex, Dual, and Split-Complex algebras to see how the topology completely changes!
+
+\section*{Problem 3: The Wandering Dragon}
+
+Once your dynamic evaluator is working perfectly, switch to "L3: Dragon Video". 
+
+Click multiple points along the boundary of the Mandelbrot set to trace a path. When you click "Generate Dragon Video", the application will interpolate the $c$ values along your path and render a smooth 15FPS MP4 video of the Julia set transforming dynamically. 
+
+(Note: The previous bug causing the generated videos to appear completely black has been fixed by properly passing \lstinline|vmin=0| and \lstinline|vmax=max_iter| into the \lstinline|imshow| animation initializer).
+
+\section*{\textcolor{red}{Submission}}
+Submit the file \texttt{implementation\_tasks.py}.
+
+\end{document}
