@@ -20,3 +20,7 @@
 ### Problem Set: Drawing Fractals
 - [Download the Problem Set (Drawing Fractals)](https://github.com/fbeilstein/math_python/releases/download/fractals_v0/fractals_problem.zip)
 
+### Problem Set: Elementary Group Theory
+- [Download the Problem Set (Elementary Group Theory)](https://github.com/fbeilstein/math_python/releases/download/cayley_v0/cayley_problem.zip)
+
+
