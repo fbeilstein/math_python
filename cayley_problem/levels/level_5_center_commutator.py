@@ -114,7 +114,8 @@ class Level5CenterCommutator(BaseLevel):
         
         title = f"Group Order: {len(self.nodes)}\n"
         title += f"Center Z(G) [Gold]: {len(self.center)} elements\n"
-        title += f"Commutator [G,G] [Red]: {len(self.commutator)} elements"
+        title += f"Commutator [G,G] [Red]: {len(self.commutator)} elements\n"
+        title += f"Both (Intersection) [Purple]: {len(self.center.intersection(self.commutator))} elements"
         self.ax.set_title(title)
         self.ax.axis('off')
         

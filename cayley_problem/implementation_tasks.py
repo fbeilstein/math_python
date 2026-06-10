@@ -18,20 +18,39 @@ def get_all_rels(relations):
     def inv_w(w):
         return "".join(c.lower() if c.isupper() else c.upper() for c in reversed(w))
         
-    all_rels = list(relations)
-    for lhs, rhs in relations:
-        inv_lhs = inv_w(lhs)
-        inv_rhs = inv_w(rhs)
-        if (inv_lhs, inv_rhs) not in all_rels:
-            all_rels.append((inv_lhs, inv_rhs))
-            
-    trivial_rels = []
-    # Just pre-populate the whole alphabet a-z to be safe and avoid missing letters
-    for c in "abcdefghijklmnopqrstuvwxyz":
-        trivial_rels.append((c + c.upper(), ""))
-        trivial_rels.append((c.upper() + c, ""))
+    def word_weight(w):
+        res = []
+        for c in w:
+            if c.islower(): res.append(ord(c) - ord('a'))
+            else: res.append(26 + ord(c) - ord('A'))
+        return tuple(res)
         
-    res = trivial_rels + all_rels
+    all_rels = set()
+    for c in "abcdefghijklmnopqrstuvwxyz":
+        all_rels.add((c + c.upper(), ""))
+        all_rels.add((c.upper() + c, ""))
+        
+    words = set()
+    for lhs, rhs in relations:
+        w = lhs + inv_w(rhs)
+        for i in range(len(w)):
+            cyc = w[i:] + w[:i]
+            words.add(cyc)
+            words.add(inv_w(cyc))
+            
+    for w in words:
+        for i in range(1, len(w) + 1):
+            u = w[:i]
+            v = w[i:]
+            v_inv = inv_w(v)
+            if len(u) > len(v_inv):
+                all_rels.add((u, v_inv))
+            elif len(u) == len(v_inv):
+                if word_weight(u) > word_weight(v_inv):
+                    all_rels.add((u, v_inv))
+                    
+    # Sort descending by length of LHS, then lexicographically
+    res = sorted(list(all_rels), key=lambda x: (-len(x[0]), word_weight(x[0])))
     _compiled_rels[rel_key] = res
     return res
 
@@ -233,14 +252,11 @@ def compute_left_cosets(subgroup, all_elements, relations, edges=None): #contain
     Return a list of sets, where each set is a coset (gH).
     """
     # BEGIN_SOLUTION
-    cosets = []
-    covered = set()
+    import networkx as nx
+    H_graph = nx.Graph()
+    H_graph.add_nodes_from(all_elements)
     
-    for g in sorted(list(all_elements), key=lambda x: (len(x), x)):
-        if g in covered:
-            continue
-            
-        coset = set()
+    for g in all_elements:
         for h in subgroup:
             if edges is not None:
                 val = graph_multiply(g, h, all_elements, edges)
@@ -252,12 +268,19 @@ def compute_left_cosets(subgroup, all_elements, relations, edges=None): #contain
                 val = canonicalize(raw, all_elements, relations, edges)
                 
             if val in all_elements:
-                coset.add(val)
-                covered.add(val)
-            
-        cosets.append(coset)
-        
-    return cosets
+                H_graph.add_edge(g, val)
+                
+    # Left cosets are the connected components under right-multiplication by H
+    cosets = [set(c) for c in nx.connected_components(H_graph)]
+    
+    # Ensure the subgroup (the coset containing "e") is always first!
+    subgroup_coset = next((c for c in cosets if "e" in c), set(["e"]))
+    other_cosets = [c for c in cosets if "e" not in c]
+    
+    # Sort the other cosets for stability
+    other_cosets.sort(key=lambda c: (len(c), min(c)))
+    
+    return [subgroup_coset] + other_cosets
     # END_SOLUTION
 
 # ---------------------------------------------------------
