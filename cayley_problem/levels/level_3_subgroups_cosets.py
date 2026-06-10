@@ -62,17 +62,27 @@ class Level3SubgroupsCosets(BaseLevel):
         rels = self.parse_relations(self.entry_rels.get())
         sub_subset = [g.strip() for g in self.entry_sub.get().split(',') if g.strip()]
         
-        nodes, edges = tasks.generate_cayley_graph(gens, rels, max_depth=10)
-        
-        # Validate subset
-        valid_subset = set()
-        for x in sub_subset:
-            red = tasks.reduce_word(x, rels)
-            red = tasks.canonicalize(red, nodes, rels)
-            if red in nodes: valid_subset.add(red)
+        try:
+            from group_engine import Group
+            group = Group(gens, rels)
+            nodes, edges = tasks.generate_cayley_graph(group, gens)
             
-        subgroup = tasks.generate_subgroup(valid_subset, nodes, rels)
-        cosets = tasks.compute_left_cosets(subgroup, nodes, rels)
+            # Validate subset
+            valid_subset = []
+            for x in sub_subset:
+                try:
+                    valid_subset.append(group.parse(x))
+                except ValueError:
+                    pass
+                
+            subgroup = tasks.generate_subgroup(group, sub_subset)
+            cosets = tasks.compute_left_cosets(group, subgroup)
+            
+        except Exception as e:
+            self.ax.clear()
+            self.ax.text(0.5, 0.5, f"Error:\n{str(e)}", color="red", fontsize=14, ha='center', va='center')
+            self.canvas.draw()
+            return
         
         self.ax.clear()
         

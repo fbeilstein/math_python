@@ -61,13 +61,23 @@ class Level4aConjugacy(BaseLevel):
         gens = [g.strip() for g in self.entry_gens.get().split(',') if g.strip()]
         rels = self.parse_relations(self.entry_rels.get())
         
-        nodes, edges = tasks.generate_cayley_graph(gens, rels, max_depth=10)
-        elem = tasks.reduce_word(self.entry_elem.get().strip(), rels)
-        elem = tasks.canonicalize(elem, nodes, rels)
-        
-        conj_class = set()
-        if elem in nodes:
-            conj_class = tasks.compute_conjugacy_class(elem, nodes, rels)
+        try:
+            from group_engine import Group
+            group = Group(gens, rels)
+            nodes, edges = tasks.generate_cayley_graph(group, gens)
+            
+            try:
+                elem = group.parse(self.entry_elem.get().strip())
+                conj_class = tasks.compute_conjugacy_class(group, elem)
+            except ValueError:
+                elem = "Invalid"
+                conj_class = set()
+                
+        except Exception as e:
+            self.ax.clear()
+            self.ax.text(0.5, 0.5, f"Error:\n{str(e)}", color="red", fontsize=14, ha='center', va='center')
+            self.canvas.draw()
+            return
             
         self.G = nx.DiGraph()
         for n in nodes: self.G.add_node(n)

@@ -1,388 +1,165 @@
-import string
+import numpy as np
 
 # =====================================================================
 # STUDENT IMPLEMENTATION (Group Theory & Cayley Graphs)
 # =====================================================================
 
 # ---------------------------------------------------------
-# L1: Word Reduction
+# L1: Cayley Graph Generation
 # ---------------------------------------------------------
 
-_reduce_cache = {}
-_compiled_rels = {}
-
-def get_all_rels(relations):
-    rel_key = tuple(relations)
-    if rel_key in _compiled_rels: return _compiled_rels[rel_key]
-    
-    def inv_w(w):
-        return "".join(c.lower() if c.isupper() else c.upper() for c in reversed(w))
-        
-    def word_weight(w):
-        res = []
-        for c in w:
-            if c.islower(): res.append(ord(c) - ord('a'))
-            else: res.append(26 + ord(c) - ord('A'))
-        return tuple(res)
-        
-    all_rels = set()
-    for c in "abcdefghijklmnopqrstuvwxyz":
-        all_rels.add((c + c.upper(), ""))
-        all_rels.add((c.upper() + c, ""))
-        
-    words = set()
-    for lhs, rhs in relations:
-        w = lhs + inv_w(rhs)
-        for i in range(len(w)):
-            cyc = w[i:] + w[:i]
-            words.add(cyc)
-            words.add(inv_w(cyc))
-            
-    for w in words:
-        for i in range(1, len(w) + 1):
-            u = w[:i]
-            v = w[i:]
-            v_inv = inv_w(v)
-            if len(u) > len(v_inv):
-                all_rels.add((u, v_inv))
-            elif len(u) == len(v_inv):
-                if word_weight(u) > word_weight(v_inv):
-                    all_rels.add((u, v_inv))
-                    
-    # Sort descending by length of LHS, then lexicographically
-    res = sorted(list(all_rels), key=lambda x: (-len(x[0]), word_weight(x[0])))
-    _compiled_rels[rel_key] = res
-    return res
-
-def reduce_word(word, relations):
-    rel_key = tuple(relations)
-    cache_key = (word, rel_key)
-    if cache_key in _reduce_cache:
-        return _reduce_cache[cache_key]
-        
-    original_word = word
-
+def generate_cayley_graph(group, generators): #contains solution
     """
-    L1: Reduce a word in a finitely presented group.
-    `word`: A string like 'aabA'. (Uppercase implies inverse: A = a^-1).
-    `relations`: A list of tuples (lhs, rhs), e.g., [("aaaa", ""), ("bb", ""), ("abab", "")].
-    
-    You must iteratively apply:
-    1. Trivial cancellations (e.g., 'aA' -> '', 'Aa' -> '', 'bB' -> '', 'Bb' -> '')
-    2. The group relations (replace lhs with rhs).
-    Stop when the word cannot be reduced any further.
-    To prevent infinite loops on crazy groups, limit to 1000 iterations.
-    Return the reduced word. If it reduces to the empty string, return 'e'.
-    """
-    """
-    L1: Reduce a word in a finitely presented group.
-    """
-    # BEGIN_SOLUTION
-    all_rels = get_all_rels(relations)
-    
-    for _ in range(1000):
-        changed = False
-        for lhs, rhs in all_rels:
-            if lhs in word:
-                word = word.replace(lhs, rhs)
-                changed = True
-        if not changed:
-            break
-            
-    res = word if word else "e"
-    _reduce_cache[cache_key] = res
-    return res
-    # END_SOLUTION
-
-# ---------------------------------------------------------
-# L2: Cayley Graph Generation (BFS)
-# ---------------------------------------------------------
-
-def generate_cayley_graph(generators, relations, max_depth=10): #contains solution
-    """
-    L2: Generate the Cayley Graph using Breadth-First Search.
-    Start at 'e' (the identity).
-    Multiply the current word by each generator on the right.
-    Reduce the new word.
-    Record the node and the directed edge (current_word, generator, new_word).
+    L1: Generate the Cayley Graph using Breadth-First Search.
+    Start at the identity.
+    Multiply the current element by each generator on the right.
+    Record the node and the directed edge (current_element, generator, new_element).
     Return (nodes, edges) where:
-    - nodes is a set of unique reduced words.
+    - nodes is a set of unique GroupElements.
     - edges is a list of tuples: (source, generator, target).
+      (generator should just be the string name of the generator e.g. 'a')
     """
     # BEGIN_SOLUTION
-    nodes = set(["e"])
+    e = group.identity()
+    nodes = set([e])
     edges = []
     
-    queue = [("e", 0)] # (word, depth)
-    visited = set(["e"])
+    queue = [e]
+    visited = set([e])
+    
+    # Parse generator strings into GroupElements
+    gen_elements = {g: group.parse(g) for g in generators}
     
     while queue:
-        current_word, depth = queue.pop(0)
+        current = queue.pop(0)
         
-        if depth >= max_depth:
-            continue
+        for g_str, g_elem in gen_elements.items():
+            new_elem = current * g_elem
+            edges.append((current, g_str, new_elem))
             
-        for g in generators:
-            # Multiply on the right
-            if current_word == "e":
-                new_word_raw = g
-            else:
-                new_word_raw = current_word + g
-                
-            new_word = reduce_word(new_word_raw, relations)
-            
-            # Record edge
-            edges.append((current_word, g, new_word))
-            
-            if new_word not in visited:
-                visited.add(new_word)
-                nodes.add(new_word)
-                queue.append((new_word, depth + 1))
+            if new_elem not in visited:
+                visited.add(new_elem)
+                nodes.add(new_elem)
+                queue.append(new_elem)
                 
     return nodes, edges
     # END_SOLUTION
 
 # ---------------------------------------------------------
-# L3: Subgroups and Cosets
+# L2: Subgroups and Cosets
 # ---------------------------------------------------------
 
-def invert_word(w):
-    if w == "e": return "e"
-    return "".join(c.lower() if c.isupper() else c.upper() for c in reversed(w))
-
-_canon_cache = {}
-
-def graph_multiply(start_node, word, all_elements, edges):
+def generate_subgroup(group, subset_strings): #contains solution
     """
-    Multiply a node by a word using the precomputed Cayley Graph edges.
-    This is O(len(word)) and completely avoids string reduction.
-    Returns the resulting node, or None if it falls off the graph boundary.
-    """
-    if word == "e" or not word: return start_node
-    
-    # Build fast adjacency lookups
-    # forward: (node, gen) -> target
-    # backward: (node, gen) -> source
-    # We can cache this on the graph object or rebuild it quickly.
-    # To be extremely fast, we assume edges is accessible.
-    forward = {}
-    backward = {}
-    for u, g, v in edges:
-        forward[(u, g)] = v
-        backward[(v, g)] = u
-        
-    current = start_node
-    for c in word:
-        if current is None: return None
-        if c.islower():
-            current = forward.get((current, c))
-        else:
-            current = backward.get((current, c.lower()))
-    return current
-
-def canonicalize(word, all_elements, relations, edges=None):
-    """
-    Helper: Find which node in all_elements this word corresponds to.
-    """
-    if word in all_elements: return word
-    
-    # If we have edges, try fast graph traversal first!
-    if edges is not None:
-        res = graph_multiply("e", word, all_elements, edges)
-        if res is not None: return res
-
-    rel_key = tuple(relations)
-    cache_key = (word, frozenset(all_elements), rel_key)
-    if cache_key in _canon_cache:
-        return _canon_cache[cache_key]
-        
-    red_word = reduce_word(word, relations)
-    if red_word in all_elements:
-        _canon_cache[cache_key] = red_word
-        return red_word
-        
-    for n in all_elements:
-        raw = (red_word if red_word != "e" else "") + (invert_word(n) if n != "e" else "")
-        if not raw: raw = "e"
-        if reduce_word(raw, relations) == "e":
-            _canon_cache[cache_key] = n
-            return n
-    
-    _canon_cache[cache_key] = red_word
-    return red_word
-
-def generate_subgroup(subset, all_elements, relations, edges=None): #contains solution
-    """
-    L3a: Given a subset of elements (reduced words), compute the full 
+    L2a: Given a list of generator strings (e.g. ['b']), compute the full 
     subgroup generated by them. This means closure under multiplication 
     and inversion.
     """
     # BEGIN_SOLUTION
-    subgroup = set(["e"])
-    queue = ["e"]
+    e = group.identity()
+    subgroup = set([e])
+    queue = [e]
     
-    gens = list(subset) + [invert_word(w) for w in subset]
+    gens = [group.parse(s) for s in subset_strings]
+    # Add inverses for closure
+    gens += [g.inv() for g in gens]
     
     while queue:
         current = queue.pop(0)
         for g in gens:
-            if edges is not None:
-                new_w = graph_multiply(current, g, all_elements, edges)
-                if new_w is None:
-                    if current == "e": new_w_raw = g
-                    elif g == "e": new_w_raw = current
-                    else: new_w_raw = current + g
-                    new_w = canonicalize(new_w_raw, all_elements, relations, edges)
-            else:
-                if current == "e": new_w_raw = g
-                elif g == "e": new_w_raw = current
-                else: new_w_raw = current + g
-                new_w = canonicalize(new_w_raw, all_elements, relations, edges)
-                
-            if new_w in all_elements and new_w not in subgroup:
-                subgroup.add(new_w)
-                queue.append(new_w)
+            new_elem = current * g
+            if new_elem not in subgroup:
+                subgroup.add(new_elem)
+                queue.append(new_elem)
                 
     return subgroup
     # END_SOLUTION
 
-def compute_left_cosets(subgroup, all_elements, relations, edges=None): #contains solution
+def compute_left_cosets(group, subgroup_elements): #contains solution
     """
-    L3b: Generate all Left Cosets of a subgroup.
+    L2b: Generate all Left Cosets of a subgroup.
     Return a list of sets, where each set is a coset (gH).
     """
     # BEGIN_SOLUTION
     import networkx as nx
     H_graph = nx.Graph()
+    all_elements = group.get_elements()
     H_graph.add_nodes_from(all_elements)
     
     for g in all_elements:
-        for h in subgroup:
-            if edges is not None:
-                val = graph_multiply(g, h, all_elements, edges)
-                if val is None:
-                    raw = h if g == "e" else (g if h == "e" else g + h)
-                    val = canonicalize(raw, all_elements, relations, edges)
-            else:
-                raw = h if g == "e" else (g if h == "e" else g + h)
-                val = canonicalize(raw, all_elements, relations, edges)
-                
-            if val in all_elements:
+        for h in subgroup_elements:
+            val = g * h
+            if val in all_elements:  # Always true for finite groups
                 H_graph.add_edge(g, val)
                 
     # Left cosets are the connected components under right-multiplication by H
     cosets = [set(c) for c in nx.connected_components(H_graph)]
     
-    # Ensure the subgroup (the coset containing "e") is always first!
-    subgroup_coset = next((c for c in cosets if "e" in c), set(["e"]))
-    other_cosets = [c for c in cosets if "e" not in c]
+    # Ensure the subgroup (the coset containing identity) is always first!
+    e = group.identity()
+    subgroup_coset = next((c for c in cosets if e in c), set([e]))
+    other_cosets = [c for c in cosets if e not in c]
     
-    # Sort the other cosets for stability
-    other_cosets.sort(key=lambda c: (len(c), min(c)))
+    # Sort the other cosets for stability (by length and string rep)
+    other_cosets.sort(key=lambda c: (len(c), min([str(x) for x in c])))
     
     return [subgroup_coset] + other_cosets
     # END_SOLUTION
 
 # ---------------------------------------------------------
-# L4: Normality and Conjugacy
+# L3: Normality and Conjugacy
 # ---------------------------------------------------------
 
-def compute_conjugacy_class(element, all_elements, relations, edges=None): #contains solution
+def compute_conjugacy_class(group, element): #contains solution
     """
-    L4a: Compute the conjugacy class of an element x: {g * x * g^-1 for all g in G}.
+    L3a: Compute the conjugacy class of an element x: {g * x * g^-1 for all g in G}.
     """
     # BEGIN_SOLUTION
     conj_class = set()
-        
+    all_elements = group.get_elements()
     for g in all_elements:
-        g_inv = invert_word(g)
-        
-        if edges is not None:
-            v1 = graph_multiply(g, element, all_elements, edges)
-            if v1 is not None:
-                val = graph_multiply(v1, g_inv, all_elements, edges)
-                if val is not None and val in all_elements:
-                    conj_class.add(val)
-                    continue
-        
-        # Fallback
-        parts = []
-        if g != "e": parts.append(g)
-        if element != "e": parts.append(element)
-        if g_inv != "e": parts.append(g_inv)
-        
-        if not parts:
-            conj_class.add("e")
-        else:
-            raw = "".join(parts)
-            val = canonicalize(raw, all_elements, relations, edges)
-            if val in all_elements:
-                conj_class.add(val)
-            
+        val = g * element * g.inv()
+        conj_class.add(val)
     return conj_class
     # END_SOLUTION
 
-def is_normal_subgroup(subgroup, all_elements, relations, edges=None): #contains solution
+def compute_normal_subgroups(group, list_of_subgroups): #contains solution
     """
-    L4b: Check if a subgroup is normal (gH = Hg for all g).
-    A subgroup is normal iff it is a union of conjugacy classes,
-    meaning for any h in H and g in G, ghg^-1 is in H.
+    L3b: Given a list of subgroups (each is a set of GroupElements), 
+    return a list of booleans indicating whether each is a normal subgroup.
+    A subgroup H is normal if g * h * g^-1 in H for all g in G and h in H.
     """
     # BEGIN_SOLUTION
-    for h in subgroup:
-        for g in all_elements:
-            g_inv = invert_word(g)
-            
-            if edges is not None:
-                v1 = graph_multiply(g, h, all_elements, edges)
-                if v1 is not None:
-                    val = graph_multiply(v1, g_inv, all_elements, edges)
-                    if val is not None:
-                        if val not in subgroup: return False
-                        continue
-                        
-            parts = []
-            if g != "e": parts.append(g)
-            if h != "e": parts.append(h)
-            if g_inv != "e": parts.append(g_inv)
-            
-            raw = "".join(parts) if parts else "e"
-            val = canonicalize(raw, all_elements, relations, edges)
-            if val not in subgroup:
-                return False
-    return True
+    results = []
+    all_elements = group.get_elements()
+    for H in list_of_subgroups:
+        is_normal = True
+        for h in H:
+            for g in all_elements:
+                if (g * h * g.inv()) not in H:
+                    is_normal = False
+                    break
+            if not is_normal: break
+        results.append(is_normal)
+    return results
     # END_SOLUTION
 
 # ---------------------------------------------------------
-# L5: Center and Commutator Subgroup
+# L4: Center and Commutator
 # ---------------------------------------------------------
 
-def compute_center(all_elements, relations, edges=None): #contains solution
+def compute_center(group): #contains solution
     """
-    L5a: Compute the Center Z(G) (elements that commute with ALL elements).
+    L4a: Compute the Center Z(G) of the group.
+    Z(G) = {z in G | z * g = g * z for all g in G}
     """
     # BEGIN_SOLUTION
     center = set()
+    all_elements = group.get_elements()
     for z in all_elements:
         commutes_with_all = True
         for g in all_elements:
-            if edges is not None:
-                val1 = graph_multiply(z, g, all_elements, edges)
-                val2 = graph_multiply(g, z, all_elements, edges)
-                if val1 is not None and val2 is not None:
-                    if val1 != val2:
-                        commutes_with_all = False
-                        break
-                    continue
-                    
-            # Check if z*g == g*z
-            raw1 = (z if z != "e" else "") + (g if g != "e" else "")
-            raw2 = (g if g != "e" else "") + (z if z != "e" else "")
-            
-            val1 = canonicalize(raw1, all_elements, relations, edges) if raw1 else "e"
-            val2 = canonicalize(raw2, all_elements, relations, edges) if raw2 else "e"
-            
-            if val1 != val2:
+            if z * g != g * z:
                 commutes_with_all = False
                 break
         if commutes_with_all:
@@ -390,39 +167,33 @@ def compute_center(all_elements, relations, edges=None): #contains solution
     return center
     # END_SOLUTION
 
-def compute_commutator_subgroup(all_elements, relations, edges=None): #contains solution
+def compute_commutator_subgroup(group): #contains solution
     """
-    L5b: Compute the Commutator Subgroup [G, G].
+    L4b: Compute the Commutator Subgroup [G, G].
     It is generated by all commutators [a, b] = a * b * a^-1 * b^-1.
     """
     # BEGIN_SOLUTION
     commutators = set()
+    all_elements = group.get_elements()
     for a in all_elements:
         for b in all_elements:
-            a_inv = invert_word(a)
-            b_inv = invert_word(b)
-            
-            if edges is not None:
-                v1 = graph_multiply(a, b, all_elements, edges)
-                if v1 is not None:
-                    v2 = graph_multiply(v1, a_inv, all_elements, edges)
-                    if v2 is not None:
-                        v3 = graph_multiply(v2, b_inv, all_elements, edges)
-                        if v3 is not None and v3 in all_elements:
-                            commutators.add(v3)
-                            continue
-            
-            parts = []
-            if a != "e": parts.append(a)
-            if b != "e": parts.append(b)
-            if a_inv != "e": parts.append(a_inv)
-            if b_inv != "e": parts.append(b_inv)
-            
-            raw = "".join(parts) if parts else "e"
-            val = canonicalize(raw, all_elements, relations, edges)
-            if val in all_elements:
-                commutators.add(val)
+            val = a * b * a.inv() * b.inv()
+            commutators.add(val)
             
     # The commutator subgroup is GENERATED BY the commutators
-    return generate_subgroup(commutators, all_elements, relations, edges)
+    # Since we have the elements as GroupElements, we can just run the closure algorithm
+    e = group.identity()
+    subgroup = set([e])
+    queue = [e]
+    gens = list(commutators)
+    
+    while queue:
+        current = queue.pop(0)
+        for g in gens:
+            new_elem = current * g
+            if new_elem not in subgroup:
+                subgroup.add(new_elem)
+                queue.append(new_elem)
+                
+    return subgroup
     # END_SOLUTION

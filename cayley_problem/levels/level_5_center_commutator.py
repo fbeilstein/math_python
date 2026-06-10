@@ -56,11 +56,19 @@ class Level5CenterCommutator(BaseLevel):
     def generate(self):
         gens = [g.strip() for g in self.entry_gens.get().split(',') if g.strip()]
         rels = self.parse_relations(self.entry_rels.get())
-        
-        nodes, edges = tasks.generate_cayley_graph(gens, rels, max_depth=10)
-        
-        center = tasks.compute_center(nodes, rels)
-        commutator = tasks.compute_commutator_subgroup(nodes, rels)
+        try:
+            from group_engine import Group
+            group = Group(gens, rels)
+            nodes, edges = tasks.generate_cayley_graph(group, gens)
+            
+            center = tasks.compute_center(group)
+            commutator = tasks.compute_commutator_subgroup(group)
+            
+        except Exception as e:
+            self.ax.clear()
+            self.ax.text(0.5, 0.5, f"Error:\n{str(e)}", color="red", fontsize=14, ha='center', va='center')
+            self.canvas.draw()
+            return
         
         self.ax.clear()
         

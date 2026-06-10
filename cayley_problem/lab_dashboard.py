@@ -7,7 +7,6 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.append(current_dir)
 
-from levels.level_1_word_reduction import Level1WordReduction
 from levels.level_2_cayley_graph import Level2CayleyGraph
 from levels.level_3_subgroups_cosets import Level3SubgroupsCosets
 from levels.level_4a_conjugacy_classes import Level4aConjugacy
@@ -42,12 +41,11 @@ class LabDashboard(tk.Tk):
         self.current_level = None
         
         levels = [
-            (Level1WordReduction, "L1: Word Reduction"),
-            (Level2CayleyGraph, "L2: Cayley Graph"),
-            (Level3SubgroupsCosets, "L3: Subgroups & Cosets"),
-            (Level4aConjugacy, "L4a: Conjugacy Classes"),
-            (Level4bNormality, "L4b: Normal Subgroups"),
-            (Level5CenterCommutator, "L5: Center & Commutator")
+            (Level2CayleyGraph, "L1: Cayley Graph"),
+            (Level3SubgroupsCosets, "L2: Subgroups & Cosets"),
+            (Level4aConjugacy, "L3a: Conjugacy Classes"),
+            (Level4bNormality, "L3b: Normal Subgroups"),
+            (Level5CenterCommutator, "L4: Center & Commutator")
         ]
         
         for cls, name in levels:
@@ -55,7 +53,7 @@ class LabDashboard(tk.Tk):
                       command=lambda c=cls: self.load_level(c)).pack(fill=tk.X, padx=2, pady=1)
         
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self.load_level(Level1WordReduction)
+        self.load_level(Level2CayleyGraph)
 
     def load_level(self, level_class):
         if self.current_level:
