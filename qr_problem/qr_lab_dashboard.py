@@ -23,9 +23,7 @@ class QRDashboard(tk.Tk):
             ("level_3_tables", "L3: GF(p^n) Tables"),
             ("level_4_gfpn_math", "L4: GF(p^n) Math"),
             ("level_5_rs_encoding", "L5: RS Encoding"),
-            ("level_6_syndromes", "L6: Syndromes"),
-            ("level_7_berlekamp", "L7: Berlekamp-Massey"),
-            ("level_8_chien_forney", "L8: Chien & Forney")
+            ("level_6_linear_decoding", "L6: Linear Decoding (PGZ)")
         ]
         
         self.status_labels = {}

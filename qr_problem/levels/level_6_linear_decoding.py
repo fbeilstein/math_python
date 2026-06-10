@@ -9,7 +9,7 @@ if base_dir not in sys.path:
     sys.path.insert(0, base_dir)
 
 import implementation_tasks as tasks
-from levels.base_level import BaseLevel, BaseLevelUI, poly_to_latex
+from levels.base_level import BaseLevel, BaseLevelUI
 
 
 import itertools
@@ -29,15 +29,34 @@ def poly_to_str(poly):
         terms.append(term)
     return " + ".join(terms)
 
-class Level7(BaseLevel):
-    def test_berlekamp(self):
+class Level6(BaseLevel):
+    def test_linear_decoding(self):
         p, n = 2, 8
         poly = [1, 0, 0, 0, 1, 1, 1, 0, 1]
         exp_table, log_table = tasks.generate_gfpn_tables(p, n, poly)
         
-        syn = tasks.calculate_syndromes([72, 101, 108, 108, 111, 23, 14, 255, 0], 4, log_table, exp_table, p, n)
-        err_loc = tasks.berlekamp_massey(syn, log_table, exp_table, p, n)
-        self.assertTrue(len(err_loc) > 1)
+        text = "Hello"
+        bytes_arr = [ord(c) for c in text]
+        
+        gen = tasks.get_generator_poly(4, log_table, exp_table, p, n)
+        rem = tasks.gfpn_poly_remainder(bytes_arr + [0]*4, gen, log_table, exp_table, p, n)
+        encoded = bytes_arr + rem
+        
+        corrupted = list(encoded)
+        corrupted[1] ^= 255 
+        
+        syn = tasks.calculate_syndromes(corrupted, 4, log_table, exp_table, p, n)
+        err_loc = tasks.pgz_error_locator(syn, log_table, exp_table, p, n)
+        
+        err_pos = tasks.chien_search(err_loc, len(corrupted), log_table, exp_table, p, n)
+        
+        mags = tasks.linear_error_magnitudes(syn, err_pos, len(corrupted), log_table, exp_table, p, n)
+        
+        for p_idx, mag in mags.items():
+            corrupted[p_idx] = tasks.gfpn_sub(corrupted[p_idx], mag, p, n)
+            
+        decoded_text = "".join(chr(c % 256) for c in corrupted[:len(text)])
+        self.assertEqual(decoded_text, text)
 
 
 import itertools
@@ -94,7 +113,7 @@ class LevelUI(BaseLevelUI):
         
         tk.Label(f, text="Input Text:", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
         self.ent_txt = tk.Entry(f, width=20)
-        self.ent_txt.insert(0, "BM-Test")
+        self.ent_txt.insert(0, "Chien")
         self.ent_txt.pack(side=tk.LEFT, padx=5)
         
         tk.Button(f, text="Encode & Initialize", command=self.init_encode).pack(side=tk.LEFT, padx=10)
@@ -145,7 +164,7 @@ class LevelUI(BaseLevelUI):
     def init_encode(self):
         try:
             text = self.ent_txt.get()
-            bytes_arr = tasks.encode_text(text)
+            bytes_arr = [ord(c) for c in text]
             
             p = int(self.ent_p.get())
             n = int(self.ent_n.get())
@@ -195,22 +214,30 @@ class LevelUI(BaseLevelUI):
             poly = self.primitives_list[idx]
             exp_table, log_table = tasks.generate_gfpn_tables(p, n, poly)
             
+            text = self.ent_txt.get()
+            
             syn = tasks.calculate_syndromes(self.corrupted_bytes, num_ec, log_table, exp_table, p, n)
-            err_loc = tasks.berlekamp_massey(syn, log_table, exp_table, p, n)
+            err_loc = tasks.pgz_error_locator(syn, log_table, exp_table, p, n)
+            err_pos = tasks.chien_search(err_loc, len(self.corrupted_bytes), log_table, exp_table, p, n)
+            mags = tasks.linear_error_magnitudes(syn, err_pos, len(self.corrupted_bytes), log_table, exp_table, p, n)
             
-            syn_poly_latex = poly_to_latex(list(reversed(syn)))
-            out = f"Berlekamp-Massey Algorithm\n\n"
-            out += f"Solving LFSR from Syndromes $S(x)$:\n"
-            out += f"{syn_poly_latex}\n\n"
-            out += f"Error Locator Polynomial $\\Lambda(x)$:\n"
-            out += f"{poly_to_latex(err_loc)}\n\n"
-            num_errors = len(err_loc) - 1
-            if num_errors == 0:
-                out += f"Degree is 0: No errors to locate."
-            else:
-                out += f"Degree is {num_errors}: {num_errors} errors mathematically detected!"
+            repaired = list(self.corrupted_bytes)
+            for p_idx, mag in mags.items():
+                repaired[p_idx] = tasks.gfpn_sub(repaired[p_idx], mag, p, n)
+                
+            corrupted_str = "".join(chr(c % 256) for c in self.corrupted_bytes[:len(text)])
+            recovered_str = "".join(chr(c % 256) for c in repaired[:len(text)])
             
-            self.ax.text(0.5, 0.5, out, fontsize=18, ha='center', va='center', color='white')
+            out = f"Berlekamp-Welch / PGZ Linear Decoding\n\n"
+            out += f"Original Input: '{text}'\n"
+            out += f"Corrupted Read: '{corrupted_str}'\n\n"
+            out += f"Syndromes: {syn}\n"
+            out += f"Error Locator Poly $\\Lambda(x)$ (via Gaussian Elim): {poly_to_str(err_loc)}\n\n"
+            out += f"Chien Search (Roots of $\\Lambda(x)$): {err_pos}\n"
+            out += f"Linear Error Magnitudes (via Gaussian Elim): {mags}\n\n"
+            out += f"Recovered String: '{recovered_str}'\n"
+            
+            self.ax.text(0.5, 0.5, out, fontsize=16, ha='center', va='center', color='white')
         except Exception as e:
             self.ax.text(0.5, 0.5, f"Error: {e}", color="red", fontsize=14, ha='center', va='center')
 

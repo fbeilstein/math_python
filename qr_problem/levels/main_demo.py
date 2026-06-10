@@ -46,6 +46,8 @@ class LevelUI(BaseLevelUI):
             self.ax.text(0.5, 0.5, f"Error: {e}\n{err}", color="red", fontsize=8, ha='center', va='center')
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == '--no-graphics':
+        sys.exit(0)
     root = tk.Tk()
     root.title("Main QR Demo")
     root.geometry("800x600")

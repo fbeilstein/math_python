@@ -12,7 +12,7 @@ from levels.base_level import BaseLevel, BaseLevelUI, poly_to_latex
 class Level5(BaseLevel):
     def test_rs_encoding(self):
         text = "Hello"
-        bytes_arr = tasks.encode_text(text)
+        bytes_arr = [ord(c) for c in text]
         self.assertEqual(bytes_arr, [72, 101, 108, 108, 111])
 
 class LevelUI(BaseLevelUI):
@@ -34,7 +34,7 @@ class LevelUI(BaseLevelUI):
         try:
             text = self.ent_txt.get()
             num_ec = int(self.ent_ec.get())
-            bytes_arr = tasks.encode_text(text)
+            bytes_arr = [ord(c) for c in text]
             
             p, n = 2, 8
             poly = [1, 0, 0, 0, 1, 1, 1, 0, 1]

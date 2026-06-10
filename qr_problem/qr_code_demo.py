@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import qr_code as qr
 import implementation_tasks as tasks
 
 # =====================================================================
@@ -118,7 +119,7 @@ def main():
     ec_bits = [int(b) for byte in interleaved_ec for b in f"{byte:08b}"]
     
     print(f"Routing {len(data_bits) + len(ec_bits)} bits through the matrix...")
-    matrix = tasks.build_qr_matrix(version, data_bits + ec_bits, get_format_string)
+    matrix = qr.build_qr_matrix(version, data_bits, ec_bits)
     
     # Rendering
     img = np.where(matrix == 1, 0, 255).astype(np.uint8)

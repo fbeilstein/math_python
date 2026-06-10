@@ -115,7 +115,13 @@ class LevelUI(BaseLevelUI):
         
         try:
             order = (p**n) - 1
-            factors = tasks.prime_factors(order)
+            factors = []
+            temp = order
+            for i in range(2, int(temp**0.5) + 1):
+                if temp % i == 0:
+                    factors.append(i)
+                    while temp % i == 0: temp //= i
+            if temp > 1: factors.append(temp)
             d_tex = poly_to_latex(poly).strip('$')
             
             text = f"Verification of Primitivity for ${d_tex}$ over GF(${p}^{{{n}}}$)\n\n"

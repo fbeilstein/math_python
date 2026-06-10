@@ -276,66 +276,43 @@ Assume we are working in $GF(2^3)$ and received $r(x) = x^2 + \alpha x + 1$. We 
 
 
 
-\section*{Problem 7: Decoding II -- Berlekamp-Massey}
+\section*{Problem 7: Decoding II -- Linear System (PGZ / Berlekamp-Welch)}
 
 \subsubsection*{Mathematical part}
-The Berlekamp-Massey algorithm finds the shortest Linear Feedback Shift Register (LFSR) that generates your syndrome sequence. It is an iterative state machine. You must maintain the following state variables:
-\begin{itemize}
-    \item $C(x)$: The current Error Locator Polynomial (starts as $1$).
-    \item $B(x)$: A copy of the last $C(x)$ before the assumed number of errors ($L$) was updated (starts as $1$).
-    \item $L$: The current assumed number of errors (starts at $0$).
-    \item $m$: The shift counter. The number of iterations since $L$ was last updated (starts at $1$).
-    \item $b$: The discrepancy from the last time $L$ was updated (starts at $1$).
-\end{itemize}
+While industry uses the Berlekamp-Massey algorithm (an iterative state machine) for hardware efficiency, we can use an elegant Linear Algebra approach (often referred to as Peterson-Gorenstein-Zierler or the Berlekamp-Welch Key Equation method) that is far more intuitive.
 
-\textbf{The Iterative Algorithm:} \\
-For each syndrome $S_i$ (where $i$ goes from $0$ to $2t-1$):
-\begin{enumerate}
-    \item Calculate the current discrepancy $d$:
-    $$d = S_i + \sum_{j=1}^{L} C_j S_{i-j}$$
-    \item \textbf{If $d == 0$:} The current $C(x)$ is still valid. Just increment the shift counter: $m = m + 1$.
-    \item \textbf{If $d \neq 0$:} We must adjust $C(x)$.
-    \begin{itemize}
-        \item Calculate the adjusted polynomial: $T(x) = C(x) - (d \cdot b^{-1}) \cdot x^m \cdot B(x)$
-        \item \textbf{If $2L \le i$:} We need to increase our assumed number of errors.
-            \begin{itemize}
-                \item $L = i + 1 - L$
-                \item $B(x) = C(x)$ \quad \textit{(Save the old C(x) before updating it)}
-                \item $b = d$
-                \item $m = 1$
-            \end{itemize}
-        \item \textbf{Else:} We don't update $L$, $B(x)$, or $b$. Just increment $m = m + 1$.
-        \item Finally, apply the adjustment: $C(x) = T(x)$.
-    \end{itemize}
-\end{enumerate}
+We define an \textbf{Error Locator Polynomial} $\Lambda(x)$ of degree $t$, where $\Lambda(x) = 1 + \Lambda_1 x + \Lambda_2 x^2 + \dots + \Lambda_t x^t$. Its roots will tell us where the errors are.
+We also define an \textbf{Error Evaluator Polynomial} $\Omega(x)$ of degree $< t$.
+The fundamental Key Equation of Reed-Solomon decoding relates these to the syndromes $S(x) = S_0 + S_1 x + \dots + S_{2t-1} x^{2t-1}$:
+$$\Lambda(x) S(x) \equiv \Omega(x) \pmod{x^{2t}}$$
 
-\textbf{Worked Example: Tracing the State Machine} \\
-Let $S = [\alpha, 1]$. Initial state: $C=[1], B=[1], L=0, m=1, b=1$.
-\begin{itemize}
-    \item \textbf{Loop $i=0$ ($S_0 = \alpha$):}
-    \begin{itemize}
-        \item $d = S_0 = \alpha$. ($d \neq 0$).
-        \item $T(x) = [1] - (\alpha \cdot 1^{-1}) \cdot x^1 \cdot [1] = 1 - \alpha x$.
-        \item $2(0) \le 0$ is True. Update: $L = 0 + 1 - 0 = 1$. $B(x) = 1$. $b = \alpha$. $m = 1$.
-        \item $C(x) = 1 - \alpha x$. (In $GF(2)$, this is $1 + \alpha x$).
-    \end{itemize}
-    \item \textbf{Loop $i=1$ ($S_1 = 1$):}
-    \begin{itemize}
-        \item $d = S_1 + C_1 S_0 = 1 + (\alpha)(\alpha) = 1 + \alpha^2$. ($d \neq 0$).
-        \item $T(x) = (1 + \alpha x) - ((1+\alpha^2) \cdot \alpha^{-1}) \cdot x^1 \cdot [1]$.
-        \item $2(1) \le 1$ is False. Update: $m = 2$.
-        \item $C(x) = T(x)$.
-    \end{itemize}
-\end{itemize}
+\textbf{Proof of the Linear System:}
+If we expand the product $\Lambda(x) S(x)$, the coefficient of $x^k$ for $k \ge t$ must be exactly $0$, because $\Omega(x)$ has degree at most $t-1$.
+Therefore, for $k = t, t+1, \dots, 2t-1$, we have:
+$$\sum_{j=0}^{t} \Lambda_j S_{k-j} = 0$$
+Since $\Lambda_0 = 1$, we can move it to the right side:
+$$\sum_{j=1}^{t} \Lambda_j S_{k-j} = -S_k$$
+This gives us exactly $t$ linear equations for $t$ unknowns ($\Lambda_1, \dots, \Lambda_t$)! We can solve this using standard Gaussian Elimination over $GF(p^n)$.
+
+\textbf{Worked Example: Setting up the Matrix} \\
+Let $S = [S_0, S_1, S_2, S_3]$ (meaning $2t = 4$, so $t = 2$ errors).
+The equations for $k = 2, 3$ are:
+\begin{align*}
+\Lambda_1 S_1 + \Lambda_2 S_0 &= -S_2 \\
+\Lambda_1 S_2 + \Lambda_2 S_1 &= -S_3
+\end{align*}
+In matrix form:
+$$ \begin{pmatrix} S_0 & S_1 \\ S_1 & S_2 \end{pmatrix} \begin{pmatrix} \Lambda_2 \\ \Lambda_1 \end{pmatrix} = \begin{pmatrix} -S_2 \\ -S_3 \end{pmatrix} $$
+\textit{(Note how the columns naturally align with the decreasing coefficients of $\Lambda$ if we write the matrix row as $[S_i, S_{i+1}, \dots]$).}
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|berlekamp_massey(syndromes, log_table, exp_table, p, n)|. Use your $GF(p^n)$ multiplication, division, and addition functions to execute the state machine described above. Pay special attention to list padding when subtracting the shifted $B(x)$ from $C(x)$.
+\textbf{Implement:} \lstinline|gfpn_solve_linear(A, b, log_table, exp_table, p, n)| to perform Gaussian Elimination over $GF(p^n)$. Then, implement \lstinline|pgz_error_locator(syndromes, log_table, exp_table, p, n)|.
 
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
 \begin{tabular}{r | c | c }
 \toprule
-\textbf{Math Symbol} & $[S_0, S_1, \dots, S_{2t-1}]$ & $C(x)$ \\ \midrule
+\textbf{Math Symbol} & $[S_0, S_1, \dots, S_{2t-1}]$ & $\Lambda(x)$ \\ \midrule
 \textbf{Argument} & \lstinline|syndromes| & \lstinline|return| \\ \midrule
 \textbf{Type} & \lstinline|list[int]| & \lstinline|list[int]| \\
 \bottomrule
@@ -344,23 +321,25 @@ Let $S = [\alpha, 1]$. Initial state: $C=[1], B=[1], L=0, m=1, b=1$.
 
 
 
-\section*{Problem 8: Decoding III -- Chien Search \& Forney}
+\section*{Problem 8: Decoding III -- Chien Search \& Linear Error Magnitudes}
 
 \subsubsection*{Mathematical part}
-Now that we have the Error Locator Polynomial $\Lambda(x)$, we must find its roots (Chien Search) and calculate how severely the bits were corrupted (Forney Algorithm).
+Now that we have the Error Locator Polynomial $\Lambda(x)$, we must find its roots to locate the errors (Chien Search) and calculate how severely the bits were corrupted (Linear Error Magnitudes).
 
 \textbf{Step 1: Chien Search} \\
 This is a brute-force evaluation. We plug every possible inverse field element $\alpha^{-i}$ into $\Lambda(x)$. If the result is $0$, there is an error at index $i$ in the message.
 \textit{Example:} If $\Lambda(x) = 1 + \alpha^3 x$, testing $x = \alpha^{-3}$ gives $1 + \alpha^3(\alpha^{-3}) = 1 + 1 = 0$. The root is $\alpha^{-3}$, meaning an error exists at position $3$.
 
-\textbf{Step 2: Forney Algorithm} \\
-To find the exact error magnitude, we need the Error Evaluator Polynomial:
-$$\Omega(x) \equiv S(x)\Lambda(x) \pmod{x^{2t}}$$
-The magnitude of the error at position $i$ (corresponding to root $X_i^{-1}$) is given by the formal derivative of the locator polynomial $\Lambda'(x)$:
-$$e_i = - \frac{X_i \Omega(X_i^{-1})}{\Lambda'(X_i^{-1})}$$
+\textbf{Step 2: Linear Error Magnitudes} \\
+Traditionally, the Forney algorithm is used here, involving the formal derivative of polynomials. However, we can use Linear Algebra again!
+Once we know the error positions $p_1, \dots, p_t$, we know their corresponding roots $X_i = \alpha^{msg\_len - 1 - p_i}$.
+The syndromes were defined as $S_k = \sum_{i=1}^t Y_i X_i^k$, where $Y_i$ is the unknown magnitude of the error at position $p_i$.
+This forms another linear system (a Vandermonde matrix):
+$$ \begin{pmatrix} X_1^0 & X_2^0 & \dots & X_t^0 \\ X_1^1 & X_2^1 & \dots & X_t^1 \\ \vdots & \vdots & \ddots & \vdots \\ X_1^{t-1} & X_2^{t-1} & \dots & X_t^{t-1} \end{pmatrix} \begin{pmatrix} Y_1 \\ Y_2 \\ \vdots \\ Y_t \end{pmatrix} = \begin{pmatrix} S_0 \\ S_1 \\ \vdots \\ S_{t-1} \end{pmatrix} $$
+We can construct this matrix and solve it using our trusty `gfpn_solve_linear` function to find the exact values of $Y_1, \dots, Y_t$!
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|chien_search| to find the integer indices of the errors, and \lstinline|forney_algorithm| to calculate a dictionary mapping those indices to their exact error magnitudes.
+\textbf{Implement:} \lstinline|chien_search| to find the integer indices of the errors, and \lstinline|linear_error_magnitudes| to construct the Vandermonde matrix and calculate a dictionary mapping those indices to their exact error magnitudes.
 
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
@@ -379,32 +358,14 @@ $$e_i = - \frac{X_i \Omega(X_i^{-1})}{\Lambda'(X_i^{-1})}$$
 \renewcommand{\arraystretch}{2.0}
 \begin{tabular}{r | c | c | c | c}
 \toprule
-\textbf{Math Symbol} & $[S_1, \dots]$ & $\Lambda(x)$ & Error Positions & Magnitudes \\ \midrule
-\textbf{Argument} & \lstinline|syndromes| & \lstinline|err_loc| & \lstinline|err_pos| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list[int]| & \lstinline|list[int]| & \lstinline|list[int]| & \lstinline|dict{pos: mag}| \\
+\textbf{Math Symbol} & $[S_0, \dots]$ & Error Positions & Magnitudes \\ \midrule
+\textbf{Argument} & \lstinline|syndromes| & \lstinline|err_pos| & \lstinline|return| \\ \midrule
+\textbf{Type} & \lstinline|list[int]| & \lstinline|list[int]| & \lstinline|dict{pos: mag}| \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 
-
-
-\section*{Problem 9: The QR Matrix}
-
-\subsubsection*{Mathematical part}
-The QR matrix is simply the final representation of a Reed--Solomon encoded bitstream. To ensure cameras can read it regardless of lighting, the ISO specification applies a data mask.
-
-\textbf{Worked Example: Masking} \\
-QR codes use XOR masks to break up large blocks of identical colors. If Mask 0 is defined as $(row + col) \bmod 2 == 0$, and you are about to place a `1` (black) bit at coordinate $(row=8, col=6)$:
-\begin{enumerate}
-    \item Calculate $(8 + 6) \bmod 2 = 14 \bmod 2 = 0$.
-    \item The mask condition is True.
-    \item XOR the bit: $1 \oplus 1 = 0$. The pixel becomes white.
-\end{enumerate}
-
-\subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|build_qr_matrix(version, all_bits, get_format_string)| to route your robustly encoded Reed-Solomon bitstream into the physical 2D matrix in a zigzag pattern, applying Mask 0. Use the provided \lstinline|draw_finder| logic to avoid corrupting the tracking squares.
-
-\textbf{Test:} Run \lstinline|qr_code_demo.py| to test your final matrix with a real smartphone camera!
+\textbf{Test:} Run \lstinline|qr_code_demo.py| to test your final mathematics by generating a real QR code matrix using your Reed-Solomon implementations!
 
 \end{document}

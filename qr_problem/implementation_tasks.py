@@ -4,27 +4,9 @@ import numpy as np
 # STUDENT IMPLEMENTATION
 # =====================================================================
 
-def encode_text(text):
-    """Convert human-readable string to an array of ASCII bytes."""
-    return [ord(c) for c in text]
-
-def decode_text(bytes_array):
-    """Convert an array of ASCII bytes back to a string."""
-    return "".join(chr(b) for b in bytes_array)
-
 # ---------------------------------------------------------
 # L1: GF(p) Polynomial Arithmetic
 # ---------------------------------------------------------
-
-def extended_gcd(a, b): #contains solution
-    if a == 0: return (b, 0, 1)
-    g, y, x = extended_gcd(b % a, a)
-    return (g, x - (b // a) * y, y)
-
-def mod_inverse(a, m): #contains solution
-    g, x, y = extended_gcd(a, m)
-    if g != 1: raise Exception('modular inverse does not exist')
-    return x % m
 
 def gfp_poly_divide(dividend, divisor, p): #contains solution
     """
@@ -44,7 +26,7 @@ def gfp_poly_divide(dividend, divisor, p): #contains solution
     quotient = [0] * (len(dividend) - len(divisor) + 1)
     remainder = list(dividend)
     
-    inv_lead = mod_inverse(divisor[0], p)
+    inv_lead = pow(divisor[0], p - 2, p)
     
     for i in range(len(quotient)):
         if remainder[i] != 0:
@@ -62,24 +44,6 @@ def gfp_poly_divide(dividend, divisor, p): #contains solution
 # L2: General Primitive Polynomial Search
 # ---------------------------------------------------------
 
-def prime_factors(n): #contains solution
-    i = 2
-    factors = []
-    while i * i <= n:
-        if n % i: i += 1
-        else:
-            n //= i
-            if i not in factors: factors.append(i)
-    if n > 1 and n not in factors: factors.append(n)
-    return factors
-
-def gfp_poly_multiply(a, b, p): #contains solution
-    res = [0] * (len(a) + len(b) - 1)
-    for i in range(len(a)):
-        for j in range(len(b)):
-            res[i+j] = (res[i+j] + a[i] * b[j]) % p
-    return res
-
 def is_primitive(poly, p, n): #contains solution
     """
     L2: Prove a polynomial of degree n is primitive over GF(p).
@@ -88,16 +52,30 @@ def is_primitive(poly, p, n): #contains solution
     if len(poly) - 1 != n: return False
     
     order = (p ** n) - 1
-    factors = prime_factors(order)
+    
+    factors = []
+    temp = order
+    for i in range(2, int(temp**0.5) + 1):
+        if temp % i == 0:
+            factors.append(i)
+            while temp % i == 0: temp //= i
+    if temp > 1: factors.append(temp)
+    
+    def gfp_poly_mul(a, b):
+        res = [0] * (len(a) + len(b) - 1)
+        for i in range(len(a)):
+            for j in range(len(b)):
+                res[i+j] = (res[i+j] + a[i] * b[j]) % p
+        return res
     
     def poly_pow_mod(base, exp, mod_poly):
         res = [1]
         base_pow = list(base)
         while exp > 0:
             if exp % 2 == 1:
-                res = gfp_poly_multiply(res, base_pow, p)
+                res = gfp_poly_mul(res, base_pow)
                 _, res = gfp_poly_divide(res, mod_poly, p)
-            base_pow = gfp_poly_multiply(base_pow, base_pow, p)
+            base_pow = gfp_poly_mul(base_pow, base_pow)
             _, base_pow = gfp_poly_divide(base_pow, mod_poly, p)
             exp //= 2
         return res
@@ -233,43 +211,76 @@ def calculate_syndromes(message, num_ec, log_table, exp_table, p, n): #contains 
     return syndromes
 
 # ---------------------------------------------------------
-# L7: RS Decoding II (Berlekamp-Massey)
+# L7: RS Decoding II (Linear Algebra / PGZ Algorithm)
 # ---------------------------------------------------------
 
-def berlekamp_massey(syndromes, log_table, exp_table, p, n): #contains solution
-    """L7: Find the Error Locator Polynomial."""
-    C = [1]
-    B = [1]
-    L = 0
-    m = 1
-    b = 1
-    for i in range(len(syndromes)):
-        d = syndromes[i]
-        for j in range(1, L + 1):
-            if j < len(C):
-                term = gfpn_mul(C[j], syndromes[i - j], log_table, exp_table, p, n)
-                d = gfpn_add(d, term, p, n)
-        if d == 0:
-            m += 1
-        else:
-            T = list(C)
-            factor = gfpn_div(d, b, log_table, exp_table, p, n)
-            scaled_B = [gfpn_mul(factor, coef, log_table, exp_table, p, n) for coef in B]
-            shift_B = [0]*m + scaled_B
-            max_len = max(len(C), len(shift_B))
-            pad_C = C + [0]*(max_len - len(C))
-            pad_B = shift_B + [0]*(max_len - len(shift_B))
-            C_new = [gfpn_sub(pad_C[k], pad_B[k], p, n) for k in range(max_len)]
-            while len(C_new) > 1 and C_new[-1] == 0: C_new.pop()
-            C = C_new
-            if 2 * L <= i:
-                L = i + 1 - L
-                B = T
-                b = d
-                m = 1
-            else:
-                m += 1
-    return list(reversed(C))
+def gfpn_solve_linear(A, b, log_table, exp_table, p, n): #contains solution
+    """L7.1: Solve a linear system Ax = b over GF(p^n) using Gaussian Elimination."""
+    A = [list(row) for row in A]
+    b = list(b)
+    size = len(b)
+    
+    # Forward elimination
+    for i in range(size):
+        # Find pivot
+        pivot_row = i
+        while pivot_row < size and A[pivot_row][i] == 0:
+            pivot_row += 1
+        if pivot_row == size:
+            raise Exception("Singular matrix")
+            
+        # Swap rows
+        A[i], A[pivot_row] = A[pivot_row], A[i]
+        b[i], b[pivot_row] = b[pivot_row], b[i]
+        
+        # Normalize pivot row
+        pivot_val = A[i][i]
+        for j in range(i, size):
+            A[i][j] = gfpn_div(A[i][j], pivot_val, log_table, exp_table, p, n)
+        b[i] = gfpn_div(b[i], pivot_val, log_table, exp_table, p, n)
+        
+        # Eliminate below
+        for k in range(i + 1, size):
+            factor = A[k][i]
+            if factor != 0:
+                for j in range(i, size):
+                    val = gfpn_mul(factor, A[i][j], log_table, exp_table, p, n)
+                    A[k][j] = gfpn_sub(A[k][j], val, p, n)
+                val = gfpn_mul(factor, b[i], log_table, exp_table, p, n)
+                b[k] = gfpn_sub(b[k], val, p, n)
+                
+    # Back substitution
+    x = [0] * size
+    for i in range(size - 1, -1, -1):
+        x[i] = b[i]
+        for j in range(i + 1, size):
+            val = gfpn_mul(A[i][j], x[j], log_table, exp_table, p, n)
+            x[i] = gfpn_sub(x[i], val, p, n)
+            
+    return x
+
+def pgz_error_locator(syndromes, log_table, exp_table, p, n): #contains solution
+    """L7.2: Find Error Locator Polynomial using Linear Algebra (PGZ algorithm)."""
+    max_t = len(syndromes) // 2
+    for t in range(max_t, 0, -1):
+        A = []
+        b = []
+        for i in range(t):
+            # Matrix A: row i is S[i], S[i+1], ..., S[i+t-1]
+            A.append(syndromes[i : i + t])
+            # Vector b: -S[i+t]
+            b.append(gfpn_sub(0, syndromes[i + t], p, n))
+            
+        try:
+            x = gfpn_solve_linear(A, b, log_table, exp_table, p, n)
+            # x is [L_t, L_{t-1}, ..., L_1]. The error locator is L_t x^t + ... + L_1 x + 1.
+            return list(x) + [1]
+        except Exception:
+            # Matrix was singular; there are fewer than t errors. Try t-1.
+            continue
+            
+    return [1] # No errors
+
 
 # ---------------------------------------------------------
 # L8: RS Decoding III (Chien & Forney)
@@ -288,111 +299,36 @@ def chien_search(err_loc, msg_len, log_table, exp_table, p, n): #contains soluti
             err_pos.append(msg_len - 1 - i)
     return err_pos
 
-def forney_algorithm(syndromes, err_loc, err_pos, msg_len, log_table, exp_table, p, n): #contains solution
-    """L8.2: Calculate the magnitude of each error."""
-    S_low = syndromes
-    Lambda_low = list(reversed(err_loc))
-    Omega_low = [0] * (len(S_low) + len(Lambda_low) - 1)
-    for i in range(len(S_low)):
-        for j in range(len(Lambda_low)):
-            val = gfpn_mul(S_low[i], Lambda_low[j], log_table, exp_table, p, n)
-            Omega_low[i+j] = gfpn_add(Omega_low[i+j], val, p, n)
-    Omega_low = Omega_low[:len(syndromes)]
-    Lambda_prime_low = [0] * max(1, len(Lambda_low) - 1)
-    for i in range(1, len(Lambda_low)):
-        c = 0
-        for _ in range(i % p):
-            c = gfpn_add(c, Lambda_low[i], p, n)
-        Lambda_prime_low[i-1] = c
-        
-    mags = {}
+def linear_error_magnitudes(syndromes, err_pos, msg_len, log_table, exp_table, p, n): #contains solution
+    """L8.2: Calculate the magnitude of each error using Linear Algebra."""
+    t = len(err_pos)
+    if t == 0: return {}
+    
+    X = []
     for pos in err_pos:
         j = msg_len - 1 - pos
-        X_k = exp_table[j % (p**n - 1)]
-        X_k_inv = exp_table[(p**n - 1 - j) % (p**n - 1)]
-        num = 0
-        for i in range(len(Omega_low) - 1, -1, -1):
-            num = gfpn_mul(num, X_k_inv, log_table, exp_table, p, n)
-            num = gfpn_add(num, Omega_low[i], p, n)
-        den = 0
-        for i in range(len(Lambda_prime_low) - 1, -1, -1):
-            den = gfpn_mul(den, X_k_inv, log_table, exp_table, p, n)
-            den = gfpn_add(den, Lambda_prime_low[i], p, n)
-        if den == 0: continue
-        neg_X_k = gfpn_sub(0, X_k, p, n)
-        mag = gfpn_mul(neg_X_k, num, log_table, exp_table, p, n)
-        mag = gfpn_div(mag, den, log_table, exp_table, p, n)
-        mags[pos] = mag
+        X.append(exp_table[j % (p**n - 1)])
+        
+    A = []
+    b = []
+    for k in range(t):
+        row = []
+        for i in range(t):
+            if X[i] == 0:
+                val = 1 if k == 0 else 0
+            else:
+                j = log_table[X[i]]
+                val = exp_table[(j * k) % (p**n - 1)]
+            row.append(val)
+        A.append(row)
+        b.append(syndromes[k])
+        
+    Y = gfpn_solve_linear(A, b, log_table, exp_table, p, n)
+    
+    mags = {}
+    for i, pos in enumerate(err_pos):
+        mags[pos] = Y[i]
+        
     return mags
 
-# ---------------------------------------------------------
-# L9: QR Code Specialization (The Matrix)
-# ---------------------------------------------------------
 
-def build_qr_matrix(version, all_bits, get_format_string): #contains solution
-    """L9: Route the data into the physical QR matrix. (ISO formatting pre-applied)."""
-    size = 4 * version + 17
-    matrix = np.full((size, size), -1, dtype=int)
-    
-    def draw_finder(r_start, c_start):
-        for r in range(7):
-            for c in range(7):
-                is_edge = (r == 0 or r == 6 or c == 0 or c == 6)
-                is_center = (2 <= r <= 4 and 2 <= c <= 4)
-                matrix[r_start + r][c_start + c] = 1 if (is_edge or is_center) else 0
-        for i in range(8):
-            if r_start + 7 < size and c_start + i < size: matrix[r_start + 7][c_start + i] = 0
-            if r_start + i < size and c_start + 7 < size: matrix[r_start + i][c_start + 7] = 0
-            if r_start - 1 >= 0 and c_start + i < size: matrix[r_start - 1][c_start + i] = 0
-            if r_start + i < size and c_start - 1 >= 0: matrix[r_start + i][c_start - 1] = 0
-
-    draw_finder(0, 0)
-    draw_finder(0, size - 7)
-    draw_finder(size - 7, 0)
-    
-    if version >= 2:
-        c = size - 7 
-        for r in range(-2, 3):
-            for col in range(-2, 3):
-                is_border = (r == -2 or r == 2 or col == -2 or col == 2)
-                is_abs_center = (r == 0 and col == 0)
-                matrix[c + r][c + col] = 1 if (is_border or is_abs_center) else 0
-    
-    for i in range(8, size - 8):
-        matrix[6][i] = matrix[i][6] = (i % 2) == 0
-        
-    matrix[4 * version + 9][8] = 1
-    
-    fmt = get_format_string()
-    tl_x = [0, 1, 2, 3, 4, 5, 7, 8, 8, 8, 8, 8, 8, 8, 8]
-    tl_y = [8, 8, 8, 8, 8, 8, 8, 8, 7, 5, 4, 3, 2, 1, 0]
-    for i in range(15): matrix[tl_y[i]][tl_x[i]] = int(fmt[i])
-    for i in range(7): matrix[size - 1 - i][8] = int(fmt[i])
-    for i in range(8): matrix[8][size - 8 + i] = int(fmt[7 + i])
-
-    bit_idx = 0
-    direction = -1 
-    col = size - 1
-    row = size - 1
-    
-    while col > 0:
-        if col == 6: col -= 1 
-        for _ in range(size):
-            for c_offset in range(2):
-                if matrix[row][col - c_offset] == -1: 
-                    if bit_idx < len(all_bits):
-                        pixel = all_bits[bit_idx]
-                        bit_idx += 1
-                    else:
-                        pixel = 0 
-                    
-                    if (row + (col - c_offset)) % 2 == 0:
-                        pixel ^= 1
-                        
-                    matrix[row][col - c_offset] = pixel
-            row += direction
-        row -= direction 
-        direction *= -1  
-        col -= 2         
-
-    return matrix
