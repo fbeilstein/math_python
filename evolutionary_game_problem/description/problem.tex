@@ -1,0 +1,103 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Game Theory Lab: Evolutionary Strategies \& Spatial Chaos \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Consider the files given.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core evolutionary algorithms, fitness evaluations, and your custom Strategy classes. \\
+\lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for exploring 1v1 matches, Axelrod tournaments, and Nowak \& May spatial grids. \\
+\lstinline|levels/level_*.py| & Graphical representation for each specific problem. \textbf{Can be run standalone.} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
+\lstinline|levels/base_level.py| & Base class for graphical debuggers, managing Tkinter layouts and Matplotlib interaction.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Run the file \lstinline|lab_dashboard.py|. You will see a window with a menu of evolutionary game theory levels.
+
+Now use any editor to open the file \lstinline|implementation_tasks.py|. You should see the API for functions you are expected to implement.
+
+\section*{Problem 1: Custom Strategies \& 1v1 Matches}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A standard $2 \times 2$ symmetric game, like the Prisoner's Dilemma, defined by a payout matrix with entries for Temptation ($T$), Reward ($R$), Punishment ($P$), and Sucker ($S$). \\
+\textbf{Derive:} The total expected payout for two strategies playing against each other for $N$ rounds. Strategies may use the entire history of the game to make decisions (e.g. \textit{Tit-for-Tat} or \textit{Grim Trigger}).
+
+\subsubsection*{Implementation part}
+\textbf{Implement:}
+\begin{itemize}
+    \item \textbf{Fundamental Strategies:} You are required to implement four foundational strategies: \textit{AlwaysCooperate}, \textit{AlwaysDefect}, \textit{TitForTat}, and \textit{GrimTrigger}. You will find the class stubs inside \lstinline|implementation_tasks.py|. You must complete their \lstinline|get_action(self, my_history, opponent_history)| methods to return \lstinline|'C'| or \lstinline|'D'|.
+    \item \textbf{Custom Strategies:} After implementing the basics, you are highly encouraged to design your own custom evolutionary strategies by inheriting from \lstinline|BaseStrategy|.
+    \item \textbf{Match Engine:} Implement \lstinline|play_match(strat_A, strat_B, matrix, rounds)|. This function should reset both strategies, iterate $N$ rounds, ask each strategy for its action, record the history, and tally the total payout from the \lstinline|matrix|.
+\end{itemize}
+
+\section*{Problem 2: Spatial Fitness Evaluation}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A 2D spatial lattice of agents. \\
+\textbf{Derive:} The fitness of an agent at a given position. In our model, an agent's fitness is the sum of its payouts playing a 1-shot game against all 8 of its neighbors (a Moore neighborhood).
+
+\subsubsection*{Implementation part}
+\textbf{Implement:}
+\begin{itemize}
+    \item \lstinline|compute_neighborhood_fitness(grid, r, c, matrix, rounds)|: Iterate through the $3 \times 3$ subgrid surrounding the target cell $(r, c)$. Make sure to apply toroidal (wrap-around) boundary conditions using modulo arithmetic. Exclude the agent itself from the calculation. Return the total accumulated payout.
+\end{itemize}
+
+\section*{Problem 3: Spatial Chaos (Imitate-the-Best)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A 2D spatial lattice of agents and their fitnesses. \\
+\textbf{Derive:} The state of the lattice in the next generation. We use a simple deterministic rule: every cell looks at its 8 neighbors and itself (9 cells total). In the next generation, it adopts the strategy of whoever had the highest fitness in that local neighborhood. \\
+
+\textit{Note on Parameters:} As demonstrated by Nowak and May (Nature, 1992), this simple deterministic rule produces chaotic, beautiful, fractal-like patterns only under very specific parameter regimes. If you set $R=1, P=0, S=0$, the dynamics are entirely controlled by the Temptation parameter $T$ (often denoted $b$):
+\begin{itemize}
+    \item \textbf{$1.8 < T < 2.0$ (The Chaotic Window):} Defectors are strong enough to invade, but Cooperators can band together to survive and reclaim territory. This generates infinite, shifting ''kaleidoscopes'' and ''gliders''. Try $T=1.9$ with a single Defector in the center!
+    \item \textbf{$T < 1.8$:} Defectors are too weak and will generally die out.
+    \item \textbf{$T > 2.0$:} Defectors are too strong and will overrun the entire grid, leaving a dead world of 0 payout.
+\end{itemize}
+
+\subsubsection*{Implementation part}
+\textbf{Implement:}
+\begin{itemize}
+    \item \lstinline|update_grid_deterministic(grid, matrix, rounds)|: Precompute the fitness of every agent on the grid using \lstinline|compute_neighborhood_fitness|. Then, for each cell, find the local maximum fitness among its 8 neighbors and itself. Return a \textbf{new} grid populated with newly instantiated strategy objects corresponding to the local winners. Do not modify the grid in-place, as this causes tearing artifacts!
+\end{itemize}
+
+\end{document}
