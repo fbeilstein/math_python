@@ -57,18 +57,18 @@ def droste_field(frame, rect):
     exact_rotation = -alpha * np.log(r_0)
     C = 1.0 + 1j * alpha
     
-    y_grid, x_grid = np.meshgrid(np.arange(H), np.arange(W), indexing='ij')
-    Z = (x_grid - cx) / S_true + 1j * (y_grid - cy) / S_true
-    Z = np.where(Z == 0, 1e-8 + 1j*1e-8, Z)
+    S_disp = (H / 2.0) / 1.2
+    Z_out = implementation_tasks.backward_step_1_normalize(H, W, S_disp)
+    Z = Z_out
     
     try:
-        Z_new = implementation_tasks.backward_step_2_log_polar(Z)
+        Z_new = implementation_tasks.backward_step_4_exponentiation(Z)
         Z = Z_new if Z_new is not None else Z
         
         Z_new = implementation_tasks.backward_step_3_conformal_twist(Z, C)
         Z = Z_new if Z_new is not None else Z
         
-        Z_new = implementation_tasks.backward_step_4_exponentiation(Z)
+        Z_new = implementation_tasks.backward_step_2_log_polar(Z)
         Z = Z_new if Z_new is not None else Z
         
         Z_new = implementation_tasks.backward_step_5_droste_fold(Z, m, exact_rotation, Bx, By)
