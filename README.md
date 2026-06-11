@@ -23,4 +23,7 @@
 ### Problem Set: Elementary Group Theory
 - [Download the Problem Set (Elementary Group Theory)](https://github.com/fbeilstein/math_python/releases/download/cayley_v0/cayley_problem.zip)
 
+### Problem Set: Game Theory
+- [Download the Problem Set - [Game Theory, Tournament)](https://github.com/fbeilstein/math_python/releases/download/tournament_v0/evolutionary_game_problem.zip)
+
 
