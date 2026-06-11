@@ -26,4 +26,7 @@
 ### Problem Set: Game Theory
 - [Download the Problem Set (Game Theory, Tournament)](https://github.com/fbeilstein/math_python/releases/download/tournament_v0/evolutionary_game_problem.zip)
 
+### Problem Set: Spectral Graph Theory
+- [Download the Problem Set (Spectral Graph Theory, Segmentation)](https://github.com/fbeilstein/math_python/releases/download/spectral_graph_v0/spectral_graph_problem.zip)
+
 
