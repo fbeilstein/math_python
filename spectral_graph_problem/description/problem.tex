@@ -1,0 +1,90 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Spectral Graph Theory Lab \\ \large The Graph Laplacian, Layouts, \& Image Segmentation}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Overview}
+This laboratory explores the profound connection between the algebraic properties of matrices and the geometric and topological properties of graphs. Specifically, we will study the \textbf{Graph Laplacian} and how its eigenvalues and eigenvectors can be used to find connected components, draw beautiful symmetric graph layouts, and even segment live camera feeds!
+
+\section*{Problem 1: Matrix Construction}
+
+\textbf{Given:} A graph $G = (V, E)$ with $N$ nodes and weighted edges.
+
+\textbf{Implement in \texttt{implementation\_tasks.py}:}
+\begin{itemize}
+    \item \lstinline|build_adjacency_matrix(num_nodes, edges)|: Construct the symmetric $N \times N$ matrix $A$ where $A_{ij}$ is the weight of the edge between node $i$ and $j$.
+    \item \lstinline|build_laplacian_matrix(A)|: Construct the unnormalized Laplacian $L = D - A$, where $D$ is the diagonal degree matrix ($D_{ii} = \sum_j A_{ij}$).
+\end{itemize}
+
+\textit{Use Level 1 in the GUI to interactively draw graphs and verify that your generated matrices match your visual drawings.}
+
+\section*{Problem 2: Null Space \& Connected Components}
+
+\textbf{Theory:} The Laplacian matrix $L$ is positive semi-definite. Its smallest eigenvalue is always $\lambda_1 = 0$, with the corresponding eigenvector being a constant vector $\mathbf{1}$. 
+The \textbf{multiplicity} of the eigenvalue $0$ (the number of times $0$ appears as an eigenvalue) is exactly equal to the number of connected components in the graph! Furthermore, the eigenvectors spanning this null space perfectly identify which nodes belong to which component.
+
+\textbf{Implement:}
+\begin{itemize}
+    \item \lstinline|compute_spectrum(L)|: Compute and return the sorted eigenvalues and eigenvectors of $L$.
+    \item \lstinline|find_zero_eigenvectors(L)|: Extract and return only the eigenvectors corresponding to $\lambda \approx 0$.
+\end{itemize}
+
+\textit{Use Level 2 to draw disconnected graphs and watch your algorithm automatically identify the components by reading the null space.}
+
+\section*{Problem 3: Spectral Graph Layout}
+
+\textbf{Theory:} How do you draw a graph nicely? If you treat edges as springs with stiffness equal to their weights, the layout that minimizes the total energy (while preventing all nodes from collapsing to the origin) is given by the eigenvectors of the Laplacian!
+The optimal 2D coordinates for the nodes are given by the \textbf{2nd and 3rd smallest eigenvectors} (assuming the graph is fully connected).
+
+\textbf{Implement:}
+\begin{itemize}
+    \item \lstinline|get_spectral_coordinates(L)|: Extract and return $v_2$ and $v_3$.
+\end{itemize}
+
+\textit{Use Level 3 to load a tangled graph. Click "Apply Spectral Layout" to watch the eigenvectors instantly untangle the graph into a symmetric layout. Adjust edge weights (spring constants) to see the geometry warp!}
+
+\section*{Problem 4: Image Segmentation (Normalized Cuts)}
+
+\textbf{Theory:} We can treat an image as a giant grid graph where pixels are nodes. If we assign edge weights based on color similarity and spatial proximity, the graph will have "weak links" at the boundaries of physical objects. 
+To segment the image into two pieces, we want to cut the weakest links. This problem (the Normalized Cut) is approximately solved by the \textbf{Fiedler Vector} (the 2nd eigenvector) of the \textbf{Normalized Laplacian}:
+$$ L_{norm} = I - D^{-1/2} A D^{-1/2} $$
+
+\textbf{Implement:}
+\begin{itemize}
+    \item \lstinline|build_normalized_laplacian(A)|: Construct $L_{norm}$. Be careful to handle isolated nodes (where degree is 0) by leaving their inverse-square-root degree as 0.
+    \item \lstinline|get_fiedler_vector(L)|: Return the 2nd eigenvector.
+\end{itemize}
+
+\textit{Use Level 4 to segment a live camera feed. Adjust the similarity constants and threshold the Fiedler vector to isolate the foreground!}
+
+\end{document}
