@@ -35,4 +35,6 @@
 ### Problem Set: RSA Encryption
 - [Download the Problem Set (RSA Encryption)](https://github.com/fbeilstein/math_python/releases/download/rsa_v0/rsa_problem.zip)
 
+### Problem Set: Explore Differential Equation Stability
+- [Download the Problem Set (Explore Differential Equation Stability)](https://github.com/fbeilstein/math_python/releases/download/stability_v0/stability_problem.zip)
 
