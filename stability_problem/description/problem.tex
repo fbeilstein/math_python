@@ -1,0 +1,157 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\geometry{a4paper, margin=1in}
+%\usepackage{tikz}
+%\usetikzlibrary{calc, positioning, arrows.meta}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Programming Lab: Non-Linear Dynamics}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+
+
+\section*{The Canonical Derivation}
+
+\subsection*{Mathematical part}
+
+Consider the general coupled linear system:
+\begin{equation}
+    \begin{cases}
+    \dot{x} = ax + by, \\
+    \dot{y} = cx + dy.
+    \end{cases}
+\end{equation}
+The system is governed by $4$ parameters $a,b,c,d$. However, it turns out that only two parameters are sufficient. First, we will show its equivalence to a second-order equation, then to a "companion system" that we will solve numerically. Your first goal is to transform this system into a single second-order differential equation for $x(t)$.
+\begin{itemize}
+    \item Step 1: Differentiate the first equation with respect to time to get an expression for $\ddot{x}$.
+    \item Step 2: Substitute the expression for $\dot{y}$ from the second equation into your result from Step 1.
+    \item Step 3: Eliminate the variable $y$ entirely by using the first equation to express $y$ in terms of $\dot{x}$ and $x$.
+    \item Step 4: Assume $\tau = a+d$ (Trace) and $\Delta = ad - bc$ (Determinant) and examine your equation. Show that these are the only parameters needed and rewrite the equation in terms of them.
+\end{itemize}
+
+
+Your next goal is to return to the system of two first-order equations. We need this to be able to call the \lstinline|solve_ivp| function from \lstinline|scipy.integrate| module. To do this define a new variable $z = \dot{x}$ and rewrite your second-order equation as a system
+\begin{equation*}
+\begin{aligned}
+ \dot{x} &= z,\\
+ \dot{z} &= \text{some function of } x \text{ but NOT } \dot{x}.
+\end{aligned}
+\end{equation*}
+
+\subsection*{Implementation part}
+
+Implement the function \lstinline|get_derivatives(x, z, tr, det)|. You should return a \lstinline|numpy.array| that contains two numbers: the values of $\dot{x}$ and $\dot{z}$.
+
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c | c | c}
+\toprule
+\textbf{Math Symbol} & $\tau$ & $\Delta$ & $x$ & $z$ & $(\dot{x},\dot{z})^T$ \\ \midrule
+\textbf{Argument} & \lstinline|tr| & \lstinline|det| & \lstinline|x| & \lstinline|z| & \lstinline|return| \\ \midrule
+\textbf{Type} & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|np.array| of $2$ elements \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+\section*{Eigenvalues}
+
+\subsection*{Mathematical part}
+
+Use the \textbf{second-order} equation you have derived in the previous section. Substitute $x(t)$ in the form $x(t) = e^{\lambda t}$ and observe how the differential equation transforms into an algebraic one. Solve the algebraic equation and write down $\lambda_1$ and $\lambda_2$. Note that the general solution is $x(t) = C_1 e^{\lambda_1 t} + C_2 e^{\lambda_2 t}$. Note that lambdas may have real and imaginary parts.
+
+\subsection*{Implementation part}
+
+Implement the function \lstinline|get_lambdas(tr, det)|. Based on your characteristic equation, calculate the real and imaginary parts of both eigenvalues $\lambda_1$ and $\lambda_2$. As a reminder: $\lambda_1 = \Re(\lambda_1) + \Im(\lambda_1) i$, where $i = \sqrt{-1}$, same for $\lambda_2$. To avoid dealing with Python's complex number types directly, your function must return a list of \textbf{exactly four} floating-point numbers in the following order: \lstinline|[Real1, Imag1, Real2, Imag2]|.
+
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c | c | c | c | c}
+\toprule
+\textbf{Math Symbol} & $\tau$ & $\Delta$ & $\Re(\lambda_1)$ & $\Im(\lambda_1)$ & $\Re(\lambda_2)$ & $\Im(\lambda_2)$ & $(\Re(\lambda_1), \Im(\lambda_1), \Re(\lambda_2), \Im(\lambda_2))$ \\ \midrule
+\textbf{Argument} & \lstinline|tr| & \lstinline|det| & \lstinline|Real1| & \lstinline|Imag1| & \lstinline|Real1| & \lstinline|Imag1| & \lstinline|return| \\ \midrule
+\textbf{Type} & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|list| of $4$ elements \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+
+\section*{Classes of stationary points}
+
+\subsection*{Observation part}
+
+Run the interactive Python script. The GUI displays the real and imaginary parts of $\lambda_1$ and $\lambda_2$ as you drag the red parameter point across the $\tau$-$\Delta$ plane.
+
+
+Your task is to "hunt" for the specific geometric behaviors listed in the table below. Once you find a coordinate that produces the described motion, look at the eigenvalues on your screen. Record the signs of their real parts (e.g., "both negative", "one positive/one negative") and state whether their imaginary parts are zero or non-zero.
+
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{p{7.5cm} | p{4cm} | p{3.5cm}}
+\toprule
+\textbf{Observed Behavior} & \textbf{Signs of $\text{Re}(\lambda_{1,2})$} & \textbf{$\text{Im}(\lambda_{1,2})$ state} \\
+\midrule
+Curves crash directly into the center without twisting (\textbf{Stable Node}) & & \\ \midrule
+Curves fly directly away from the center without twisting (\textbf{Unstable Node}) & & \\ \midrule
+Curves come in from one direction and get pushed out another (\textbf{Saddle}) & & \\ \midrule
+Curves spin inwards towards the center (\textbf{Stable Spiral}) & & \\ \midrule
+Curves spin outwards away from the center (\textbf{Unstable Spiral}) & & \\ \midrule
+Curves form perfect closed loops, spinning forever (\textbf{Center}) & & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+
+
+\subsection*{Implementation part}
+
+Having mapped the analytical eigenvalues to the geometric behaviors, formalize your observations by implementing the \lstinline|classify_system(tr, det)| function. Your function must return a single descriptive string for the classification (e.g., \lstinline|"Saddle"|, \lstinline|"Stable Spiral"|). Use your discriminant ($\Delta$) and trace ($\tau$) logic to route the parameters to the correct classification. The interactive GUI will automatically map your unique labels to a distinct colormap for visualization.
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c}
+\toprule
+\textbf{Math Symbol} & $\tau$ & $\Delta$ &  \\ \midrule
+\textbf{Argument} & \lstinline|tr| & \lstinline|det| & \lstinline|return| \\ \midrule
+\textbf{Type} & \lstinline|float| & \lstinline|float| & \lstinline|string|\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+\section*{\textcolor{red}{Submission}}
+
+Submit the file \texttt{implementation\_tasks.py}
+
+
+\end{document}
+
