@@ -1,0 +1,83 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{color}
+
+\geometry{a4paper, margin=1in}
+
+\title{Laboratory: The Mind Reader (Markov Chains \& Statistics)}
+\author{Escher Droste Laboratory Series}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Introduction}
+Humans are remarkably poor at generating true randomness. When asked to simulate a coin flip by typing `1' or `2', the human brain attempts to artificially ``balance'' the sequence, actively avoiding long streaks and falling into predictable, alternating patterns.
+
+In this laboratory, you will build a mathematical ``Mind Reader'' that exploits this human predictability. By implementing Markov Chains of increasing complexity, you will build an Artificial Intelligence capable of guessing a human's next keystroke with extraordinary accuracy. You will then use statistical hypothesis testing to prove the AI has ``learned'' something non-random, before finally destroying its predictive power using the pure mathematical randomness of $\pi$.
+
+All of your work will be done in \texttt{implementation\_tasks.py}.
+
+\section{Level 1: The Basic N-Gram (Fixed Memory)}
+A Markov Chain is a stochastic model describing a sequence of possible events where the probability of each event depends only on the state attained in the previous events.
+
+If we use a fixed memory length $N$ (an $N$-Gram model), the ``state'' is simply the exact sequence of the last $N$ keystrokes.
+Your first task is to implement the core mechanics of a fixed-order Markov Chain.
+
+\textbf{Tasks:}
+\begin{enumerate}
+    \item Implement \texttt{update\_markov\_counts(history, new\_char, order, counts\_dict)} to extract the preceding state string of length $N$ and update the frequency dictionary.
+    \item Implement \texttt{predict\_fixed\_order(history, order, counts\_dict)}. Look up the current state in the dictionary and return the character (`1' or `2') with the higher historical frequency. If the state is unseen or perfectly tied, guess randomly.
+\end{enumerate}
+
+\section{Level 2: Statistical Significance (Hypothesis Testing)}
+When you run your Level 1 predictor, you might see an accuracy of 60\%. But is that mathematically significant, or just a lucky streak?
+
+Under the Null Hypothesis (assuming the human is perfectly random), your sequence of correct guesses $k$ out of $n$ trials follows a Binomial distribution $B(n, 0.5)$. For large $n$, this approximates to a Gaussian (Normal) distribution:
+$$ \mathcal{N}\left(\mu = 0.5n, \sigma = 0.5\sqrt{n}\right) $$
+
+\textbf{Task:}
+\begin{enumerate}
+    \item Implement \texttt{calculate\_p\_value(correct\_guesses, total\_trials)}. Use \texttt{scipy.stats.norm.sf} (the survival function) to calculate the exact p-value---the probability that a perfectly random sequence would achieve your score or higher.
+\end{enumerate}
+\textit{Watch the red line on the UI. If your p-value drops below 0.05, you have statistically proven the human is predictable!}
+
+\section{Level 3: Variable-Order Fallback (Smoothing)}
+The weakness of a fixed $N$-Gram is data sparsity. If $N=5$, the model must see the exact same 5-character sequence before it can make an informed prediction. If it hasn't, it blindly guesses.
+
+We can fix this using a technique similar to \textit{Prediction by Partial Matching}. 
+
+\textbf{Task:}
+\begin{enumerate}
+    \item Implement \texttt{predict\_with\_fallback(history, max\_order, counts\_dict)}. Instead of rigidly looking at length $N$, loop backwards from $N$ down to 1. If a state has zero counts, or its predictions are perfectly tied, \textit{fall back} to the shorter history length.
+\end{enumerate}
+
+\section{Level 4: Mixture of Experts (Online Learning)}
+Even with fallback, how do we know the optimal maximum memory length? A short memory adapts quickly but misses complex patterns (High Bias). A long memory catches complex patterns but is easily fooled by noise (High Variance).
+
+Instead of choosing, we will run $M$ different Markov models in parallel (Orders 1 through $M$) as competing ``Experts''. We will track their recent accuracy using an Exponential Decay factor $\gamma$.
+$$ \text{Score}_{i} = \text{Score}_{i} \times \gamma + \begin{cases} 1 & \text{if Expert } i \text{ guessed correctly} \\ 0 & \text{otherwise} \end{cases} $$
+
+\textbf{Tasks:}
+\begin{enumerate}
+    \item Implement \texttt{update\_expert\_scores(scores, expert\_predictions, actual\_char, decay)}.
+    \item Implement \texttt{get\_best\_expert(scores)} using \texttt{numpy.argmax} to dynamically route the final prediction to the currently winning Expert.
+\end{enumerate}
+\textit{Watch the Expert Dashboard on the UI. The AI will dynamically shift gears, using Order 1 for simple sequences and Order 5 for tricky ones!}
+
+\section{Level 5: The $\pi$ Simulator (True Randomness)}
+We have proven humans are predictable. But how does our AI perform against strict mathematical pseudo-randomness?
+We will generate binary digits of $\pi$ using Machin's arctangent formula:
+$$ \frac{\pi}{4} = 4 \arctan\left(\frac{1}{5}\right) - \arctan\left(\frac{1}{239}\right) $$
+
+\textbf{Task:}
+\begin{enumerate}
+    \item Implement \texttt{generate\_pi\_binary\_digits(num\_bits)}. Use the provided \texttt{arccot} integer-arithmetic helper to calculate $num\_bits$ of $\pi$. Strip the integer part and return the binary string.
+\end{enumerate}
+\textit{Press the ``Test Against $\pi$'' button. Watch the Markov Chain's accuracy violently collapse to exactly 50\%, trapping the red line in the dead center of the Bell Curve!}
+
+\end{document}
