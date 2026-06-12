@@ -8,7 +8,6 @@ def fast_mod_exp(base, exp, mod): #contains solution
     """
     L3: Compute (base^exp) % mod efficiently using square-and-multiply.
     """
-    # BEGIN_SOLUTION
     res = 1
     base = base % mod
     while exp > 0:
@@ -17,7 +16,6 @@ def fast_mod_exp(base, exp, mod): #contains solution
         exp = exp >> 1
         base = (base * base) % mod
     return res
-    # END_SOLUTION
 
 def miller_rabin(n, k=40): #contains solution
     """
@@ -26,7 +24,6 @@ def miller_rabin(n, k=40): #contains solution
     - Write n-1 as 2^r * d.
     - Test k random bases 'a' in [2, n-2].
     """
-    # BEGIN_SOLUTION
     if n <= 1: return False
     if n <= 3: return True
     if n % 2 == 0: return False
@@ -50,44 +47,37 @@ def miller_rabin(n, k=40): #contains solution
             return False
             
     return True
-    # END_SOLUTION
 
 def generate_prime(bits): #contains solution
     """
     L1: Generate a random odd integer of 'bits' length that passes Miller-Rabin.
     """
-    # BEGIN_SOLUTION
     while True:
         p = random.getrandbits(bits)
         p |= (1 << (bits - 1)) | 1 # Ensure it's exactly 'bits' long and odd
         if miller_rabin(p):
             return p
-    # END_SOLUTION
 
 def extended_gcd(a, b): #contains solution
     """
     L2: Extended Euclidean Algorithm. Return (x, y, g) such that a*x + b*y = g = gcd(a, b).
     """
-    # BEGIN_SOLUTION
     if a == 0:
         return (0, 1, b)
     x1, y1, g = extended_gcd(b % a, a)
     x = y1 - (b // a) * x1
     y = x1
     return (x, y, g)
-    # END_SOLUTION
 
 def mod_inverse(e, phi): #contains solution
     """
     L2: Compute the modular inverse 'd' such that (e * d) % phi == 1.
     If e and phi are not coprime, raise ValueError.
     """
-    # BEGIN_SOLUTION
     x, y, g = extended_gcd(e, phi)
     if g != 1:
         raise ValueError("e and phi are not coprime!")
     return x % phi
-    # END_SOLUTION
 
 def generate_keypair(bits=512): #contains solution
     """
@@ -99,7 +89,6 @@ def generate_keypair(bits=512): #contains solution
     5. Compute d
     Returns ((e, n), (d, n))
     """
-    # BEGIN_SOLUTION
     p = generate_prime(bits // 2)
     q = generate_prime(bits // 2)
     n = p * q
@@ -116,36 +105,29 @@ def generate_keypair(bits=512): #contains solution
                 
     d = mod_inverse(e, phi)
     return ((e, n), (d, n))
-    # END_SOLUTION
 
 def encrypt(m_int, pub_key): #contains solution
     """
     L3: Textbook RSA Encryption -> c = m^e (mod n)
     """
-    # BEGIN_SOLUTION
     e, n = pub_key
     return fast_mod_exp(m_int, e, n)
-    # END_SOLUTION
 
 def decrypt(c_int, priv_key): #contains solution
     """
     L3: Textbook RSA Decryption -> m = c^d (mod n)
     """
-    # BEGIN_SOLUTION
     d, n = priv_key
     return fast_mod_exp(c_int, d, n)
-    # END_SOLUTION
 
 def factorize(n): #contains solution
     """
     L4: Factorize the modulus n into its prime factors (p, q) using trial division.
     """
-    # BEGIN_SOLUTION
     for i in range(2, int(n**0.5) + 1):
         if n % i == 0:
             return (i, n // i)
     return None
-    # END_SOLUTION
 
 def hack_rsa(pub_key, ciphertext): #contains solution
     """
@@ -155,10 +137,8 @@ def hack_rsa(pub_key, ciphertext): #contains solution
     3. Compute the private key d using mod_inverse(e, phi).
     4. Decrypt the ciphertext using d and n.
     """
-    # BEGIN_SOLUTION
     e, n = pub_key
     p, q = factorize(n)
     phi = (p - 1) * (q - 1)
     d = mod_inverse(e, phi)
     return decrypt(ciphertext, (d, n))
-    # END_SOLUTION

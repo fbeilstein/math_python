@@ -14,9 +14,7 @@ def z_div(a, b): #contains solution
     L1: Euclidean division. 
     Return (quotient, remainder) such that a = b * q + r.
     """
-    # BEGIN_SOLUTION
     return divmod(a, b)
-    # END_SOLUTION
 
 def z_gcdex(a, b): #contains solution
     """
@@ -24,7 +22,6 @@ def z_gcdex(a, b): #contains solution
     Given a, b, return (x, y, g) such that a*x + b*y = g = gcd(a, b).
     Note: gcd should always be >= 0.
     """
-    # BEGIN_SOLUTION
     if a == 0 and b == 0: return 0, 1, 0
     if a == 0: return 0, b // abs(b), abs(b)
     if b == 0: return a // abs(a), 0, abs(a)
@@ -38,7 +35,6 @@ def z_gcdex(a, b): #contains solution
         c, q = a % b, a // b
         a, b, r, s, x, y = b, c, x - q * r, y - q * s, r, s
     return x * x_sign, y * y_sign, a
-    # END_SOLUTION
 
 
 # ---------------------------------------------------------
@@ -54,12 +50,10 @@ def add_columns(m, i, j, a, b, c, d): #contains solution
       m[k][i] = a * old_e + b * m[k][j]
       m[k][j] = c * old_e + d * m[k][j]
     """
-    # BEGIN_SOLUTION
     for k in range(len(m)):
         e = m[k][i]
         m[k][i] = a * e + b * m[k][j]
         m[k][j] = c * e + d * m[k][j]
-    # END_SOLUTION
 
 def add_rows(m, i, j, a, b, c, d): #contains solution
     """
@@ -70,19 +64,16 @@ def add_rows(m, i, j, a, b, c, d): #contains solution
       m[i][k] = a * old_e + b * m[j][k]
       m[j][k] = c * old_e + d * m[j][k]
     """
-    # BEGIN_SOLUTION
     for k in range(len(m[0])):
         e = m[i][k]
         m[i][k] = a * e + b * m[j][k]
         m[j][k] = c * e + d * m[j][k]
-    # END_SOLUTION
 
 def clear_column(m): #contains solution
     """
     L2: Zero out the first column of `m` (except m[0][0]) using row operations.
     Returns the modified matrix `m`.
     """
-    # BEGIN_SOLUTION
     if m[0][0] == 0: return m
     pivot = m[0][0]
     for j in range(1, len(m)):
@@ -97,14 +88,12 @@ def clear_column(m): #contains solution
             add_rows(m, 0, j, a, b, d_0, -d_j)
             pivot = g
     return m
-    # END_SOLUTION
 
 def clear_row(m): #contains solution
     """
     L2: Zero out the first row of `m` (except m[0][0]) using column operations.
     Returns the modified matrix `m`.
     """
-    # BEGIN_SOLUTION
     if m[0][0] == 0: return m
     pivot = m[0][0]
     for j in range(1, len(m[0])):
@@ -119,7 +108,6 @@ def clear_row(m): #contains solution
             add_columns(m, 0, j, a, b, d_0, -d_j)
             pivot = g
     return m
-    # END_SOLUTION
 
 
 # ---------------------------------------------------------
@@ -132,7 +120,6 @@ def invariant_factors(m): #contains solution
     Returns a list of integers (the diagonal elements).
     Note: m is modified in place, but you may want to copy it first if necessary.
     """
-    # BEGIN_SOLUTION
     if len(m) == 0 or len(m[0]) == 0: return []
     
     # 1. Bring a non-zero element to m[0][0] if possible
@@ -184,7 +171,6 @@ def invariant_factors(m): #contains solution
         result = invs
         
     return result
-    # END_SOLUTION
 
 
 # ---------------------------------------------------------
@@ -196,7 +182,6 @@ def get_complex(tt): #contains solution
     L4: Given a list of triangles (each triangle is a string of 3 sorted characters, e.g., 'ABC'),
     return a sorted list of all unique simplices (vertices, edges, faces).
     """
-    # BEGIN_SOLUTION
     parts = set()
     for t in tt:
         # vertex
@@ -210,7 +195,6 @@ def get_complex(tt): #contains solution
         # face
         parts.add(t)
     return sorted(list(parts))
-    # END_SOLUTION
 
 def calculate_boundary(chain, all_simplices_lower_dim): #contains solution
     """
@@ -227,7 +211,6 @@ def calculate_boundary(chain, all_simplices_lower_dim): #contains solution
     - 'v': Rows labels (the lower dim simplices)
     - 'k': Columns labels (the k-simplices)
     """
-    # BEGIN_SOLUTION
     n = len(chain)
     matrix_dict = {}
     
@@ -272,7 +255,6 @@ def calculate_boundary(chain, all_simplices_lower_dim): #contains solution
         "v": v_labels, 
         "k": k_labels
     }
-    # END_SOLUTION
 
 
 # ---------------------------------------------------------
@@ -284,9 +266,7 @@ def compute_homology(num_c0, num_c1, num_c2, rank_d1, rank_d2, torsion_d2): #con
     L5: Compute the Betti numbers and torsion coefficients.
     Returns (h0, h1, h2, torsion_d2).
     """
-    # BEGIN_SOLUTION
     h0 = num_c0 - rank_d1
     h1 = num_c1 - rank_d1 - rank_d2
     h2 = num_c2 - rank_d2
     return h0, h1, h2, torsion_d2
-    # END_SOLUTION
