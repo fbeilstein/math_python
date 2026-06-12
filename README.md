@@ -29,7 +29,10 @@
 ### Problem Set: Spectral Graph Theory
 - [Download the Problem Set (Spectral Graph Theory, Segmentation)](https://github.com/fbeilstein/math_python/releases/download/spectral_graph_v0/spectral_graph_problem.zip)
 
-### Problem Set: Markov Chain Problem
+### Problem Set: Markov Chain
 - [Download the Problem Set (Markov Chain Problem)](https://github.com/fbeilstein/math_python/releases/download/markov_v0/markov_chain_problem.zip)
+
+### Problem Set: RSA Encryption
+- [Download the Problem Set (RSA Encryption)](https://github.com/fbeilstein/math_python/releases/download/rsa_v0/rsa_problem.zip)
 
 
