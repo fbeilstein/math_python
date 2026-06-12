@@ -39,7 +39,8 @@ class RSADebugger(tk.Tk):
         self.tasks = {
             1: ("Miller-Rabin Primes", "level_1_primes", "Level1Primes"),
             2: ("Key Generation", "level_2_keys", "Level2Keys"),
-            3: ("Fast Exponentiation", "level_3_encrypt", "Level3Encrypt")
+            3: ("Fast Exponentiation", "level_3_encrypt", "Level3Encrypt"),
+            4: ("Hacking RSA", "level_4_hack", "Level4Hack")
         }
         
         self.status_indicators = {}

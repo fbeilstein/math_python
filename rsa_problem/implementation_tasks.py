@@ -135,3 +135,30 @@ def decrypt(c_int, priv_key): #contains solution
     d, n = priv_key
     return fast_mod_exp(c_int, d, n)
     # END_SOLUTION
+
+def factorize(n): #contains solution
+    """
+    L4: Factorize the modulus n into its prime factors (p, q) using trial division.
+    """
+    # BEGIN_SOLUTION
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return (i, n // i)
+    return None
+    # END_SOLUTION
+
+def hack_rsa(pub_key, ciphertext): #contains solution
+    """
+    L4: Given ONLY the public key (e, n) and the ciphertext, decrypt the message!
+    1. Factorize n into p and q.
+    2. Compute phi = (p-1)*(q-1).
+    3. Compute the private key d using mod_inverse(e, phi).
+    4. Decrypt the ciphertext using d and n.
+    """
+    # BEGIN_SOLUTION
+    e, n = pub_key
+    p, q = factorize(n)
+    phi = (p - 1) * (q - 1)
+    d = mod_inverse(e, phi)
+    return decrypt(ciphertext, (d, n))
+    # END_SOLUTION
