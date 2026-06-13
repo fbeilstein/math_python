@@ -1,0 +1,139 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Physics Lab: Quantum Wave Packets \& Scattering \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Welcome to the Wave Packet simulator. Natural units ($\hbar=1, m=1$) are used everywhere to make our Fourier transforms clean.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core quantum mechanics solvers (wavefunctions, FFTs, and split-operator steps). \\
+\lstinline|levels/level_*.py| & Unittests and graphical representation for each specific problem. \textbf{Run standalone} for visual debugging. Append \lstinline|--no-graphics| to only run the unit tests. \\
+\lstinline|wave_explorer.py| & \textbf{The grand finale.} Run this when all levels are solved to launch the interactive tunneling demo. (Modes: \lstinline|barrier|, \lstinline|well|, \lstinline|finite_well|). \\ \midrule
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\vspace{0.5cm}
+Open \lstinline|implementation_tasks.py|. You will find empty un-implemented functions marked with \lstinline|pass|. Proceed sequentially through the problems below. Run the corresponding \lstinline|level_*.py| to debug your math. 
+
+
+\section*{Problem 1: The Initial Packet}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A position spatial grid $x$, a centroid $x_0$, a width $\sigma$, and a momentum $k_0$. \\
+\textbf{Derive:} The normalized Gaussian wave packet. The formula is:
+$$
+\psi(x) = \left(\frac{1}{2\pi \sigma^2}\right)^{1/4} \exp\left(-\frac{(x-x_0)^2}{4\sigma^2}\right) e^{i k_0 x}
+$$
+Ensure you perform a discrete normalization pass: divide by $\sqrt{\sum |\psi|^2 \Delta x}$ to combat grid effects.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|gaussian_packet(x, x0, sigma, k0)|. Must return a complex \lstinline|numpy.array|. \\
+\textbf{Test:} \lstinline|python levels/level_1_gaussian.py|. Does it look like a smooth bump? Does the integral display 1.000?
+
+
+\section*{Problem 2: Fourier Duality}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The spatial wavefunction $\psi(x)$ and grid spacing $\Delta x$. \\
+\textbf{Derive:} The momentum-space wavefunction $\phi(k)$ and the conjugate $k$-grid. Use Fast Fourier Transform (FFT). Remember that $\phi(k) \approx \text{FFT}(\psi) \cdot \Delta x$. You must normalize $\phi(k)$ discretely.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|momentum_wavefunction(psi, dx)|. \\
+\textbf{Test:} \lstinline|python levels/level_2_momentum_space.py|. Watch what happens when you adjust $\sigma$. As the packet gets narrow in space, does it broaden in momentum?
+
+
+\section*{Problem 3: Free Evolution}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The Hamiltonian for a free particle is purely kinetic: $\hat{H} = \hat{p}^2 / 2m$. In $k$-space, the propagator is an exact algebraic multiplication:
+$$ \phi(k, t+\Delta t) = \phi(k, t) \exp\left(-i \frac{k^2 \Delta t}{2}\right) $$
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|evolve_free_particle(psi, k, dt)|. Use FFT to go to $k$-space, apply the phase, and IFFT back. \\
+\textbf{Test:} \lstinline|python levels/level_3_free_particle.py|. The wave packet should move to the right and spread.
+
+
+\section*{Problem 4: Why Quantization?}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} An infinite square well from $x=0$ to $x=L$. \\
+\textbf{Derive:} The eigenfunction $\psi_n(x) = \sqrt{\frac{2}{L}}\sin\left(\frac{n\pi x}{L}\right)$.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|well_eigenfunction(x, n, L)|. It returns the purely real function array. \\
+\textbf{Test:} \lstinline|python levels/level_4_eigenfunctions.py|. \textbf{Critial Experiment:} move the $n$ slider to a non-integer. Notice how $\psi(L) \neq 0$. This explicitly shows why only integers are allowed — particles cannot exist inside infinite walls.
+
+
+\section*{Problem 5: Split-Operator}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The full potential $V(x)$. The Trotter formula splits the propagator:
+$$ e^{-i \hat{H} \Delta t } \approx e^{-i \hat{V} \Delta t/2 } \, e^{-i \hat{T} \Delta t } \, e^{-i \hat{V} \Delta t/2 } $$
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|split_operator_step(psi, k, V, dt)|. Apply the first half potential kick, hop to $k$-space, apply the full kinetic kick, hop to $x$-space, and apply the final half potential kick. (Use your code from Problem 3). \\
+\textbf{Test:} \lstinline|python levels/level_5_split_operator.py|. Watch the packet scatter against the barrier... and then wrap around the edges!
+
+
+\section*{Problems 6 \& 7: The Final Fixes}
+
+You have two distinct problems to solve numerical artifacts:
+\begin{itemize}
+    \item \textbf{Level 6 (Infinite Well via DST):} Use the Discrete Sine Transform (DST) to exactly solve the infinite well boundary condition. \textbf{Implement:} \lstinline|dst_energy_levels(N, L)|.
+    \item \textbf{Level 7 (Absorbing BCs):} In an open space, we want to kill scattering that reaches the grid boundary. \textbf{Implement:} \lstinline|absorbing_mask(N, gobble_frac)| using a $\sin^2$ taper envelope that goes to 0 near edges.
+\end{itemize}
+
+
+\section*{Problem 8: The Tunneling Explorer}
+
+Once everything is complete, run:
+\begin{lstlisting}[language=bash]
+python wave_explorer.py --mode barrier
+python wave_explorer.py --mode finite_well
+\end{lstlisting}
+
+\textbf{Task:} Experiment with the tunneling modes. Find the barrier height $V_0$ that cuts transmission down to exactly 1\%. Try the finite well and see resonant bound states reflecting back and forth.
+
+\section*{\textcolor{red}{Submission}}
+Submit \texttt{implementation\_tasks.py} and two screenshots proving your \lstinline|wave_explorer.py| achieved scattering and bound states.
+
+\end{document}
