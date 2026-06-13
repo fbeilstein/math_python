@@ -41,4 +41,9 @@
 ### Problem Set: Quantum Tunneling
 - [Download the Problem Set (Quantum Tunneling)](https://github.com/fbeilstein/math_python/releases/download/quanta_v0/quantum_problem.zip)
 
+### Problem Set: Optics
+- [Download the Problem Set (Optics)](https://github.com/fbeilstein/math_python/releases/download/optics_v0/optical_problem.zip)
+
+
+
 
