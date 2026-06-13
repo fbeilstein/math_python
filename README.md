@@ -38,3 +38,7 @@
 ### Problem Set: Explore Differential Equation Stability
 - [Download the Problem Set (Explore Differential Equation Stability)](https://github.com/fbeilstein/math_python/releases/download/stability_v0/stability_problem.zip)
 
+### Problem Set: Quantum Tunneling
+- [Download the Problem Set (Quantum Tunneling)](https://github.com/fbeilstein/math_python/releases/download/quanta_v0/quantum_problem.zip)
+
+
