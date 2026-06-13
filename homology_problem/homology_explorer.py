@@ -11,8 +11,9 @@ class Alphabet:
     def get_label(self):
         return self.labels.pop() if self.labels else '?'
     def return_label(self, label):
-        if label != '?':
+        if label != '?' and label not in self.labels:
             self.labels.append(label)
+            self.labels.sort(key=lambda x: self.alphabet.index(x))
 
 class Vertex:
     def __init__(self, x, y, label):
@@ -182,8 +183,9 @@ class HomologyDashboard(tk.Tk):
     def glue(self, x_idx, y_idx):
         vt_x = self.triangles[x_idx[0]].vertices[x_idx[1]]
         vt_y = self.triangles[y_idx[0]].vertices[y_idx[1]]
+        old_label = vt_y.label
         vt_y.label = vt_x.label
-        self.return_label_if_poss(vt_y.label)
+        self.return_label_if_poss(old_label)
 
     def change_all_v1_to_v2(self, v1, v2):
         if v1 is v2: return
