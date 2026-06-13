@@ -155,6 +155,8 @@ def run_explorer(mode='barrier'):
     N = 1024
     sim_time = 0.0
     norms = []
+    R_accumulated = 0.0
+    T_accumulated = 0.0
 
     if mode == 'well':
         L = 20.0
@@ -263,7 +265,7 @@ def run_explorer(mode='barrier'):
     ax2.set_xlim(0, 400)
     ax2.set_ylim(0.0, 1.1)
     ax2.set_xlabel('Calculation Frames', color='#cccccc')
-    ax2.set_ylabel('∫|ψ|² dx', color='#cccccc')
+    ax2.set_ylabel('On-screen ∫|ψ|² dx', color='#cccccc')
     ax2.axhline(1.0, color='gray', ls='--', alpha=0.5)
     ax2.grid(True, color='#2a2a4a', ls='--', alpha=0.6)
 
@@ -295,9 +297,11 @@ def run_explorer(mode='barrier'):
         btn_pot = widgets.Button(ax_btn_pot, 'Edit Potential', color='#ffb74d', hovercolor='#ffa726')
 
     def reset_sim(event=None):
-        nonlocal psi, sim_time, norms, V, V_display_span, V_display_fill, barrier_width
+        nonlocal psi, sim_time, norms, V, V_display_span, V_display_fill, barrier_width, R_accumulated, T_accumulated
         sim_time = 0.0
         norms.clear()
+        R_accumulated = 0.0
+        T_accumulated = 0.0
         try:
             psi = tasks.gaussian_packet(x, x0, slider_sigma.val, slider_k0.val)
             if psi is None: raise NotImplementedError
@@ -338,7 +342,7 @@ def run_explorer(mode='barrier'):
         btn_pot.on_clicked(open_editor_wrapper)
 
     def animate(frame):
-        nonlocal psi, sim_time
+        nonlocal psi, sim_time, R_accumulated, T_accumulated
         try:
             for _ in range(n_steps_per_frame):
                 if mode == 'well':
@@ -349,8 +353,16 @@ def run_explorer(mode='barrier'):
                 else:
                     new_psi = tasks.split_operator_step(psi, k_grid, V, dt)
                     if new_psi is None: raise NotImplementedError
-                    psi = new_psi
-                    psi *= mask
+                    
+                    prob_before = np.abs(new_psi)**2
+                    psi = new_psi * mask
+                    prob_after = np.abs(psi)**2
+                    
+                    loss = prob_before - prob_after
+                    gw = int(0.1 * N)
+                    R_accumulated += np.sum(loss[:gw]) * dx
+                    T_accumulated += np.sum(loss[-gw:]) * dx
+                    
             sim_time += n_steps_per_frame * dt
         except Exception:
             return prob_line, real_line, norm_line, time_text
@@ -359,15 +371,18 @@ def run_explorer(mode='barrier'):
         prob_line.set_ydata(prob)
         real_line.set_ydata(psi.real)
         norm = np.sum(prob) * dx
-        norms.append(norm)
+        
+        norm_total = norm
+            
+        norms.append(norm_total)
 
         if len(norms) > ax2.get_xlim()[1]:
             ax2.set_xlim(0, len(norms) + 100)
         norm_line.set_data(range(len(norms)), norms)
 
         if mode in ('barrier', 'finite_well', 'scattering'):
-            R = np.sum(prob[x < -barrier_width/2]) * dx
-            T = np.sum(prob[x > barrier_width/2]) * dx
+            R = np.sum(prob[x < -barrier_width/2]) * dx + R_accumulated
+            T = np.sum(prob[x > barrier_width/2]) * dx + T_accumulated
             
             # bonus overlay analytical T if barrier
             bonus_T = ""
