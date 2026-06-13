@@ -15,6 +15,8 @@ import matplotlib.animation as animation
 import matplotlib.widgets as widgets
 import argparse
 import sys
+from scipy.interpolate import interp1d
+from scipy.ndimage import gaussian_filter1d
 
 # Import student implementations (should fail if not done)
 try:
@@ -25,6 +27,129 @@ except ImportError as e:
     print(f"Error loading implementation_tasks.py: {e}")
     sys.exit(1)
 
+
+def open_potential_editor(x_grid, current_V, callback, title="Potential Editor"):
+    """Opens a dedicated Matplotlib window for potential editing."""
+    fig, ax = plt.subplots(figsize=(12, 6))
+    fig.patch.set_facecolor('#1a1a2e')
+    ax.set_facecolor('#16213e')
+    ax.tick_params(colors='#cccccc')
+    for sp in ax.spines.values(): sp.set_edgecolor('#444466')
+    ax.set_xlim(x_grid[0], x_grid[-1])
+    ax.set_ylim(-50, 50)
+    ax.set_xlabel("Position x", color='white')
+    ax.set_ylabel("V(x)", color='white')
+    ax.set_title(title, color='white')
+    ax.axhline(y=0, color='#444466', linewidth=1)
+    ax.grid(True, color='#2a2a4a', ls='--', alpha=0.6)
+    
+    plt.subplots_adjust(bottom=0.2)
+    
+    line, = ax.plot(x_grid, current_V, color='#ff7043', lw=3)
+    
+    V_state = current_V.copy()
+    is_drawing = [False]
+    drawing_mode = [False]
+    drawn_x, drawn_y = [], []
+    
+    def update_plot():
+        line.set_data(x_grid, V_state)
+        fig.canvas.draw_idle()
+
+    # Toolbar buttons
+    ax_clear = plt.axes([0.05, 0.05, 0.1, 0.075])
+    ax_barrier = plt.axes([0.16, 0.05, 0.12, 0.075])
+    ax_f_well = plt.axes([0.29, 0.05, 0.12, 0.075])
+    ax_i_well = plt.axes([0.42, 0.05, 0.12, 0.075])
+    ax_draw = plt.axes([0.55, 0.05, 0.2, 0.075])
+    ax_apply = plt.axes([0.76, 0.05, 0.15, 0.075])
+
+    btn_clear = widgets.Button(ax_clear, 'Clear')
+    btn_barrier = widgets.Button(ax_barrier, 'Barrier')
+    btn_f_well = widgets.Button(ax_f_well, 'Finite Well')
+    btn_i_well = widgets.Button(ax_i_well, 'Infinite Well')
+    btn_draw = widgets.Button(ax_draw, 'Toggle Draw: OFF')
+    btn_apply = widgets.Button(ax_apply, 'Apply & Close', color='#81c784', hovercolor='#66bb6a')
+
+    def on_clear(val):
+        V_state[:] = 0.0
+        update_plot()
+    
+    def on_barrier(val):
+        V_raw = np.where(np.abs(x_grid) < 0.5, 25.0, 0.0)
+        V_state[:] = gaussian_filter1d(V_raw, sigma=1)
+        update_plot()
+
+    def on_f_well(val):
+        V_raw = np.where(np.abs(x_grid) < 1.0, -25.0, 0.0)
+        V_state[:] = gaussian_filter1d(V_raw, sigma=1)
+        update_plot()
+        
+    def on_i_well(val):
+        V_raw = np.where(np.abs(x_grid) < 15.0, 0.0, 250.0)
+        V_state[:] = gaussian_filter1d(V_raw, sigma=2)
+        update_plot()
+
+    def on_draw(val):
+        drawing_mode[0] = not drawing_mode[0]
+        btn_draw.label.set_text(f"Toggle Draw: {'ON' if drawing_mode[0] else 'OFF'}")
+        btn_draw.color = '#ffb74d' if drawing_mode[0] else '0.85'
+        fig.canvas.draw_idle()
+
+    def on_apply(val):
+        callback(V_state.copy())
+        plt.close(fig)
+
+    btn_clear.on_clicked(on_clear)
+    btn_barrier.on_clicked(on_barrier)
+    btn_f_well.on_clicked(on_f_well)
+    btn_i_well.on_clicked(on_i_well)
+    btn_draw.on_clicked(on_draw)
+    btn_apply.on_clicked(on_apply)
+
+    # Keep a reference to buttons to prevent garbage collection
+    fig._buttons = [btn_clear, btn_barrier, btn_f_well, btn_i_well, btn_draw, btn_apply]
+
+    # Drawing event logic
+    def on_press(event):
+        if not drawing_mode[0] or event.inaxes != ax: return
+        is_drawing[0] = True
+        drawn_x.clear()
+        drawn_y.clear()
+
+    def on_motion(event):
+        if not is_drawing[0] or event.inaxes != ax: return
+        drawn_x.append(event.xdata)
+        drawn_y.append(event.ydata)
+        line.set_data(drawn_x, drawn_y)
+        fig.canvas.draw_idle()
+
+    def on_release(event):
+        if not is_drawing[0]: return
+        is_drawing[0] = False
+        if len(drawn_x) < 2:
+            update_plot()
+            return
+            
+        order = np.argsort(drawn_x)
+        dx_arr = np.array(drawn_x)[order]
+        dy_arr = np.array(drawn_y)[order]
+        _, unique_idx = np.unique(dx_arr, return_index=True)
+        dx_arr = dx_arr[unique_idx]
+        dy_arr = dy_arr[unique_idx]
+        
+        interp_func = interp1d(dx_arr, dy_arr, kind='linear', bounds_error=False, fill_value=np.nan)
+        V_new = interp_func(x_grid)
+        mask = ~np.isnan(V_new)
+        V_state[mask] = V_new[mask]
+        V_state[:] = gaussian_filter1d(V_state, sigma=1)
+        update_plot()
+
+    fig.canvas.mpl_connect('button_press_event', on_press)
+    fig.canvas.mpl_connect('motion_notify_event', on_motion)
+    fig.canvas.mpl_connect('button_release_event', on_release)
+
+    plt.show(block=False)
 
 def run_explorer(mode='barrier'):
     N = 1024
@@ -64,7 +189,13 @@ def run_explorer(mode='barrier'):
         x0, sigma_init, k0_init = -L * 0.25, 1.0, 10.0
         dt = 0.002
         n_steps_per_frame = 15
-        title = "Quantum Tunneling & Scattering"
+        
+        if mode == 'scattering':
+            title = "Quantum Scattering (Custom Potential)"
+            V_custom = np.where(np.abs(x) < 0.5, 25.0, 0.0)
+        else:
+            title = "Quantum Tunneling & Scattering"
+            V_custom = None
 
     # Build the initial wave packet
     try:
@@ -102,12 +233,18 @@ def run_explorer(mode='barrier'):
                          bbox=dict(boxstyle='round', facecolor='#1a1a2e', alpha=0.8))
 
     V_display_span = None
+    V_display_fill = None
     if mode in ('barrier', 'finite_well', 'scattering'):
-        V = np.where(np.abs(x) < barrier_width / 2, v0_init, 0.0)
-        
-        # Potential visual overlay directly on main plot
-        v_color = '#ff7043' if v0_init > 0 else '#4fc3f7'
-        V_display_span = ax1.axvspan(-barrier_width/2, barrier_width/2, color=v_color, alpha=0.2)
+        if mode == 'scattering':
+            V = V_custom
+            # Scale V for display: map max(V) to y_max
+            v_max = max(np.max(V), 1e-5)
+            V_display = V * (y_max * 0.8) / v_max
+            V_display_fill = ax1.fill_between(x, 0, V_display, color='#ff7043', alpha=0.3)
+        else:
+            V = np.where(np.abs(x) < barrier_width / 2, v0_init, 0.0)
+            v_color = '#ff7043' if v0_init > 0 else '#4fc3f7'
+            V_display_span = ax1.axvspan(-barrier_width/2, barrier_width/2, color=v_color, alpha=0.2)
         
         # Absorbing zones visual cue on main plot
         gw = int(0.1 * N)
@@ -133,11 +270,11 @@ def run_explorer(mode='barrier'):
     # UI Controls
     ax_k0    = plt.axes([0.15, 0.16, 0.65, 0.03])
     ax_sigma = plt.axes([0.15, 0.11, 0.65, 0.03])
-    slider_k0    = widgets.Slider(ax_k0, 'Momentum $k_0$', 2.0, 30.0, valinit=k0_init, color='#ffb74d')
-    slider_sigma = widgets.Slider(ax_sigma, 'Width $\\sigma$', 0.5, 3.0, valinit=sigma_init, color='#81c784')
+    slider_k0    = widgets.Slider(ax_k0, 'Momentum $k_0$', 2.0, 20.0, valinit=k0_init, color='#ffb74d')
+    slider_sigma = widgets.Slider(ax_sigma, 'Width $\\sigma$', 0.5, 2.0, valinit=sigma_init, color='#81c784')
 
     slider_v0 = slider_a = None
-    if mode in ('barrier', 'finite_well', 'scattering'):
+    if mode in ('barrier', 'finite_well'):
         ax_v0 = plt.axes([0.15, 0.06, 0.65, 0.03])
         ax_a  = plt.axes([0.15, 0.01, 0.65, 0.03])
         slider_v0 = widgets.Slider(ax_v0, 'Potential $V_0$', -50.0, 50.0, valinit=v0_init, color='#ff7043')
@@ -151,9 +288,14 @@ def run_explorer(mode='barrier'):
 
     ax_btn = plt.axes([0.85, 0.06, 0.1, 0.05])
     btn_fire = widgets.Button(ax_btn, 'Fire Packet', color='#81c784', hovercolor='#66bb6a')
+    
+    btn_pot = None
+    if mode == 'scattering':
+        ax_btn_pot = plt.axes([0.72, 0.06, 0.12, 0.05])
+        btn_pot = widgets.Button(ax_btn_pot, 'Edit Potential', color='#ffb74d', hovercolor='#ffa726')
 
     def reset_sim(event=None):
-        nonlocal psi, sim_time, norms, V, V_display_span, barrier_width
+        nonlocal psi, sim_time, norms, V, V_display_span, V_display_fill, barrier_width
         sim_time = 0.0
         norms.clear()
         try:
@@ -162,13 +304,20 @@ def run_explorer(mode='barrier'):
         except Exception:
             psi = np.zeros(len(x), dtype=complex)
         
-        if mode in ('barrier', 'finite_well', 'scattering') and slider_v0 and slider_a:
+        if mode in ('barrier', 'finite_well') and slider_v0 and slider_a:
             barrier_width = slider_a.val
             V = np.where(np.abs(x) < barrier_width / 2, slider_v0.val, 0.0)
             if V_display_span:
                 V_display_span.remove()
             v_color = '#ff7043' if slider_v0.val > 0 else '#4fc3f7'
             V_display_span = ax1.axvspan(-barrier_width / 2, barrier_width / 2, color=v_color, alpha=0.2)
+        elif mode == 'scattering':
+            V = V_custom.copy()
+            if V_display_fill:
+                V_display_fill.remove()
+            v_max = max(np.max(np.abs(V)), 1e-5)
+            V_display = V * (y_max * 0.8) / v_max
+            V_display_fill = ax1.fill_between(x, 0, V_display, color='#ff7043', alpha=0.3)
 
     slider_k0.on_changed(reset_sim)
     slider_sigma.on_changed(reset_sim)
@@ -176,6 +325,17 @@ def run_explorer(mode='barrier'):
     if slider_v0:
         slider_v0.on_changed(reset_sim)
         slider_a.on_changed(reset_sim)
+        
+    if btn_pot:
+        def apply_new_potential(new_V):
+            nonlocal V_custom
+            V_custom = new_V
+            reset_sim()
+
+        def open_editor_wrapper(event):
+            open_potential_editor(x, V_custom, apply_new_potential)
+
+        btn_pot.on_clicked(open_editor_wrapper)
 
     def animate(frame):
         nonlocal psi, sim_time
