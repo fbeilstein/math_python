@@ -10,7 +10,7 @@ m    = 1.0
 #  STUDENT IMPLEMENTATION (ASSIGNMENTS 1-3)
 # =============================================================================
 
-def gaussian_packet(x, x0, sigma, k0):
+def gaussian_packet(x, x0, sigma, k0): #contains solution
     """
     Create a normalized Gaussian wave packet.
 
@@ -26,11 +26,7 @@ def gaussian_packet(x, x0, sigma, k0):
     return psi
 
 
-#def gaussian_packet(x, x0, sigma, k0):
-#    pass
-
-
-def momentum_wavefunction(psi, dx):
+def momentum_wavefunction(psi, dx): #contains solution
     """
     Compute the momentum-space wavefunction phi(k) using FFT.
     Normalized so that integral |phi|^2 dk = 1.
@@ -43,11 +39,7 @@ def momentum_wavefunction(psi, dx):
     return k, phi
 
 
-#def momentum_wavefunction(psi, dx):
-#    pass
-
-
-def evolve_free_particle(psi, k, dt):
+def evolve_free_particle(psi, k, dt): #contains solution
     """
     Evolve psi by dt under the free-particle propagator.
     H = hbar^2 k^2 / (2m)  =>  phase = exp(-i hbar k^2 dt / 2m)
@@ -57,15 +49,11 @@ def evolve_free_particle(psi, k, dt):
     return ifft(psi_k)
 
 
-#def evolve_free_particle(psi, k, dt):
-#    pass
-
-
 # =============================================================================
 #  STUDENT IMPLEMENTATION (ASSIGNMENT 4)
 # =============================================================================
 
-def well_eigenfunction(x, n, L):
+def well_eigenfunction(x, n, L): #contains solution
     """
     n-th eigenfunction of the infinite square well [0, L].
     Normalized for integer n; boundary conditions break for non-integer n.
@@ -74,15 +62,11 @@ def well_eigenfunction(x, n, L):
     return psi
 
 
-#def well_eigenfunction(x, n, L):
-#    pass
-
-
 # =============================================================================
 #  STUDENT IMPLEMENTATION (ASSIGNMENTS 5-6)
 # =============================================================================
 
-def split_operator_step(psi, k, V, dt):
+def split_operator_step(psi, k, V, dt): #contains solution
     """
     One Trotter split-operator step.
     exp(-iHdt) ≈ exp(-iV dt/2) · exp(-iT dt) · exp(-iV dt/2)
@@ -95,11 +79,7 @@ def split_operator_step(psi, k, V, dt):
     return psi
 
 
-#def split_operator_step(psi, k, V, dt):
-#    pass
-
-
-def dst_energy_levels(N, L):
+def dst_energy_levels(N, L): #contains solution
     """
     DST energy eigenvalues for infinite well: E_n = (n*pi/L)^2 / 2.
     """
@@ -108,15 +88,11 @@ def dst_energy_levels(N, L):
     return E_k
 
 
-#def dst_energy_levels(N, L):
-#    pass
-
-
 # =============================================================================
 #  STUDENT IMPLEMENTATION (ASSIGNMENT 7)
 # =============================================================================
 
-def absorbing_mask(N, gobble_frac=0.1):
+def absorbing_mask(N, gobble_frac=0.1): #contains solution
     """
     Sine-squared absorbing boundary mask (the Gobbler).
     """
@@ -128,15 +104,11 @@ def absorbing_mask(N, gobble_frac=0.1):
     return mask
 
 
-#def absorbing_mask(N, gobble_frac=0.1):
-#    pass
-
-
 # =============================================================================
 #  BONUS (EXTRA CREDIT)
 # =============================================================================
 
-def compute_tunneling_probability(V0, k0, a):
+def compute_tunneling_probability(V0, k0, a): #contains solution
     """
     Analytic tunneling transmission for a rectangular barrier.
     """
@@ -146,7 +118,3 @@ def compute_tunneling_probability(V0, k0, a):
     kappa = np.sqrt(2 * m * (V0 - E)) / hbar
     T = 1.0 / (1.0 + (V0**2 * np.sinh(kappa * a)**2) / (4 * E * (V0 - E)))
     return T
-
-
-#def compute_tunneling_probability(V0, k0, a):
-#    pass
