@@ -1,0 +1,183 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{tikz}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Topology Lab: The Light Cycle Problem \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Consider the files given.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core topology rules for how the light cycles wrap around the boundaries of different mathematical spaces. \\
+\lstinline|main.py| & \textcolor{red}{This file you run.} The main game engine. You can select different topologies from the menu and observe if your logic works correctly. \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
+\lstinline|player.py| & Manages the state, traces, and drawing of the individual players. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Run the file \lstinline|main.py|. You should see a menu to select a topology.
+Now use any editor to open the file \lstinline|implementation_tasks.py|. You should see the API for functions you should implement.
+
+\begin{lstlisting}
+def wrap_cylinder(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom):
+    pass
+\end{lstlisting}
+
+\noindent \textbf{Important Rule on Velocities:} When crossing a boundary with a ``twist'', the orientation of the surface locally flips. Even though our light cycles only move horizontally or vertically, a robust mathematical wrapper must flip the corresponding velocity vector (\lstinline|dx| or \lstinline|dy|) if the axis it traverses has been inverted!
+
+\newpage
+
+\section*{Problem 1: The Cylinder (1D Wrap)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A 2D grid of size $W \times H$. The left edge is glued to the right edge with the same orientation.
+\begin{center}
+\begin{tikzpicture}
+    \draw (0,0) rectangle (3,3);
+    \draw[->, thick, red] (0,0) -- (0,1.6);
+    \draw[->, thick, red] (3,0) -- (3,1.6);
+    \node at (-0.3, 1.5) {$a$};
+    \node at (3.3, 1.5) {$a$};
+\end{tikzpicture}
+\end{center}
+\textbf{Derive:} The new coordinate $(x', y')$ and velocity $(dx', dy')$ when crossing a boundary.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|wrap_cylinder|. If the player crosses the top or bottom boundary, they die (return \lstinline|None|). If they cross the left or right boundary, they wrap around to the opposite side.
+\textbf{Test:} Select ``Cylinder'' in the menu and try to drive off the left and right edges.
+
+
+\section*{Problem 2: The Möbius Strip (1D Twist)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The left edge is glued to the right edge, but with a half-twist (reverse orientation).
+\begin{center}
+\begin{tikzpicture}
+    \draw (0,0) rectangle (3,3);
+    \draw[->, thick, red] (0,0) -- (0,1.6);
+    \draw[<-, thick, red] (3,0) -- (3,1.6);
+    \node at (-0.3, 1.5) {$a$};
+    \node at (3.3, 1.5) {$a$};
+\end{tikzpicture}
+\end{center}
+\textbf{Derive:} When exiting the left edge at $y$, you enter the right edge at $H - 1 - y$. Since the $y$-axis is inverted locally across this glued edge, what happens to $dy$?
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|wrap_mobius|. The top/bottom edges are solid (return \lstinline|None|). When wrapping horizontally, ensure $y$ is inverted, and the $y$-velocity $dy$ is inverted.
+\textbf{Test:} Drive off the left edge while near the top. You should emerge on the right edge, but near the bottom!
+
+
+\section*{Problem 3: The Torus (2D Wrap)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} Both pairs of opposite edges are glued with the same orientation.
+\begin{center}
+\begin{tikzpicture}
+    \draw (0,0) rectangle (3,3);
+    \draw[->, thick, red] (0,0) -- (0,1.6);
+    \draw[->, thick, red] (3,0) -- (3,1.6);
+    \draw[->, thick, blue] (0,3) -- (1.6,3);
+    \draw[->, thick, blue] (0,0) -- (1.6,0);
+    \draw[->, thick, blue] (1.6,3) -- (1.7,3);
+    \draw[->, thick, blue] (1.6,0) -- (1.7,0);
+    \node at (-0.3, 1.5) {$a$};
+    \node at (3.3, 1.5) {$a$};
+    \node at (1.5, 3.3) {$b$};
+    \node at (1.5, -0.3) {$b$};
+\end{tikzpicture}
+\end{center}
+\textbf{Derive:} The boundaries wrap normally.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|wrap_torus|. No boundaries are solid. Ensure wrapping on all 4 edges.
+
+
+\section*{Problem 4: The Klein Bottle (2D, 1 Twist)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} Left and right edges are glued normally. Top and bottom edges are glued with a twist.
+\begin{center}
+\begin{tikzpicture}
+    \draw (0,0) rectangle (3,3);
+    \draw[->, thick, red] (0,0) -- (0,1.6);
+    \draw[->, thick, red] (3,0) -- (3,1.6);
+    \draw[<-, thick, blue] (0,3) -- (1.6,3);
+    \draw[->, thick, blue] (0,0) -- (1.6,0);
+    \draw[<-, thick, blue] (1.6,3) -- (1.7,3);
+    \draw[->, thick, blue] (1.6,0) -- (1.7,0);
+    \node at (-0.3, 1.5) {$a$};
+    \node at (3.3, 1.5) {$a$};
+    \node at (1.5, 3.3) {$b$};
+    \node at (1.5, -0.3) {$b$};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|wrap_klein_bottle|. When wrapping vertically, $x$ is inverted ($x' = W - 1 - x$), and the $x$-velocity $dx$ is inverted.
+
+
+\section*{Problem 5: The Real Projective Plane (2D, 2 Twists)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A topological space modeled by a square where opposite edges are glued with a twist on \textit{both} axes.
+\begin{center}
+\begin{tikzpicture}
+    \draw (0,0) rectangle (3,3);
+    \draw[->, thick, red] (0,0) -- (0,1.6);
+    \draw[<-, thick, red] (3,0) -- (3,1.6);
+    \draw[<-, thick, blue] (0,3) -- (1.6,3);
+    \draw[->, thick, blue] (0,0) -- (1.6,0);
+    \draw[<-, thick, blue] (1.6,3) -- (1.7,3);
+    \draw[->, thick, blue] (1.6,0) -- (1.7,0);
+    \node at (-0.3, 1.5) {$a$};
+    \node at (3.3, 1.5) {$a$};
+    \node at (1.5, 3.3) {$b$};
+    \node at (1.5, -0.3) {$b$};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|wrap_projective_plane|. 
+
+\section*{\textcolor{red}{Submission}}
+
+Submit the file \texttt{implementation\_tasks.py} with all topologies fully implemented.
+
+\end{document}

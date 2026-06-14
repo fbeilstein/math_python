@@ -1,6 +1,6 @@
 import pygame
 import sys
-from topologies import apply_topology
+from implementation_tasks import apply_topology
 from player import Player
 
 # Constants
