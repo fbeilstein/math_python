@@ -47,6 +47,9 @@
 ### Problem Set: Topological Game
 - [Download the Problem Set (Topological Game)](https://github.com/fbeilstein/math_python/releases/download/topo_v0/tron_problem.zip)
 
+### Problem Set: Duplicate Documents Search
+- [Download the Problem Set (Duplicate Documents Search)](https://github.com/fbeilstein/math_python/releases/download/lsh_v0/lsh_problem.zip)
+
 
 
 
