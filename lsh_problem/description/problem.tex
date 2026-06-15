@@ -1,0 +1,154 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Probabilistic Algorithms: Document Similarity \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Consider the files given.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core algorithms for shingling, MinHashing, Bloom Filters, and LSH. \\
+\lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} A testing sandbox with an interactive left sidebar to test each level of your code. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Run the file \lstinline|lab_dashboard.py|. This will open the dashboard where you can sequentially test your implementations.
+
+
+\section*{Problem 1: K-Shingling (Level 1)}
+
+\subsubsection*{Mathematical part}
+To compare two text documents, we first need to convert them into a mathematical set. We do this using \textbf{k-shingling}. A $k$-shingle is any continuous sequence of $k$ words (or characters) appearing in the document.
+
+\textbf{Example:} Let the text be ``The quick brown fox jumps''. For $k=3$, the shingles are:
+$$ \{ (\text{the, quick, brown}), (\text{quick, brown, fox}), (\text{brown, fox, jumps}) \} $$
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|get_shingles(text, k=3)|.
+1. Convert the text to lowercase.
+2. Extract all words (e.g., using a regular expression like \lstinline|r'\b\w+\b'|).
+3. Create tuples of length $k$ by sliding a window over the words.
+4. Return a Python \lstinline|set| containing these tuples.
+
+
+\section*{Problem 2: Jaccard Similarity (Level 2)}
+
+\subsubsection*{Mathematical part}
+The \textbf{Jaccard Similarity} between two sets $A$ and $B$ is the size of their intersection divided by the size of their union:
+$$ J(A, B) = \frac{|A \cap B|}{|A \cup B|} $$
+This gives a value between 0 (completely disjoint) and 1 (identical sets).
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|jaccard_similarity(set1, set2)|. Return the float value. Be sure to handle the edge case where both sets are empty (return 0.0).
+
+
+\section*{Problem 3: MinHash Signatures (Level 3)}
+
+\subsubsection*{Mathematical part}
+If we have 10,000 documents, doing a pairwise Jaccard comparison takes $O(N^2)$ operations on massive sets, which is too slow.
+Instead, we use \textbf{MinHash}. If we pass every element of a set through a random hash function $h(x)$, the probability that the minimum hash value of set $A$ equals the minimum hash value of set $B$ is exactly their Jaccard similarity!
+$$ P(\min(h(A)) == \min(h(B))) = J(A, B) $$
+By doing this for 100 different hash functions, we can compress a massive document into a tiny ``signature'' of 100 integers.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|create_signature(shingles, hash_funcs)|.
+For every hash function in the provided list \lstinline|hash_funcs|, find the minimum hash value it produces across all shingles in the document. Return a tuple of these minimums.
+
+
+\section*{Problem 4: MinHash Similarity (Level 4)}
+
+\subsubsection*{Mathematical part}
+Once we have our MinHash signatures, how do we compare them? Because $P(\min(h(A)) == \min(h(B))) = J(A, B)$, we can estimate the Jaccard similarity by simply counting the fraction of hash values that are identical between the two signatures!
+$$ \hat{J}(A, B) \approx \frac{\text{Number of identical hash values}}{\text{Total number of hash functions}} $$
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|minhash_similarity(sig1, sig2)|.
+Compare two tuples of integers element-by-element. Count how many indices have the exact same value. Use the \textbf{MinHash Sandbox} tab in the dashboard to test your estimation against exact Jaccard similarity.
+
+
+\section*{Problem 5: Modified Bloom Filter (LSH Bucketing) (Level 5)}
+
+\subsubsection*{Mathematical part}
+Even with tiny signatures, comparing 10,000 signatures pairwise is still $O(N^2)$. We only want to compare documents that are likely to be similar. 
+
+We can think of this process as a \textbf{Modified Bloom Filter} with memory. We divide the signature into $b$ \textbf{bands} of $r$ \textbf{rows}. We hash each band into a bucket. Unlike a standard Bloom Filter that only stores a `1` bit to indicate existence, our bucket "remembers" exactly which documents were hashed into it by storing a list of Document IDs. If two documents hash to the same bucket in any band, they collide!
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|lsh_bloom_filter(signatures, num_bands)|.
+Iterate over the signatures. For each signature, split it into \lstinline|num_bands|. Use the band index and the tuple of values in that band to create a unique bucket identifier. Return a dictionary mapping these bucket IDs to lists of document indices. Use the \textbf{Bloom Simulator} tab to watch the buckets fill up!
+
+
+\section*{Problem 6: Standard Bloom Filter Probability (Level 6)}
+
+\subsubsection*{Mathematical part}
+Let's step back and look at a Standard Bloom Filter. If we have a filter of $m$ bits, and we insert $n$ elements using $k$ independent hash functions, what is the probability of a False Positive (a collision)?
+The probability that a specific bit is still 0 after all insertions is approximately $e^{-kn/m}$. Therefore, the probability that all $k$ bits for a new element are already 1 (a False Positive) is:
+$$ P(\text{False Positive}) \approx \left(1 - e^{-k\frac{n}{m}}\right)^k $$
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|bloom_false_positive(n, m, k)|.
+Return the probability. You can visualize this curve in the \textbf{Bloom Probabilities} tab.
+
+
+\section*{Problem 7: Document Matcher (Level 7)}
+
+Now that all your core hashing and filtering logic is complete, open the \textbf{Document Matcher} tab. This runs the full pipeline on 300 real NASA press releases. If your functions work, you will instantly see all the duplicated or highly similar articles!
+
+
+\section*{Problem 8: LSH Probability Mechanics (Level 8)}
+
+\subsubsection*{Mathematical part}
+To understand why the Modified Bloom Filter (LSH) is so effective, we must look at the probability curve of a collision. 
+If we divide the signature into $b$ bands of $r$ rows, the probability that two documents with Jaccard similarity $s$ will collide in at least one band is:
+$$ P(\text{collision}) = 1 - (1 - s^r)^b $$
+This creates a sharp ``S-curve''. The threshold similarity (where the probability of collision crosses 50\%) can be approximated as:
+$$ t \approx \left(1 - \left(\frac{1}{2}\right)^{\frac{1}{b}}\right)^{\frac{1}{r}} $$
+
+\subsubsection*{Implementation part}
+\textbf{Implement:}
+1. \lstinline|collision_probability(jaccard, bands, rows)|: Return $1 - (1 - j^r)^b$.
+2. \lstinline|calculate_threshold(bands, rows)|: Return $(1 - (1/2)^{1/b})^{1/r}$.
+Check the \textbf{LSH Probabilities} tab to see your S-Curve perfectly separate False Positives from False Negatives!
+
+\section*{\textcolor{red}{Submission}}
+
+Submit the file \texttt{implementation\_tasks.py} once the dashboard successfully catches the duplicated press releases!
+
+\end{document}
