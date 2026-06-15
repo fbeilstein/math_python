@@ -1,0 +1,148 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Cryptography Lab: RSA Implementation \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Consider the files given.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core cryptography algorithms: prime generation, modular arithmetic, and RSA encryption/decryption intended for student implementation. \\
+\lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging individual cryptography levels through an interactive UI. \\
+\lstinline|secure_chat.py| & \textbf{May be run standalone after you solve all levels.} The final simulation; a secure chat application that uses the cryptographic math you implement to exchange encrypted messages over a simulated network. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Run the file \lstinline|lab_dashboard.py|. This will open an interface allowing you to test each of the functions you write in \lstinline|implementation_tasks.py|. 
+
+
+\section*{Problem 1: Primality Testing (Level 1)}
+
+\subsubsection*{Mathematical part}
+To generate RSA keys, we need to find very large prime numbers (e.g., 512 bits). Standard division checks are too slow. Instead, we use probabilistic tests like the \textbf{Miller-Rabin} primality test.
+
+Fermat's Little Theorem states that if $n$ is prime, then $a^{n-1} \equiv 1 \pmod{n}$ for any $1 < a < n-1$. 
+However, $x^2 \equiv 1 \pmod n$ has only two solutions modulo a prime: $x \equiv 1$ and $x \equiv -1 \equiv n-1$. 
+
+By factoring $n-1$ into $2^r \cdot d$ (where $d$ is odd), we can repeatedly square a base $a^d$. 
+If $n$ is prime, the sequence $a^d, a^{2d}, a^{4d}, \dots, a^{2^r d}$ must eventually reach $1$, and the value just before it reaches $1$ must be $n-1$.
+
+\textbf{Example:} Let $n = 13$. $n-1 = 12 = 2^2 \cdot 3$. So $r = 2, d = 3$. 
+Choose $a = 5$. Compute $x = 5^3 \equiv 125 \equiv 8 \pmod{13}$.
+Square it: $x^2 = 8^2 = 64 \equiv 12 \pmod{13}$. Wait, $12 \equiv -1 \pmod{13}$. 
+Because we hit $-1$, 13 passes the test for base 5 and is "probably prime"!
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} 
+1. \lstinline|miller_rabin(n, k=40)|: Run the Miller-Rabin test $k$ times with random bases $a \in [2, n-2]$. If it fails for any $a$, return \lstinline|False|. If it passes all $k$ rounds, return \lstinline|True|.
+2. \lstinline|generate_prime(bits)|: Randomly generate an odd number of exactly \lstinline|bits| length, and test it using \lstinline|miller_rabin|. Repeat until a prime is found.
+
+
+\section*{Problem 2: Modular Arithmetic (Level 2)}
+
+\subsubsection*{Mathematical part}
+In RSA, we need to find the private key $d$, which is the modular inverse of the public exponent $e$ modulo $\phi(n)$. That is, $e \cdot d \equiv 1 \pmod{\phi(n)}$.
+We find this using the \textbf{Extended Euclidean Algorithm}, which finds integers $x$ and $y$ such that $ax + by = \gcd(a, b)$. If $\gcd(a, b) = 1$, then $ax \equiv 1 \pmod b$, meaning $x$ is the modular inverse!
+
+\textbf{Example:} Find the inverse of $3 \pmod{11}$. 
+The Extended Euclidean Algorithm gives $3(4) + 11(-1) = 1$. 
+Therefore, $3 \cdot 4 \equiv 1 \pmod{11}$, and the inverse is $4$.
+
+RSA Key Generation follows these steps:
+1. Generate two primes $p$ and $q$.
+2. Compute $n = p \cdot q$ and $\phi(n) = (p-1)(q-1)$.
+3. Choose $e$ such that $\gcd(e, \phi(n)) = 1$. (Often $e=65537$).
+4. Compute $d$ as the modular inverse of $e$ modulo $\phi(n)$.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:}
+1. \lstinline|extended_gcd(a, b)|: Return a tuple \lstinline|(x, y, gcd)|.
+2. \lstinline|mod_inverse(e, phi)|: Return $d$ using the extended GCD.
+3. \lstinline|generate_keypair(bits)|: Follow the RSA key generation steps and return \lstinline|((e, n), (d, n))|.
+
+
+\section*{Problem 3: Encryption \& Decryption (Level 3)}
+
+\subsubsection*{Mathematical part}
+RSA encryption and decryption require raising huge numbers to huge powers modulo $n$.
+$c = m^e \pmod n$ and $m = c^d \pmod n$.
+We compute this efficiently using the \textbf{Square-and-Multiply} algorithm (Fast Modular Exponentiation). We look at the binary representation of the exponent.
+
+\textbf{Example:} Compute $5^{13} \pmod{17}$. 
+The exponent $13$ in binary is $1101_2 = 8 + 4 + 1$.
+Thus, $5^{13} = 5^8 \cdot 5^4 \cdot 5^1$. 
+By repeatedly squaring the base ($5 \to 25 \to 625 \to \dots$) modulo $17$, and multiplying it into our result whenever the current bit of the exponent is $1$, we save thousands of multiplications!
+
+\subsubsection*{Implementation part}
+\textbf{Implement:}
+1. \lstinline|fast_mod_exp(base, exp, mod)|: Implement the square-and-multiply algorithm.
+2. \lstinline|encrypt(m_int, pub_key)|: Return $m^e \pmod n$.
+3. \lstinline|decrypt(c_int, priv_key)|: Return $c^d \pmod n$.
+
+
+\section*{Problem 4: Cryptanalysis (Level 4)}
+
+\subsubsection*{Mathematical part}
+The security of RSA relies solely on the fact that integer factorization is hard. If an attacker can factor $n$ back into $p$ and $q$, they can compute $\phi(n) = (p-1)(q-1)$ and derive the private key $d$ using the public key $e$.
+
+\textbf{Example:} Given public key $n=323, e=5$.
+Trial division yields $323 = 17 \cdot 19$. So $p=17, q=19$.
+$\phi(n) = (16)(18) = 288$.
+The inverse of $5 \pmod{288}$ is $173$. The private key $d$ is $173$!
+
+\subsubsection*{Implementation part}
+\textbf{Implement:}
+1. \lstinline|factorize(n)|: Return the tuple \lstinline|(p, q)| using basic trial division up to $\sqrt{n}$.
+2. \lstinline|hack_rsa(pub_key, ciphertext)|: Given only $(e, n)$ and a ciphertext, factor $n$, derive $d$, and return the decrypted message!
+
+
+\section*{Problem 5: Secure Chat Simulation}
+
+Once you have verified your mathematical implementation using the Lab Dashboard, you are ready to use the full application. Run \lstinline|secure_chat.py|. 
+
+You will see two windows simulating two users (Alice and Bob) communicating over an insecure network. 
+When a user sends a message, their client will automatically request the recipient's public key, encrypt the message using the \lstinline|encrypt| function you wrote, and send the ciphered integer over the wire. The recipient will use their private key and your \lstinline|decrypt| function to read it!
+
+
+\section*{\textcolor{red}{Submission}}
+
+Submit the file \texttt{implementation\_tasks.py} once all tests in the dashboard pass.
+
+\end{document}
