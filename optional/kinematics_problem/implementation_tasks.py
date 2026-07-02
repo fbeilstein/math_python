@@ -214,3 +214,12 @@ def sclerp(dq1, dq2, t): #contains solution
     
     res = dq1 * (1.0 - t) + dq2 * t
     return res.normalized()
+
+# =============================================================================
+#  SELF-TESTING (add your own tests below)
+# =============================================================================
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here, then run:
+    #     python implementation_tasks.py
+    unittest.main(verbosity=2)

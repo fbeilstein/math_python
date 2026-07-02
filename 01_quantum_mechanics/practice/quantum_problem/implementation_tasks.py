@@ -118,3 +118,13 @@ def compute_tunneling_probability(V0, k0, a): #contains solution
     kappa = np.sqrt(2 * m * (V0 - E)) / hbar
     T = 1.0 / (1.0 + (V0**2 * np.sinh(kappa * a)**2) / (4 * E * (V0 - E)))
     return T
+
+
+# =============================================================================
+#  SELF-TESTING (add your own tests below)
+# =============================================================================
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here, then run:
+    #     python implementation_tasks.py
+    unittest.main(verbosity=2)

@@ -1,5 +1,4 @@
 import tkinter as tk
-import unittest
 import sys
 import os
 
@@ -132,15 +131,6 @@ class Level4bNormality(BaseLevel):
         
         return artists
 
-# ==========================================
-# UNIT TESTS
-# ==========================================
-class TestLevel4b(unittest.TestCase):
-    def test_normal(self):
-        nodes = {"e", "a", "b", "ba"}
-        rels = [("aa", ""), ("bb", ""), ("ab", "ba")]
-        sub = {"e", "a"}
-        self.assertTrue(tasks.is_normal_subgroup(sub, nodes, rels))
-        
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import unittest
 import os
 import sys
 
@@ -49,36 +48,11 @@ class Level5SegmentNormal(Level1Line):
         
         self.draw_handles()
 
-# ==========================================
-# UNIT TESTS (Isolated)
-# ==========================================
-class TestLevel5SegmentNormal(unittest.TestCase):
-    
-    def test_l5_segment_normal_direction(self):
-        """Verify the normal is perpendicular and faces the incoming ray."""
-        rd = np.array([1.0, 0.0]) # Ray moving right
-        p1 = np.array([5.0, -10.0])
-        p2 = np.array([5.0, 10.0]) # Vertical line at x=5
-        
-        n = tasks.calculate_normal_segment(rd, p1, p2)
-        
-        self.assertIsNotNone(n, "Normal should not be None.")
-        # Normal should be [-1, 0] to face the ray coming from the left
-        np.testing.assert_allclose(n, [-1.0, 0.0], atol=1e-7)
-        self.assertAlmostEqual(np.linalg.norm(n), 1.0, msg="Normal must be a unit vector.")
-        
-        # Perpendicularity check: dot product with the line direction (p2-p1) should be 0
-        line_vec = p2 - p1
-        self.assertAlmostEqual(np.dot(n, line_vec), 0.0, places=7)
 
 # ==========================================
 # STANDALONE EXECUTION
 # ==========================================
-if __name__ == '__main__':
-    if "--no-graphics" in sys.argv:
-        sys.argv.remove("--no-graphics")
-        unittest.main()
-    else:
-        lvl = Level5SegmentNormal()
-        lvl.draw()
-        plt.show()
+if __name__ == \'__main__\':
+    lvl = Level5SegmentNormal()
+    lvl.draw()
+    plt.show()

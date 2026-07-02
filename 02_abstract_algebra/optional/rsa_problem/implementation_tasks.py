@@ -142,3 +142,13 @@ def hack_rsa(pub_key, ciphertext): #contains solution
     phi = (p - 1) * (q - 1)
     d = mod_inverse(e, phi)
     return decrypt(ciphertext, (d, n))
+
+
+# =============================================================================
+#  SELF-TESTING (add your own tests below)
+# =============================================================================
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here, then run:
+    #     python implementation_tasks.py
+    unittest.main(verbosity=2)

@@ -139,3 +139,12 @@ def generate_pi_binary_digits(num_bits): #contains solution
     pi_scaled = pi_scaled >> 10
     frac = pi_scaled - (3 << num_bits) # Remove integer part '3'
     return bin(frac)[2:].zfill(num_bits)
+
+# =============================================================================
+#  SELF-TESTING (add your own tests below)
+# =============================================================================
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here, then run:
+    #     python implementation_tasks.py
+    unittest.main(verbosity=2)

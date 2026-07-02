@@ -140,6 +140,9 @@ fi
 # Clean up the python script
 rm -f /tmp/strip_solutions.py
 
+# Remove grading infrastructure from student bundle
+rm -rf "$release_dir/tests"
+
 # Create zip archive
 cd "$staging_dir"
 zip_file="${problem}.zip"

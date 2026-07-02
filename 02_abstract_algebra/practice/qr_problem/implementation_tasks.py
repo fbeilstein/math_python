@@ -332,3 +332,13 @@ def linear_error_magnitudes(syndromes, err_pos, msg_len, log_table, exp_table, p
     return mags
 
 
+
+
+# =============================================================================
+#  SELF-TESTING (add your own tests below)
+# =============================================================================
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here, then run:
+    #     python implementation_tasks.py
+    unittest.main(verbosity=2)

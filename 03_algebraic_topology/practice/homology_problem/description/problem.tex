@@ -43,10 +43,10 @@ Consider the files given.
 \toprule
 \textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
 \multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
-\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core algebraic topology logic (boundary matrices, Smith Normal Form, Homology) intended for student implementation. \\
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core algebraic topology logic (boundary matrices, Smith Normal Form, Homology) intended for student implementation. You can add your own \lstinline|unittest.TestCase| classes at the bottom and run \lstinline|python implementation_tasks.py| to execute them. You can add your own \lstinline|unittest.TestCase| classes at the bottom and run \lstinline|python implementation_tasks.py| to execute them. \\
 \lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging individual algebra and topology levels through an interactive UI. \\
 \lstinline|homology_explorer.py| & \textbf{May be run standalone after you solve levels 1-5.} The main visual topology engine; allows for the creation and dynamic gluing of simplicial complexes, and computes their Homology Groups on the fly. \\
-\lstinline|levels/level_*.py| & Unittests and graphical representation for each specific problem. \textbf{Can be run standalone.} You can use \lstinline|python levels/level_*.py| for the graphical debugger or \lstinline|python levels/level_*.py --no-graphics| for unittests only. \\ \midrule
+\lstinline|levels/level_*.py| & Interactive graphical sandbox for each specific problem. \textbf{Can be run standalone} with \lstinline|python levels/level_*.py| for visual debugging. \\ \midrule
 \multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
 \lstinline|levels/base_level.py| & Base class for textual and visual debuggers.\\
 \lstinline|levels/homology_base.py| & Contains the interactive Mesh Editor used in levels 3, 4, and 5 to dynamically draw and analyze 2D topological surfaces.\\
@@ -71,6 +71,23 @@ def z_gcdex(a, b):
 
 <<<< MORE CODE >>>>
 \end{lstlisting}
+
+\subsubsection*{Self-Testing (Optional)}
+At the bottom of \lstinline|implementation_tasks.py|, you will find a block that looks like this:
+\begin{lstlisting}[language=Python]
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here...
+    unittest.main(verbosity=2)
+\end{lstlisting}
+This allows you to write your own automated unit tests to verify your code before running the visual dashboard. If you'd like to test your functions with specific inputs, simply define a class inheriting from \lstinline|unittest.TestCase| above the \lstinline|unittest.main()| call. For example, if you wanted to test simple math:
+\begin{lstlisting}[language=Python]
+class TestMyMath(unittest.TestCase):
+    def test_addition(self):
+        result = 2 + 2
+        self.assertEqual(result, 4, "Addition is broken!")
+\end{lstlisting}
+You can run these tests anytime by executing \lstinline|python implementation_tasks.py| in your terminal. This is completely optional, but highly recommended for debugging tricky edge cases.
 
 Now proceed with the following problems. First solve the math part so you understand the underlying algorithms. Then implement. After implementation press "Reload \& Retest" button and see if the bulb near the appropriate task becomes green, if not there are probably some issues with your implementation. Click the button with the appropriate task to use the interactive visual debugger to help track down bugs.
 

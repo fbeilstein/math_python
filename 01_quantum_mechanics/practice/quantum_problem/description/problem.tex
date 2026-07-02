@@ -44,8 +44,8 @@ Welcome to the Wave Packet simulator. Natural units ($\hbar=1, m=1$) are used ev
 \toprule
 \textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
 \multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
-\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core quantum mechanics solvers (wavefunctions, FFTs, and split-operator steps). \\
-\lstinline|levels/level_*.py| & Unittests and graphical representation for each specific problem. \textbf{Run standalone} for visual debugging. Append \lstinline|--no-graphics| to only run the unit tests. \\
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core quantum mechanics solvers (wavefunctions, FFTs, and split-operator steps). You can add your own \lstinline|unittest.TestCase| classes at the bottom and run \lstinline|python implementation_tasks.py| to execute them. You can add your own \lstinline|unittest.TestCase| classes at the bottom and run \lstinline|python implementation_tasks.py| to execute them. \\
+\lstinline|levels/level_*.py| & Interactive graphical sandbox for each specific problem. \textbf{Can be run standalone} with \lstinline|python levels/level_*.py| for visual debugging. \\
 \lstinline|wave_explorer.py| & \textbf{The grand finale.} Run this when all levels are solved to launch the interactive tunneling demo. (Modes: \lstinline|barrier|, \lstinline|well|, \lstinline|finite_well|). \\ \midrule
 \bottomrule
 \end{tabularx}

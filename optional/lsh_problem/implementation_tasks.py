@@ -100,3 +100,12 @@ def calculate_threshold(bands, rows): #contains solution
     L8: Calculate the Jaccard similarity threshold where the collision probability is 50%.
     """
     return (1.0 - (0.5)**(1.0/bands))**(1.0/rows)
+
+# =============================================================================
+#  SELF-TESTING (add your own tests below)
+# =============================================================================
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here, then run:
+    #     python implementation_tasks.py
+    unittest.main(verbosity=2)

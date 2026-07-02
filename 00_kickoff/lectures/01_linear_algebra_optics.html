@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>01 Linear Algebra Optics</title>
+</head>
+<body>
+    <script type="module" src="../engine/js/slides.js?v=3"></script>
+
+    <template id="markdown-source">
+# Math with Python
+
+## Kickoff Session
+
+<div style="margin-top: 40px;"></div>
+
+### Linear Algebra, NumPy & Geometrical Optics
+
+<div style="margin-top: 60px;"></div>
+
+**Today's plan:**
+1. Python + NumPy crash course
+2. Vectors and basic linear algebra in code
+3. How we apply it: geometrical ray tracing
+
+---
+
+# Why NumPy?
+
+Python lists are **general-purpose** containers. NumPy arrays are **mathematical objects**.
+
+<div style="display: flex; gap: 40px; margin-top: 20px;">
+<div style="flex: 1;">
+
+### 🐍 Pure Python
+
+```python
+# Adding two vectors (painful)
+a = [1.0, 2.0]
+b = [3.0, 4.0]
+c = [a[0]+b[0], a[1]+b[1]]
+# c = [4.0, 6.0]
+```
+
+- Loop-based, element by element
+- No mathematical operations on lists
+- `[1, 2] + [3, 4]` → `[1, 2, 3, 4]` 😱
+
+</div>
+<div style="flex: 1;">
+
+### ⚡ NumPy
+
+```python
+import numpy as np
+
+a = np.array([1.0, 2.0])
+b = np.array([3.0, 4.0])
+c = a + b
+# c = array([4.0, 6.0])
+```
+
+- Vectorized: operates on **entire arrays**
+- Written in C under the hood
+- Mathematically natural syntax
+
+</div>
+</div>
+
+---
+
+# Creating Arrays
+
+```python
+import numpy as np
+```
+
+<div style="display: flex; gap: 40px; margin-top: 10px;">
+<div style="flex: 1;">
+
+### From values
+
+```python
+# 1D vector
+v = np.array([3.0, 4.0])
+
+# 2D matrix
+M = np.array([[1, 2],
+              [3, 4]])
+
+# Specifying type
+v = np.array([1, 0], dtype=float)
+```
+
+</div>
+<div style="flex: 1;">
+
+### From generators
+
+```python
+# Zeros and ones
+np.zeros(5)       # [0. 0. 0. 0. 0.]
+np.ones((2, 3))   # 2×3 matrix of 1s
+
+# Range of values
+np.arange(0, 10, 0.5)  # [0. 0.5 1. ... 9.5]
+np.linspace(0, 1, 5)   # [0. .25 .5 .75 1.]
+
+# Identity matrix
+np.eye(3)         # 3×3 identity
+```
+
+</div>
+</div>
+
+---
+
+# Array Indexing & Slicing
+
+<div style="display: flex; gap: 40px; margin-top: 10px;">
+<div style="flex: 1;">
+
+### Indexing
+
+Access elements by index. Python uses **0-based indexing**, and negative indices count backwards.
+
+```python
+x = np.array([5, 0, 3, 7, 9])
+
+x[0]  # returns 5
+x[4]  # returns 9
+x[-1] # returns 9
+x[-2] # returns 7
+```
+
+:::nparray
+[5, 0, 3, 7, 9]
+:::
+
+</div>
+<div style="flex: 1;">
+
+### Slicing
+
+Use the `[start:stop:step]` syntax to access subarrays.
+
+```python
+x[0:3]  # First three: [5, 0, 3]
+x[:3]   # Equivalent to x[0:3]
+x[2:]   # From index 2 to end: [3, 7, 9]
+x[::2]  # Every other element: [5, 3, 9]
+```
+
+### Multi-Dimensional
+
+For 2D matrices, provide indices as `[row, col]`:
+
+```python
+M = np.array([[1, 2], [3, 4]])
+M[0, 0] # Top-left: 1
+M[:, 0] # First column: [1, 3]
+```
+
+</div>
+</div>
+
+---
+
+# Reshaping Arrays
+
+<div style="display: flex; gap: 40px; margin-top: 10px;">
+<div style="flex: 1;">
+
+### Linear array
+
+Many times you generate a flat list of numbers:
+
+```python
+x = np.arange(1, 7)
+# [1 2 3 4 5 6]
+```
+
+:::nparray
+[1, 2, 3, 4, 5, 6]
+:::
+
+</div>
+<div style="flex: 1;">
+
+### Reshape into Matrix
+
+You can freely reshape arrays as long as the **total number of elements matches**.
+
+```python
+grid = np.arange(1, 7).reshape((2, 3))
+```
+
+:::nparray
+[[1, 2, 3],
+ [4, 5, 6]]
+:::
+
+</div>
+</div>
+
+---
+
+# Universal Functions & Broadcasting
+
+NumPy operations are vectorized, meaning they operate on whole arrays directly in compiled C code. 
+
+<div style="display: flex; gap: 40px; margin-top: 10px;">
+<div style="flex: 1;">
+
+### Elementwise (ufuncs)
+
+No loops required. Mathematical operations map directly over the arrays.
+
+```python
+a = np.array([2.0, 3.0])
+b = np.array([4.0, 1.0])
+
+c = a * b      # [8.0, 3.0]
+d = a ** 2     # [4.0, 9.0]
+e = np.sin(a)  # [0.909, 0.141]
+```
+
+</div>
+<div style="flex: 1;">
+
+### Broadcasting Rules
+
+NumPy can operate on arrays of different shapes by "broadcasting" the smaller array across the larger one.
+
+```python
+v = np.array([1.0, 2.0, 3.0])
+
+2.0 * v       # [2.0, 4.0, 6.0]
+v + 10        # [11.0, 12.0, 13.0]
+```
+
+This makes parametrizing rays extremely succinct:
+```python
+point = origin + t * direction
+```
+
+</div>
+</div>
+
+---
+
+# Advanced Indexing & Masking
+
+When dealing with large sets of rays or intersection points, boolean masking allows for rapid filtering.
+
+<div style="display: flex; gap: 40px; margin-top: 10px;">
+<div style="flex: 1;">
+
+### Fancy Indexing
+
+You can pass arrays of indices to access multiple elements at once:
+
+```python
+x = np.arange(10, 20)
+idx = np.array([2, 5, 8])
+
+print(x[idx])
+# [12, 15, 18]
+```
+
+</div>
+<div style="flex: 1;">
+
+### Boolean Masking
+
+Operations return boolean arrays which can be used to filter data directly.
+
+```python
+# Suppose we have t_values for intersections
+t = np.array([-1.2, 0.5, 3.1, -0.1])
+
+# Keep only intersections IN FRONT of the ray
+valid_t = t[t > 0]
+# [0.5, 3.1]
+```
+
+</div>
+</div>
+
+---
+
+# Sorting & Partitioning
+
+Physics simulations often require finding the *closest* intersection point quickly.
+
+<div style="display: flex; gap: 40px; margin-top: 10px;">
+<div style="flex: 1;">
+
+### argsort()
+
+Returns the **indices** that would sort the array. Critical for keeping track of points.
+
+```python
+distances = np.array([5.5, 1.2, 3.4])
+
+# Get indices from closest to furthest
+order = np.argsort(distances)  
+# [1, 2, 0]
+
+closest_distance = distances[order[0]]
+```
+
+</div>
+<div style="flex: 1;">
+
+### partition()
+
+If you only need the $k$-th smallest values (e.g. nearest neighbors) without sorting everything:
+
+```python
+x = np.array([7, 2, 3, 1, 6, 5, 4])
+
+# Bring the 3 smallest to the front
+np.partition(x, 3)
+# [2, 1, 3, 4, 6, 5, 7]
+```
+
+</div>
+</div>
+
+---
+
+# Structured Arrays
+
+For complex optics, we sometimes need to bind heterogeneous data together tightly in memory, exactly like C-structs.
+
+```python
+# Define a memory layout:
+# 'U10' = 10-char string, 'i4' = 32-bit int, 'f8' = 64-bit float
+arr_type = np.dtype([('name', 'U10'), ('age', 'i4'), ('weight', 'f8')])
+
+data = np.zeros(4, dtype=arr_type)
+
+data['name'] = ['Alice', 'Bob', 'Cathy', 'Doug']
+data['age'] = [25, 45, 37, 19]
+
+# Masking on structures
+print(data[data['age'] < 30]['name'])
+# ['Alice' 'Doug']
+```
+
+---
+
+# Quick Reference Card
+
+<style>
+  .ref-table { font-size: 0.9em; }
+  .ref-table td, .ref-table th { padding: 6px 12px; }
+</style>
+
+<table class="ref-table">
+<tr><th>Task</th><th>Code</th><th>Returns</th></tr>
+<tr><td>Array instantiation</td><td><code>np.array([x, y])</code></td><td>1D array</td></tr>
+<tr><td>Dot product</td><td><code>np.dot(a, b)</code></td><td>float</td></tr>
+<tr><td>Vector length (L2 norm)</td><td><code>np.linalg.norm(v)</code></td><td>float</td></tr>
+<tr><td>Type casting</td><td><code>v.astype(float)</code></td><td>float array</td></tr>
+<tr><td>Sorting indices</td><td><code>np.argsort(x)</code></td><td>int array</td></tr>
+<tr><td>Memory structures</td><td><code>np.dtype([...])</code></td><td>DType</td></tr>
+</table>
+
+<div style="margin-top: 20px; padding: 15px; border: 2px solid var(--accent-color); border-radius: 8px; text-align: center;">
+
+**Now open the practice problem and start with Level 1!** 🚀
+
+`python lab_dashboard.py`
+
+</div>
+    </template>
+</body>
+</html>

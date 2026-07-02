@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import unittest
 import os
 import sys
 
@@ -49,37 +48,11 @@ class Level1Line(BaseLevel):
         self.draw_student_output(intersection_point)
         self.draw_handles()
 
-# ==========================================
-# UNIT TESTS
-# ==========================================
-class TestLevel1Line(unittest.TestCase):
-    
-    def test_l1_infinite_hit(self):
-        """Checks if the math finds the intersection point."""
-        origin, rd = np.array([0.0, 0.0]), np.array([1.0, 0.0])
-        p1, p2 = np.array([5.0, -5.0]), np.array([5.0, 5.0])
-        result = tasks.intersect_line_infinite(origin, rd, p1, p2)
-        
-        self.assertIsInstance(result, np.ndarray, "Expected output to be a numpy array.")
-        np.testing.assert_allclose(result, [5.0, 0.0], atol=1e-7, err_msg="Intersection coordinates do not match.")
-
-    def test_l1_parallel(self):
-        """Parallel lines should return None."""
-        origin, rd = np.array([0.0, 0.0]), np.array([1.0, 0.0])
-        p1, p2 = np.array([0.0, 5.0]), np.array([10.0, 5.0])
-        result = tasks.intersect_line_infinite(origin, rd, p1, p2)
-        self.assertIsNone(result, "Expected None for parallel lines.")
 
 # ==========================================
 # STANDALONE EXECUTION
 # ==========================================
-if __name__ == '__main__':
-    if "--no-graphics" in sys.argv:
-        sys.argv.remove("--no-graphics")
-        # unittest.main() will automatically find TestLevel1Line and run it!
-        unittest.main()
-    else:
-        # Standalone visual test
-        lvl = Level1Line()
-        lvl.draw()
-        plt.show()
+if __name__ == \'__main__\':
+    lvl = Level1Line()
+    lvl.draw()
+    plt.show()

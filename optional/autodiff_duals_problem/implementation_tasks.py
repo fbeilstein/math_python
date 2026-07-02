@@ -84,29 +84,11 @@ def log(x): #contains solution
         return Dual(math.log(x.real), x.dual / x.real)
     return math.log(x)
 
-# ==========================================
-# UNIT TESTS
-# ==========================================
-class TestDualArithmetic(unittest.TestCase):
-    def test_addition(self):
-        d1 = Dual(2, 3)
-        d2 = Dual(4, 5)
-        res = d1 + d2
-        self.assertEqual(res.real, 6)
-        self.assertEqual(res.dual, 8)
-        
-    def test_multiplication(self):
-        d1 = Dual(2, 3)
-        d2 = Dual(4, 5)
-        res = d1 * d2
-        self.assertEqual(res.real, 8)
-        self.assertEqual(res.dual, 22) # 2*5 + 3*4 = 10 + 12 = 22
-        
-    def test_sin_derivative(self):
-        x = Dual(math.pi/2, 1)
-        res = sin(x)
-        self.assertAlmostEqual(res.real, 1.0)
-        self.assertAlmostEqual(res.dual, 0.0)
-
+# =============================================================================
+#  SELF-TESTING (add your own tests below)
+# =============================================================================
 if __name__ == '__main__':
-    unittest.main()
+    import unittest
+    # Add your own unittest.TestCase classes here, then run:
+    #     python implementation_tasks.py
+    unittest.main(verbosity=2)

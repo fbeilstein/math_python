@@ -7,16 +7,7 @@ if base_dir not in sys.path:
     sys.path.insert(0, base_dir)
 
 import implementation_tasks as tasks
-from levels.base_level import BaseLevel, BaseLevelUI, poly_to_latex
-
-class Level2(BaseLevel):
-    def test_primitive_qr(self):
-        poly = [1, 0, 0, 0, 1, 1, 1, 0, 1]
-        self.assertTrue(tasks.is_primitive(poly, 2, 8))
-
-    def test_non_primitive(self):
-        poly = [1, 0, 0, 0, 0, 0, 0, 0, 1]
-        self.assertFalse(tasks.is_primitive(poly, 2, 8))
+from levels.base_level import BaseLevelUI, poly_to_latex
 
 class LevelUI(BaseLevelUI):
     def setup_inputs(self):
@@ -166,7 +157,3 @@ class LevelUI(BaseLevelUI):
             
         self.canvas.draw()
 
-if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '--no-graphics':
-        import unittest
-        unittest.main(argv=['first-arg-is-ignored'])

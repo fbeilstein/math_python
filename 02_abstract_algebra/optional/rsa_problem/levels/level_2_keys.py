@@ -1,5 +1,4 @@
 import tkinter as tk
-import unittest
 import sys
 import os
 
@@ -60,33 +59,6 @@ class Level2Keys(BaseLevel):
         except Exception as e:
             self.output_text.insert(tk.END, f"\nError during generation: {e}")
 
-# ==========================================
-# UNIT TESTS
-# ==========================================
-class TestLevel2Keys(unittest.TestCase):
-    
-    def test_l2_extended_gcd(self):
-        x, y, g = tasks.extended_gcd(42, 30)
-        self.assertEqual(g, 6)
-        self.assertEqual(42*x + 30*y, g)
-
-    def test_l2_mod_inverse(self):
-        # 3 * d = 1 mod 11 -> d = 4 (since 12 = 1 mod 11)
-        d = tasks.mod_inverse(3, 11)
-        self.assertEqual(d, 4)
-        
-    def test_l2_mod_inverse_fail(self):
-        with self.assertRaises(ValueError):
-            tasks.mod_inverse(2, 4) # not coprime
-
-    def test_l2_generate_keypair(self):
-        pub, priv = tasks.generate_keypair(64)
-        e, n = pub
-        d, n_priv = priv
-        self.assertEqual(n, n_priv)
-        self.assertTrue(n > 0)
-        self.assertTrue(d > 0)
-        # We can't directly check (e*d)%phi without phi, but we can verify it doesn't crash
 
 if __name__ == '__main__':
     unittest.main()

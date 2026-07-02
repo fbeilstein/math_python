@@ -49,8 +49,24 @@ Consider the files given.
 \end{tabularx}
 \end{center}
 
-Run the file \lstinline|lab_dashboard.py|. This will open the dashboard where you can sequentially test your implementations.
+Run the file \lstinline|lab_dashboard.py|. This will open the dashboard where you can sequentially test your implementations. You can add your own \lstinline|unittest.TestCase| classes at the bottom of \lstinline|implementation_tasks.py| and run \lstinline|python implementation_tasks.py| to execute them.
 
+\subsubsection*{Self-Testing (Optional)}
+At the bottom of \lstinline|implementation_tasks.py|, you will find a block that looks like this:
+\begin{lstlisting}[language=Python]
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here...
+    unittest.main(verbosity=2)
+\end{lstlisting}
+This allows you to write your own automated unit tests to verify your code before running the visual dashboard. If you'd like to test your functions with specific inputs, simply define a class inheriting from \lstinline|unittest.TestCase| above the \lstinline|unittest.main()| call. For example, if you wanted to test simple math:
+\begin{lstlisting}[language=Python]
+class TestMyMath(unittest.TestCase):
+    def test_addition(self):
+        result = 2 + 2
+        self.assertEqual(result, 4, "Addition is broken!")
+\end{lstlisting}
+You can run these tests anytime by executing \lstinline|python implementation_tasks.py| in your terminal. This is completely optional, but highly recommended for debugging tricky edge cases.
 
 \section*{Problem 1: K-Shingling (Level 1)}
 

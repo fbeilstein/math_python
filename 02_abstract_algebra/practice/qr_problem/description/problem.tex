@@ -43,10 +43,10 @@ Consider the files given.
 \toprule
 \textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
 \multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
-\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core abstract algebra (Galois Fields) and Reed-Solomon coding logic intended for student implementation. \\
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core abstract algebra (Galois Fields) and Reed-Solomon coding logic intended for student implementation. You can add your own \lstinline|unittest.TestCase| classes at the bottom and run \lstinline|python implementation_tasks.py| to execute them. \\
 \lstinline|qr_lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging individual math levels through an interactive UI. \\
 \lstinline|qr_code_demo.py| & \textbf{May be run standalone after you solve levels 1-9.} The main engine that ties all your math together to generate a fully functioning, scannable physical QR code. \\
-\lstinline|levels/level_*.py| & Unittests and graphical representation for each specific problem. \textbf{Can be run standalone.} Use \lstinline|python levels/level_*.py| for the graphical debugger or \lstinline|python levels/level_*.py --no-graphics| for unittests only. \\ \midrule
+\lstinline|levels/level_*.py| & Interactive graphical sandbox for each specific problem. \textbf{Can be run standalone} with \lstinline|python levels/level_*.py| for visual debugging. \\ \midrule
 \multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
 \lstinline|levels/base_level.py| & Base class for graphical debuggers. \\
 \lstinline|qr_code.py| & Pre-baked ISO formatting logic (BCH codes, masking) that utilizes your math. \\

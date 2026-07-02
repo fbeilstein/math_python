@@ -1,5 +1,4 @@
 import tkinter as tk
-import unittest
 import sys
 import os
 
@@ -129,21 +128,6 @@ class Level5CenterCommutator(BaseLevel):
         
         return artists
 
-# ==========================================
-# UNIT TESTS
-# ==========================================
-class TestLevel5(unittest.TestCase):
-    def test_center(self):
-        nodes = {"e", "a", "b", "ba"} # K4 is abelian
-        rels = [("aa", ""), ("bb", ""), ("ab", "ba")]
-        center = tasks.compute_center(nodes, rels)
-        self.assertEqual(center, nodes)
-        
-    def test_commutator(self):
-        nodes = {"e", "a", "b", "ba"} # K4 is abelian
-        rels = [("aa", ""), ("bb", ""), ("ab", "ba")]
-        commutator = tasks.compute_commutator_subgroup(nodes, rels)
-        self.assertEqual(commutator, {"e"})
-        
+
 if __name__ == '__main__':
     unittest.main()

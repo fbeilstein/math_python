@@ -210,3 +210,12 @@ def render_fractal(algebra, fractal_type, formula_str, c_val=None, width=400, he
     img[active] = max_iter
     return img
     # #end solution
+
+# =============================================================================
+#  SELF-TESTING (add your own tests below)
+# =============================================================================
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here, then run:
+    #     python implementation_tasks.py
+    unittest.main(verbosity=2)

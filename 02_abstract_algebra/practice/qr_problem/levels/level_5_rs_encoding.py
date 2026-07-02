@@ -7,13 +7,7 @@ if base_dir not in sys.path:
     sys.path.insert(0, base_dir)
 
 import implementation_tasks as tasks
-from levels.base_level import BaseLevel, BaseLevelUI, poly_to_latex
-
-class Level5(BaseLevel):
-    def test_rs_encoding(self):
-        text = "Hello"
-        bytes_arr = [ord(c) for c in text]
-        self.assertEqual(bytes_arr, [72, 101, 108, 108, 111])
+from levels.base_level import BaseLevelUI, poly_to_latex
 
 class LevelUI(BaseLevelUI):
     def setup_inputs(self):
@@ -57,7 +51,3 @@ class LevelUI(BaseLevelUI):
         except Exception as e:
             self.ax.text(0.5, 0.5, f"Error: {e}", color="red", fontsize=14, ha='center', va='center')
 
-if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '--no-graphics':
-        import unittest
-        unittest.main(argv=['first-arg-is-ignored'])

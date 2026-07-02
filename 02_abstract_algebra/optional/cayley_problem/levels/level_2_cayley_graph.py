@@ -1,5 +1,4 @@
 import tkinter as tk
-import unittest
 import sys
 import os
 
@@ -112,17 +111,6 @@ class Level2CayleyGraph(BaseLevel):
         
         return artists
 
-# ==========================================
-# UNIT TESTS
-# ==========================================
-class TestLevel2(unittest.TestCase):
-    def test_cayley_graph_cyclic(self):
-        nodes, edges = tasks.generate_cayley_graph(["a"], [("aaaa", "")])
-        self.assertEqual(len(nodes), 4)
-        
-    def test_cayley_graph_klein4(self):
-        nodes, edges = tasks.generate_cayley_graph(["a", "b"], [("aa", ""), ("bb", ""), ("ab", "ba")])
-        self.assertEqual(len(nodes), 4)
 
 if __name__ == '__main__':
     unittest.main()

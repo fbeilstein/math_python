@@ -35,3 +35,12 @@ def classify_system(tr, det): #contains solution
         if abs(tr) < 0.001: return "Center"
         return "Stable Spiral" if tr < 0 else "Unstable Spiral"
     return "Stable Node" if tr < 0 else "Unstable Node"
+
+# =============================================================================
+#  SELF-TESTING (add your own tests below)
+# =============================================================================
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here, then run:
+    #     python implementation_tasks.py
+    unittest.main(verbosity=2)

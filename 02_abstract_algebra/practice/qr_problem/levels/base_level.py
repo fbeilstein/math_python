@@ -1,4 +1,3 @@
-import unittest
 import sys
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -68,6 +67,4 @@ class BaseLevelUI(tk.Frame):
     def draw_math(self):
         pass
 
-class BaseLevel(unittest.TestCase):
-    pass
 

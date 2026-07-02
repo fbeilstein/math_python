@@ -7,19 +7,7 @@ if base_dir not in sys.path:
     sys.path.insert(0, base_dir)
 
 import implementation_tasks as tasks
-from levels.base_level import BaseLevel, BaseLevelUI, poly_to_latex
-
-class Level1(BaseLevel):
-    def test_division_gf2(self):
-        dividend = [1, 0, 0, 0, 0, 0, 0, 0, 0]
-        divisor = [1, 0, 0, 0, 1, 1, 1, 0, 1]
-        q, r = tasks.gfp_poly_divide(dividend, divisor, 2)
-        self.assertEqual(r, [1, 1, 1, 0, 1])
-
-    def test_division_gf3(self):
-        q, r = tasks.gfp_poly_divide([2, 0, 1], [1, 2], 3)
-        self.assertEqual(q, [2, 2])
-        self.assertEqual(r, [0])
+from levels.base_level import BaseLevelUI, poly_to_latex
 
 class LevelUI(BaseLevelUI):
     def setup_inputs(self):
@@ -83,7 +71,3 @@ class LevelUI(BaseLevelUI):
             if "list index out of range" in msg: msg = "Polynomial cannot be empty!"
             self.ax.text(0.5, 0.5, f"Error: {msg}", color="red", fontsize=14, ha='center', va='center')
 
-if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '--no-graphics':
-        import unittest
-        unittest.main(argv=['first-arg-is-ignored'])

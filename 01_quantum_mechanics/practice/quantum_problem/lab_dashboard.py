@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import messagebox
-import unittest
 import importlib
 import sys
 import os
@@ -30,7 +29,6 @@ class QuantumDebugger(tk.Tk):
 
         self.setup_sidebar()
         self.setup_main_area()
-        self.refresh_tests()
 
     def setup_sidebar(self):
         self.sidebar = tk.Frame(self, bg="#252526", highlightbackground="#333333", highlightthickness=1)
@@ -63,8 +61,8 @@ class QuantumDebugger(tk.Tk):
                        command=lambda n=num: self.switch_sandbox(n)).pack(side="left")
 
         # Utility Buttons
-        tk.Button(self.sidebar, text="🔄 Reload & Retest", bg="#3e3e42", fg="white",
-                  command=self.reload_and_retest).pack(pady=(30, 10), padx=20, fill="x")
+        tk.Button(self.sidebar, text="🔄 Reload Code", bg="#3e3e42", fg="white",
+                  command=self.reload_code).pack(pady=(30, 10), padx=20, fill="x")
                   
         tk.Button(self.sidebar, text="🚀 Run Wave Explorer", bg="#007acc", fg="white", 
                   font=("Arial", 10, "bold"), command=self.run_main_simulation).pack(pady=(0, 20), padx=20, fill="x")
@@ -105,7 +103,7 @@ class QuantumDebugger(tk.Tk):
             self.log(f"CRITICAL ERROR:\n{str(e)}", color="#f44747")
             return False
 
-    def reload_and_retest(self):
+    def reload_code(self):
         if not self.force_reload_core():
             return
             
@@ -115,8 +113,6 @@ class QuantumDebugger(tk.Tk):
         
         if self.current_lvl_num:
             self.switch_sandbox(self.current_lvl_num)
-        
-        self.refresh_tests()
 
     def switch_sandbox(self, level_num):
         if not self.force_reload_core():
@@ -152,51 +148,6 @@ class QuantumDebugger(tk.Tk):
         except Exception as e:
             messagebox.showerror("Module Error", f"Failed to load Level {level_num}:\n{e}")
 
-    def refresh_tests(self, test_list=None):
-        if not test_list:
-            self.clear_log()
-            test_list = self.tasks.items()
-        
-        if not self.force_reload_core():
-            for num in self.tasks:
-                canvas, light = self.status_indicators[num]
-                canvas.itemconfig(light, fill="#f44747")
-            return
-
-        loader = unittest.TestLoader()
-
-        for num, task in test_list:
-            if len(task) == 4:
-                name, mod_name, class_name, _ = task
-            else:
-                name, mod_name, class_name = task[0], task[1], task[2]
-                
-            if mod_name in sys.modules:
-                importlib.reload(sys.modules[mod_name])
-                
-            try:
-                module = importlib.import_module(mod_name)
-                suite = loader.loadTestsFromModule(module)
-                
-                # Capture unittest output
-                stream = io.StringIO()
-                runner = unittest.TextTestRunner(stream=stream, verbosity=1)
-                result = runner.run(suite)
-                
-                output = stream.getvalue()
-                if not 'OK' in output:
-                    self.log(f"L{num}: {name} -- FAILED")
-                
-                canvas, light = self.status_indicators[num]
-                if result.wasSuccessful() and result.testsRun > 0:
-                    canvas.itemconfig(light, fill="#4ec9b0")
-                else:
-                    canvas.itemconfig(light, fill="#f44747")
-                    
-            except Exception as e:
-                self.log(f"FATAL ERROR L{num}: {str(e)}")
-                canvas, light = self.status_indicators[num]
-                canvas.itemconfig(light, fill="#f44747")
 
     def run_main_simulation(self):
         """Launches the main wave_explorer.py script."""

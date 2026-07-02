@@ -7,18 +7,7 @@ if base_dir not in sys.path:
     sys.path.insert(0, base_dir)
 
 import implementation_tasks as tasks
-from levels.base_level import BaseLevel, BaseLevelUI, poly_to_latex
-
-class Level4(BaseLevel):
-    def test_gfpn_math(self):
-        p, n = 2, 8
-        poly = [1, 0, 0, 0, 1, 1, 1, 0, 1]
-        exp_table, log_table = tasks.generate_gfpn_tables(p, n, poly)
-        
-        a = [2, 3] 
-        b = [4]
-        res = tasks.gfpn_poly_multiply(a, b, log_table, exp_table, p, n)
-        self.assertEqual(res, [8, 12])
+from levels.base_level import BaseLevelUI, poly_to_latex
 
 class LevelUI(BaseLevelUI):
     def setup_inputs(self):
@@ -103,7 +92,3 @@ class LevelUI(BaseLevelUI):
             if "list index out of range" in msg: msg = "Polynomial cannot be empty!"
             self.ax.text(0.5, 0.5, f"Error: {msg}", color="red", fontsize=14, ha='center', va='center')
 
-if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '--no-graphics':
-        import unittest
-        unittest.main(argv=['first-arg-is-ignored'])

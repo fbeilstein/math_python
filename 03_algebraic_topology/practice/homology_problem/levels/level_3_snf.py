@@ -1,5 +1,4 @@
 import tkinter as tk
-import unittest
 import sys
 import os
 
@@ -69,26 +68,6 @@ class Level3SNF(MeshEditorLevel):
         self.output_text.insert(tk.END, out)
         self.output_text.config(state=tk.DISABLED)
 
-# ==========================================
-# UNIT TESTS
-# ==========================================
-class TestLevel3SNF(unittest.TestCase):
-    
-    def test_l3_snf_diagonal(self):
-        m = [[2, 0], [0, 3]]
-        invs = tasks.invariant_factors(m)
-        # SNF of diag(2, 3) is diag(1, 6)
-        self.assertEqual(invs, [1, 6])
-
-    def test_l3_snf_zero(self):
-        m = [[0, 0], [0, 0]]
-        invs = tasks.invariant_factors(m)
-        self.assertEqual(invs, [0, 0])
-
-    def test_l3_snf_complex(self):
-        m = [[2, 4, 4], [-6, 6, 12], [10, -4, -16]]
-        invs = tasks.invariant_factors(m)
-        self.assertEqual(invs, [2, 6, 12])
 
 if __name__ == '__main__':
     unittest.main()

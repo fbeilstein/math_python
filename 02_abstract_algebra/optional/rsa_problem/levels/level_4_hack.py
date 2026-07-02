@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import messagebox
-import unittest
 import sys
 import os
 
@@ -115,30 +114,6 @@ class Level4Hack(BaseLevel):
         except Exception as e:
             self.output_text.insert(tk.END, f"\n✗ ERROR: Hack failed. {e}")
 
-# ==========================================
-# UNIT TESTS
-# ==========================================
-class TestLevel4Hack(unittest.TestCase):
-    
-    def test_l4_factorize(self):
-        # 15 = 3 * 5
-        res = tasks.factorize(15)
-        self.assertIsNotNone(res)
-        self.assertEqual(set(res), {3, 5})
-        
-        # Test a slightly larger number (p=101, q=103)
-        res = tasks.factorize(10403)
-        self.assertIsNotNone(res)
-        self.assertEqual(set(res), {101, 103})
-
-    def test_l4_hack_rsa(self):
-        pub, priv = tasks.generate_keypair(32)
-        m = 42069
-        c = tasks.encrypt(m, pub)
-        
-        # Now hack it!
-        m_hacked = tasks.hack_rsa(pub, c)
-        self.assertEqual(m, m_hacked)
 
 if __name__ == '__main__':
     unittest.main()

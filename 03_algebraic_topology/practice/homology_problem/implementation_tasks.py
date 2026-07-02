@@ -270,3 +270,13 @@ def compute_homology(num_c0, num_c1, num_c2, rank_d1, rank_d2, torsion_d2): #con
     h1 = num_c1 - rank_d1 - rank_d2
     h2 = num_c2 - rank_d2
     return h0, h1, h2, torsion_d2
+
+
+# =============================================================================
+#  SELF-TESTING (add your own tests below)
+# =============================================================================
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here, then run:
+    #     python implementation_tasks.py
+    unittest.main(verbosity=2)

@@ -47,3 +47,12 @@ def backward_step_5_droste_fold(Z_spiral, m, exact_rotation, Bx, By): #contains 
     R_rect = np.where(R_rect == 0, 1e-8, R_rect)
     k = np.ceil(np.log(R_rect) / np.log(m))
     return Z * (m ** -k)
+
+# =============================================================================
+#  SELF-TESTING (add your own tests below)
+# =============================================================================
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here, then run:
+    #     python implementation_tasks.py
+    unittest.main(verbosity=2)

@@ -43,10 +43,10 @@ Consider the files given.
 \toprule
 \textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
 \multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
-\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core physics and geometry logic (intersections, refraction, and normals) intended for student implementation. \\
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core physics and geometry logic (intersections, refraction, and normals) intended for student implementation. You can add your own \lstinline|unittest.TestCase| classes at the bottom and run \lstinline|python implementation_tasks.py| to execute them. \\
 \lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging individual physics levels through an interactive UI. This is your main interaction point\,-- other scripts can be started from here.\\
 \lstinline|optic_bench.py| & \textbf{May be run standalone after you solve levels 1-7.} The main simulation engine; allows for the creation and management of simple optical systems, and uses the math you implement in \lstinline|implementation_tasks.py|. \\
-\lstinline|levels/level_*.py| & Unittests and graphical representation for each specific problem. \textbf{Can be run standalone.} You can use \lstinline|python levels/level_*.py| for the graphical debugger or \lstinline|python levels/level_*.py --no-graphics| for unittests only. \\ \midrule
+\lstinline|levels/level_*.py| & Interactive graphical sandbox for each specific problem. \textbf{Can be run standalone} with \lstinline|python levels/level_*.py| for visual debugging. \\ \midrule
 \multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
 \lstinline|levels/base_level.py| & Base class for graphical debuggers.\\
 \mbox{\lstinline|ray_tracer.py|}, \mbox{\lstinline|lens_object.py|}, \mbox{\lstinline|ray.py|}, \mbox{\lstinline|ray_source.py|}, \mbox{\lstinline|lens_architect.py|}, \mbox{\lstinline|inspector.py|}, \mbox{\lstinline|io_manager.py|} & Needed for Optic Workbench. These manage the global state, perform recursive ray tracing, save/load optical system, and provide UI for the final simulation. \\
@@ -80,8 +80,24 @@ def intersect_segment(ray_origin, ray_dir, p1, p2):
 <<<< MORE CODE >>>>
 \end{lstlisting}
 
+\subsubsection*{Self-Testing (Optional)}
+At the bottom of \lstinline|implementation_tasks.py|, you will find a block that looks like this:
+\begin{lstlisting}[language=Python]
+if __name__ == '__main__':
+    import unittest
+    # Add your own unittest.TestCase classes here...
+    unittest.main(verbosity=2)
+\end{lstlisting}
+This allows you to write your own automated unit tests to verify your code before running the visual dashboard. If you'd like to test your functions with specific inputs, simply define a class inheriting from \lstinline|unittest.TestCase| above the \lstinline|unittest.main()| call. For example, if you wanted to test simple math:
+\begin{lstlisting}[language=Python]
+class TestMyMath(unittest.TestCase):
+    def test_addition(self):
+        result = 2 + 2
+        self.assertEqual(result, 4, "Addition is broken!")
+\end{lstlisting}
+You can run these tests anytime by executing \lstinline|python implementation_tasks.py| in your terminal. This is completely optional, but highly recommended for debugging tricky edge cases.
 
-Now proceed with the following problems. First solve the math part so you get the equation. Than implement. After implementation press "Reload \& Retest" button and see if the bulb near the appropriate task becomes green, if not there are probably some issues with your implementation. Click the button with the appropriate task to get some visuals, drag elements on the scene and see where your point is, this should help debugging.
+Now proceed with the following problems. First solve the math part so you get the equation. Then implement. After implementation, click the button with the appropriate task to get some visuals, drag elements on the scene and see where your point is, this should help debugging.
 
 \section*{Problem 1: Linear Intersection (Infinite Line)}
 
@@ -90,7 +106,7 @@ Now proceed with the following problems. First solve the math part so you get th
 \begin{center}
 \includegraphics[width=0.5\textwidth]{lines_intersection}
 \end{center}
-\textbf{Derive:} The intersection point of the ray and this line $\mathbf{Q}$. \textbf{Hint:} use vector representation $\vec{l}(t) = t \vec{u} + \vec{v}$ to write equations for lines.\\
+\textbf{Derive:} The intersection point of the ray and this line $\mathbf{Q}$. \\
 
 \subsubsection*{Implementation part}
 \textbf{Implement:} a function \lstinline|intersect_line_infinite(ray_origin, ray_dir, p1, p2)| that returns intersection point $\mathbf{Q}$ as a \lstinline|numpy.array| with two coordinates. If the ray does not intersect the line, return \lstinline|None|.
@@ -104,16 +120,16 @@ Now proceed with the following problems. First solve the math part so you get th
 \bottomrule
 \end{tabular}
 \end{center}
-\textbf{Test:} Press "Reload \& Retest" button and see if the bulb near the appropriate task becomes green, if not there are probably some issues with your implementation. Press "L1 Infinite Line" button in the visual debugger window. Move different points and see how the intersection point is displayed. Fix any bugs if you see inconsistencies, point disappears when it shouldn't or appears in the wrong place.
+\textbf{Test:} Press "L1 Infinite Line" button in the visual debugger window. Move different points and see how the intersection point is displayed. Fix any bugs if you see inconsistencies, point disappears when it shouldn't or appears in the wrong place.
 
 \section*{Problem 2: Boundary Logic (The Segment)}
 
 \subsubsection*{Mathematical part}
 \textbf{Given:} A light ray starting at origin $\mathbf{O}$ with a unit direction vector $\vec{d}$, and a segment defined by its endpoints $\mathbf{P}_1$ and $\mathbf{P}_2$. \\
-\textbf{Derive:} Conditions that the intersection point $\mathbf{Q}$ of the ray and the line passing through $\mathbf{P}_1$ and $\mathbf{P}_2$ lies on the segment $\overline{P_1P_2}$. \textbf{Hint:} you can use your previous result, just think regarding restrictions.\\
+\textbf{Derive:} Conditions that the intersection point $\mathbf{Q}$ of the ray and the line passing through $\mathbf{P}_1$ and $\mathbf{P}_2$ lies on the segment $\overline{P_1P_2}$. \\
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} a function \lstinline|intersect_segment(ray_origin, ray_dir, p1, p2)| that returns intersection point $\mathbf{Q}$ as a \lstinline|numpy.array| with two coordinates. If the ray does not intersect the segment, return \lstinline|None|. \textbf{Hint:} call your function for the line to get the point. Test that the point is on the segment.
+\textbf{Implement:} a function \lstinline|intersect_segment(ray_origin, ray_dir, p1, p2)| that returns intersection point $\mathbf{Q}$ as a \lstinline|numpy.array| with two coordinates. If the ray does not intersect the segment, return \lstinline|None|.
 
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
@@ -125,14 +141,14 @@ Now proceed with the following problems. First solve the math part so you get th
 \bottomrule
 \end{tabular}
 \end{center}
-\textbf{Test:} Press "Reload \& Retest", than "L2 Segment Bounds" buttons in the visual debugger window. Ensure unittests are passing. Move different points in visual debugger and ensure your code works appropriately.
+\textbf{Test:} Press "L2 Segment Bounds" button in the visual debugger window. Move different points in visual debugger and ensure your code works appropriately.
 
 
 \section*{Problem 3: Quadratic Geometry (Circle)}
 
 \subsubsection*{Mathematical part}
 \textbf{Given:} A light ray starting at origin $\mathbf{O}$ with a unit direction vector $\vec{d}$, and a circle defined by its center $\mathbf{C}$ and radius $R$. \\
-\textbf{Derive:} The intersection points $\mathbf{Q}_1$ and $\mathbf{Q}_2$ of the ray and the circle. Define them in way $\mathbf{Q}_1$ is \textbf{always closer} to the ray source than $\mathbf{Q}_2$. \textbf{Hint:} substitute the ray equation $\mathbf{r}(t) = \mathbf{O} + t\vec{d}$ into the circle equation $\|\mathbf{r} - \mathbf{C}\|^2 = R^2$ and solve the resulting quadratic equation for $t$. Note that the discriminant is always a positive number.
+\textbf{Derive:} The intersection points $\mathbf{Q}_1$ and $\mathbf{Q}_2$ of the ray and the circle. Define them in way $\mathbf{Q}_1$ is \textbf{always closer} to the ray source than $\mathbf{Q}_2$.
 
 \subsubsection*{Implementation part}\textbf{Implement:} a function \lstinline|intersect_circle(ray_origin, ray_dir, center, radius)| that returns a list of intersection points $\mathbf{Q}_1$ and $\mathbf{Q}_2$ as \lstinline|numpy.array| objects. Make sure that \textbf{the point closer to the ray source precedes in the list}. If no intersection exists, return an empty list \lstinline|[]|. If there is only one intersection point, you can either return a list containing only that point, or a list containing its two copies\,--- both cases will be valid.
 \begin{center}
@@ -146,14 +162,14 @@ Now proceed with the following problems. First solve the math part so you get th
 \bottomrule
 \end{tabular}
 \end{center}
-\textbf{Test:} Press "Reload \& Retest", than "L3 Circle Math" buttons in the visual debugger window. Ensure unittests are passing. Move different points in visual debugger and ensure your code works appropriately. \textbf{Note: only the first point from the list is displayed in the debugger.} This is to help you understand whether you return points in the correct order.
+\textbf{Test:} Press "L3 Circle Math" button in the visual debugger window. Move different points in visual debugger and ensure your code works appropriately. \textbf{Note: only the first point from the list is displayed in the debugger.} This is to help you understand whether you return points in the correct order.
 
 
 \section*{Problem 4: Angular Sector (The Arc)}
 
 \subsubsection*{Mathematical part}
 \textbf{Given:} A light ray starting at origin $\mathbf{O}$ with a unit direction vector $\vec{d}$, and an arc defined by center $\mathbf{C}$, radius $R$, central axis unit vector $\vec{a}$, and the cosine of the \textbf{half}-aperture angle $\cos(\phi)$. \\
-\textbf{Derive:} The condition that an intersection point $\mathbf{Q}$ lies within the angular sector of the arc (see image below). \textbf{Hint:} use the dot product between the normalized vector $(\mathbf{Q} - \mathbf{C})$ and the axis $\vec{a}$.
+\textbf{Derive:} The condition that an intersection point $\mathbf{Q}$ lies within the angular sector of the arc (see image below).
 
 \begin{center}
  \includegraphics[width=0.5\textwidth]{arcs}
@@ -165,7 +181,7 @@ Now proceed with the following problems. First solve the math part so you get th
 \begin{center}
 \lstinline|intersect_arc(ray_origin, ray_dir, center, radius, axis, cos_half_angle)|
 \end{center}
- that returns \textbf{the nearest} valid intersection point $\mathbf{Q}$ as a \lstinline|numpy.array|. Use the fact that \lstinline|intersect_circle| function returns points in order from closer to the ray source to further. If no point on the arc is hit, return \lstinline|None|. \textbf{Hint:} call your circle function and filter the results by the angular condition. If two points are left, check which one is hit first.
+ that returns \textbf{the nearest} valid intersection point $\mathbf{Q}$ as a \lstinline|numpy.array|. Use the fact that \lstinline|intersect_circle| function returns points in order from closer to the ray source to further. If no point on the arc is hit, return \lstinline|None|.
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
 \begin{tabular}{| c | c | c | c | c | c | c |}
@@ -178,7 +194,7 @@ $\mathbf{O}$ & $\vec{d}$ & $\mathbf{C}$ & $R$ & $\vec{a}$ & $\cos(\phi)$ & $\mat
 \bottomrule
 \end{tabular}
 \end{center}
-\textbf{Test:} Press "Reload \& Retest", than "L4 Arc Sector" buttons in the visual debugger window. Ensure unittests are passing. Move different points in visual debugger and ensure your code works appropriately.
+\textbf{Test:} Press "L4 Arc Sector" button in the visual debugger window. Move different points in visual debugger and ensure your code works appropriately.
 
 
 \section*{Problem 5: Surface Orientation (Segment Normal)}
@@ -189,7 +205,6 @@ $\mathbf{O}$ & $\vec{d}$ & $\mathbf{C}$ & $R$ & $\vec{a}$ & $\cos(\phi)$ & $\mat
 
 \subsubsection*{Implementation part}
 \textbf{Implement:} a function \lstinline|calculate_normal_segment(ray_dir, p1, p2)| that returns the unit normal vector $\vec{n}$ as a \lstinline|numpy.array|.
-\textbf{Hint:} find a unit perpendicular vector using the segment direction, then check its orientation relative to $\vec{d}$ and multiply by $-1$ if needed.
 
 \begin{figure}[h]
     \centering
@@ -221,7 +236,7 @@ $\mathbf{O}$ & $\vec{d}$ & $\mathbf{C}$ & $R$ & $\vec{a}$ & $\cos(\phi)$ & $\mat
 \bottomrule
 \end{tabular}
 \end{center}
-\textbf{Test:} Press "Reload \& Retest", than "L5 Line Normals" buttons in the visual debugger window. Ensure unittests are passing. Move different points in visual debugger and ensure your code works appropriately. Try reproducing the image in the problem description, ensure that the vector points appropriately.
+\textbf{Test:} Press "L5 Line Normals" button in the visual debugger window. Move different points in visual debugger and ensure your code works appropriately. Try reproducing the image in the problem description, ensure that the vector points appropriately.
 
 
 \section*{Problem 6: Radial Orientation (Arc Normal)}
@@ -263,7 +278,7 @@ $\mathbf{O}$ & $\vec{d}$ & $\mathbf{C}$ & $R$ & $\vec{a}$ & $\cos(\phi)$ & $\mat
 \bottomrule
 \end{tabular}
 \end{center}
-\textbf{Test:} Press "Reload \& Retest", than "L6 Arc Normals" buttons in the visual debugger window. Ensure unittests are passing. Move different points in visual debugger and ensure your code works appropriately. Try reproducing the image in the problem description, ensure that the vector points appropriately.
+\textbf{Test:} Press "L6 Arc Normals" button in the visual debugger window. Move different points in visual debugger and ensure your code works appropriately. Try reproducing the image in the problem description, ensure that the vector points appropriately.
 
 
 
@@ -271,7 +286,7 @@ $\mathbf{O}$ & $\vec{d}$ & $\mathbf{C}$ & $R$ & $\vec{a}$ & $\cos(\phi)$ & $\mat
 
 \subsubsection*{Mathematical part}
 \textbf{Given:} An incident unit direction vector $\vec{d}$, the unit normal vector $\vec{n}$ at the interface, and the refractive indices $n_1$ and $n_2$ of the two media. Suppose that the ray goes from the medium with $n_1$ into the medium with $n_2$. \\
-\textbf{Derive:} The unit direction vector of the refracted ray $\vec{r}$. \textbf{Hint:} use the vector form of Snell's Law. First, find $\cos \theta_1$ and $\sin^2 \theta_1$ using the dot product. Then, calculate $\sin^2 \theta_2$ using the ratio $\eta = n_1/n_2$. If $\sin^2 \theta_2 > 1$, Total Internal Reflection (TIR) occurs and no refracted ray exists. Otherwise, derive $\vec{r} = \eta \vec{d} + (\eta \cos \theta_1 - \cos \theta_2)\vec{n}$.
+\textbf{Derive:} The unit direction vector of the refracted ray $\vec{r}$.
 
 \subsubsection*{Implementation part}
 \textbf{Implement:} a function \lstinline|refract_vector(ray_dir, normal, n1, n2)| that returns the refracted unit vector $\vec{r}$ as a \lstinline|numpy.array|. If Total Internal Reflection occurs, return \lstinline|None|. \textbf{Note:} ensure that your normal $\vec{n}$ was correctly oriented.
@@ -287,7 +302,7 @@ $\mathbf{O}$ & $\vec{d}$ & $\mathbf{C}$ & $R$ & $\vec{a}$ & $\cos(\phi)$ & $\mat
 \bottomrule
 \end{tabular}
 \end{center}
-\textbf{Test:} Press "Reload \& Retest", than "L6 Refraction" buttons in the visual debugger window. Ensure unittests are passing. Move different points in visual debugger and ensure your code works appropriately. See if the light bends. \textbf{Debugger supposes that the light is always going from the air $n_1 = 1$ into the glass $n_2 = 1.5$.} Think if the beam should get closer of further from the normal, check in the visual debugger.
+\textbf{Test:} Press "L7 Refraction" button in the visual debugger window. Move different points in visual debugger and ensure your code works appropriately. See if the light bends. \textbf{Debugger supposes that the light is always going from the air $n_1 = 1$ into the glass $n_2 = 1.5$.} Think if the beam should get closer of further from the normal, check in the visual debugger.
 
 
 \section*{Problem 8: Run Physical Simulation}

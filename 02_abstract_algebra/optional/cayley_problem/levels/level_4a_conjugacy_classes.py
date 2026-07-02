@@ -1,5 +1,4 @@
 import tkinter as tk
-import unittest
 import sys
 import os
 
@@ -126,16 +125,6 @@ class Level4aConjugacy(BaseLevel):
         
         return artists
 
-# ==========================================
-# UNIT TESTS
-# ==========================================
-class TestLevel4a(unittest.TestCase):
-    def test_conjugacy(self):
-        nodes = {"e", "a", "b", "ba"} # K4
-        rels = [("aa", ""), ("bb", ""), ("ab", "ba")]
-        # In abelian group, conjugacy class of a is just {a}
-        c_class = tasks.compute_conjugacy_class("a", nodes, rels)
-        self.assertEqual(c_class, {"a"})
-        
+
 if __name__ == '__main__':
     unittest.main()

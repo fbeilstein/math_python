@@ -25,12 +25,9 @@ class QRDashboard(tk.Tk):
             ("level_5_rs_encoding", "L5: RS Encoding"),
             ("level_6_linear_decoding", "L6: Linear Decoding (PGZ)")
         ]
-        
-        self.status_labels = {}
         self.current_frame = None
         
         self.build_ui()
-        self.run_all_tests()
         self.launch_level("level_1_gfp_math")
 
     def build_ui(self):
@@ -41,18 +38,10 @@ class QRDashboard(tk.Tk):
         
         for module_name, label_text in self.levels:
             row = tk.Frame(self.sidebar, bg="#2d2d30")
-            row.pack(fill=tk.X, pady=2, padx=10)
-            
-            lbl_status = tk.Label(row, text="⚫", fg="gray", bg="#2d2d30", font=("Arial", 12))
-            lbl_status.pack(side=tk.LEFT)
-            self.status_labels[module_name] = lbl_status
-            
+            row.pack(fill=tk.X, pady=2, padx=10)            
             btn = tk.Button(row, text=label_text, bg="#3e3e42", fg="white", width=20,
                             command=lambda m=module_name: self.launch_level(m))
             btn.pack(side=tk.LEFT, padx=5)
-            
-        tk.Button(self.sidebar, text="↻ Run All Tests", font=("Arial", 12, "bold"), bg="#007acc", fg="white",
-                  command=self.run_all_tests).pack(pady=20, fill=tk.X, padx=10)
                   
         tk.Frame(self.sidebar, height=2, bg="gray").pack(fill=tk.X, padx=10, pady=10)
         
@@ -62,20 +51,6 @@ class QRDashboard(tk.Tk):
         self.main_area = tk.Frame(self, bg="#1e1e1e")
         self.main_area.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-    def run_all_tests(self):
-        for module_name, _ in self.levels:
-            path = os.path.join(self.levels_dir, f"{module_name}.py")
-            if not os.path.exists(path):
-                continue
-                
-            try:
-                result = subprocess.run([sys.executable, path, "--no-graphics"], capture_output=True, text=True)
-                if result.returncode == 0:
-                    self.status_labels[module_name].config(text="🟢", fg="#00ff00")
-                else:
-                    self.status_labels[module_name].config(text="🔴", fg="#ff0000")
-            except Exception:
-                self.status_labels[module_name].config(text="🔴", fg="#ff0000")
 
     def launch_level(self, module_name):
         if self.current_frame:
