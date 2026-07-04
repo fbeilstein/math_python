@@ -72,12 +72,12 @@ Additional problems for warm-up or advanced students:
 
 ## Lectures
 
-Each module contains a `slides.html` and `lectures/*.md` files. To view lectures locally:
+Each module contains its own HTML lecture files. To view lectures locally, you must run the server from the root of the repository:
 
 ```bash
-cd <module_folder>/
+# From the math_python root directory:
 python -m http.server 8000
-# Open http://localhost:8000/slides.html?file=lectures/<lecture_name>.md
+# Open http://localhost:8000/00_kickoff/lectures/01_linear_algebra_optics.html
 ```
 
 The presentation engine is included as a git submodule:
