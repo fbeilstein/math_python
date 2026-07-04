@@ -81,7 +81,7 @@ class Level3Circle(BaseLevel):
 # ==========================================
 # STANDALONE EXECUTION
 # ==========================================
-if __name__ == \'__main__\':
+if __name__ == '__main__':
     lvl = Level3Circle()
     lvl.draw()
     plt.show()

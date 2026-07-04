@@ -52,7 +52,7 @@ class Level6ArcNormal(Level4Arc):
 # ==========================================
 # STANDALONE EXECUTION
 # ==========================================
-if __name__ == \'__main__\':
+if __name__ == '__main__':
     lvl = Level6ArcNormal()
     lvl.draw()
     plt.show()

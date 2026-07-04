@@ -52,7 +52,7 @@ class Level5SegmentNormal(Level1Line):
 # ==========================================
 # STANDALONE EXECUTION
 # ==========================================
-if __name__ == \'__main__\':
+if __name__ == '__main__':
     lvl = Level5SegmentNormal()
     lvl.draw()
     plt.show()

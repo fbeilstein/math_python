@@ -7,9 +7,8 @@ A semester course exploring deep mathematical topics through hands-on Python pro
 
 ### The Kickoff
 **Session 1 — Linear Algebra & Optics** (Combined Lecture + Practice)
-- Vectors, matrices, and ray tracing
-- Introduction to Python vectorization and the coding environment
-- Practice: [`optical_problem`](00_kickoff/practice/optical_problem/)
+- Lecture: [Linear Algebra & Optics](https://fbeilstein.github.io/math_python/00_kickoff/lectures/01_linear_algebra_optics.html)
+- Practice: [Optics](https://github.com/fbeilstein/math_python/releases/download/optics_v0/optical_problem.zip)
 
 ---
 

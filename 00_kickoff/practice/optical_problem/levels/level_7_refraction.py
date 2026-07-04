@@ -66,7 +66,7 @@ class Level7Refraction(Level5SegmentNormal):
 # ==========================================
 # STANDALONE EXECUTION
 # ==========================================
-if __name__ == \'__main__\':
+if __name__ == '__main__':
     lvl = Level7Refraction()
     lvl.draw()
     plt.show()

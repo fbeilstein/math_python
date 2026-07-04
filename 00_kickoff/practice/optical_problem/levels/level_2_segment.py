@@ -35,7 +35,7 @@ class Level2Segment(Level1Line):
 # ==========================================
 # STANDALONE EXECUTION
 # ==========================================
-if __name__ == \'__main__\':
+if __name__ == '__main__':
     lvl = Level2Segment()
     lvl.draw()
     plt.show()

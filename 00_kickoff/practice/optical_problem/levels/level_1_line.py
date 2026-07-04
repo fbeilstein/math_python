@@ -52,7 +52,7 @@ class Level1Line(BaseLevel):
 # ==========================================
 # STANDALONE EXECUTION
 # ==========================================
-if __name__ == \'__main__\':
+if __name__ == '__main__':
     lvl = Level1Line()
     lvl.draw()
     plt.show()
