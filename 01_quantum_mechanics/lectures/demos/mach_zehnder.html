@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mach-Zehnder Simulator</title>
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: sans-serif;
+            background-color: transparent;
+            color: #fff;
+        }
+
+        body.light-theme {
+            color: #333;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100vh;
+            cursor: crosshair;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            pointer-events: none;
+        }
+
+        .instruction {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .math-legend {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 13px;
+            color: #aaa;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: absolute;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: #222;
+            margin: 5% auto;
+            padding: 20px 30px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 650px;
+            color: #eee;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+            position: relative;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        body.light-theme .modal-content {
+            background-color: #fdfdfd;
+            color: #222;
+            border-color: #ccc;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .close-btn {
+            color: #888;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+        body.light-theme .close-btn:hover {
+            color: #000;
+        }
+
+        .component-hover:hover {
+            color: #fff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        body.light-theme .component-hover:hover {
+            color: #000;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="controls">
+        <div class="instruction"><b>Interactive Mach-Zehnder Interferometer</b><br>Click on the dashed boxes to block or
+            unblock the quantum paths!<br><br><b>Click on a Mirror (M) or Beam Splitter (BS) to see the rigorous QM
+                derivation of its phase shift!</b></div>
+    </div>
+
+    <!-- Math Modal -->
+    <div id="math-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title" style="margin-top: 0;"></h2>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <canvas id="mzCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('mzCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let isLight = false;
+
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'theme-change') {
+                isLight = e.data.theme === 'light';
+                document.body.classList.toggle('light-theme', isLight);
+            }
+        });
+        window.parent.postMessage({ type: 'get-theme' }, '*');
+
+        // Math Content
+        const mirrorMath = `
+        <p>A perfect mirror is modeled as an infinite potential barrier in the Schrödinger Equation: $V(x) \\to \\infty$ at $x=0$.</p>
+        <p>Because the potential is infinite, the wave function must perfectly vanish at the boundary: $\\psi(0) = 0$.</p>
+        <p>The general state is a superposition of the incident and reflected momentum eigenstates:</p>
+        $$ \\psi(x) = A e^{ikx} + B e^{-ikx} $$
+        <p>Applying the boundary condition:</p>
+        $$ \\psi(0) = A e^0 + B e^0 = A + B = 0 \\implies B = -A $$
+        <p>The reflected amplitude is $B = A e^{i\\pi}$, proving that reflection off a hard boundary requires a precise <b>$180^\\circ$ ($\\pi$) phase shift</b> purely from quantum mechanics!</p>
+        `;
+
+        const bsMath = `
+        <p>A beam splitter acts as a Unitary operator $\\hat{U}$ mapping input modes to output modes:</p>
+        $$ \\begin{pmatrix} |\\psi_3\\rangle \\\\ |\\psi_4\\rangle \\end{pmatrix} = \\begin{pmatrix} r & t \\\\ t & r \\end{pmatrix} \\begin{pmatrix} |\\psi_1\\rangle \\\\ |\\psi_2\\rangle \\end{pmatrix} $$
+        <p>Postulate 4 (Conservation of Probability) requires Unitarity: $\\hat{U}^\\dagger \\hat{U} = I$.</p>
+        $$ \\begin{pmatrix} r^* & t^* \\\\ t^* & r^* \\end{pmatrix} \\begin{pmatrix} r & t \\\\ t & r \\end{pmatrix} = \\begin{pmatrix} |r|^2 + |t|^2 & r^* t + t^* r \\\\ t^* r + r^* t & |t|^2 + |r|^2 \\end{pmatrix} = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix} $$
+        <p>From the diagonal, $|r|^2 + |t|^2 = 1$, allowing the parameterization $r = \\cos(\\xi)e^{i\\phi}$ and $t = \\sin(\\xi)e^{i\\psi}$.</p>
+        <p>From the off-diagonal, $r^* t + t^* r = 0$, which yields:</p>
+        $$ \\cos(\\xi)\\sin(\\xi)(e^{i(\\psi - \\phi)} + e^{-i(\\psi - \\phi)}) = \\sin(2\\xi)\\cos(\\phi - \\psi) = 0 $$
+        <p>For a functioning beam splitter ($\\sin(2\\xi) \\neq 0$), we must have $\\cos(\\phi - \\psi) = 0$, strictly proving that $\\phi - \\psi = \\pm \\pi/2$.</p>
+        <p>This is the fundamental quantum proof of the <b>$90^\\circ$ ($\\pi/2$) relative phase shift</b>!</p>
+        `;
+
+        const modal = document.getElementById('math-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+
+        function showModal(title, htmlContent) {
+            modalTitle.innerHTML = title;
+            modalBody.innerHTML = htmlContent;
+            modal.style.display = 'block';
+            if (window.MathJax) {
+                MathJax.typesetPromise([modalBody]);
+            }
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        let width, height;
+        let time = 0;
+
+        let upperBlocked = false;
+        let lowerBlocked = false;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- LAYOUT CONFIGURATION ---
+        // Change these values to fine-tune the positions of everything
+        const logicalW = 850; // Total internal coordinate width
+        const logicalH = 400; // Total internal coordinate height
+
+        // Global offsets to shift the entire diagram at once
+        const globalDx = 40;
+        const globalDy = 0;
+
+        // Positions of optical components
+        const pIn = { x: 50, y: 300 };
+        const pBS1 = { x: 200, y: 300 };
+        const pM1 = { x: 200, y: 100 };
+        const pM2 = { x: 500, y: 300 };
+        const pBS2 = { x: 500, y: 100 };
+        const pD1 = { x: 650, y: 100 };
+        const pD2 = { x: 500, y: 20 };
+
+        // Positions of the clickable blockers
+        const rectUpper = { x: 300, y: 80, w: 100, h: 40 };
+        const rectLower = { x: 300, y: 280, w: 100, h: 40 };
+
+        // Positions of the output graphs (x, y)
+        const graph1Pos = { x: 550, y: 150 };
+        const graph2Pos = { x: 550, y: -10 };
+        // -----------------------------
+
+        canvas.addEventListener('mousedown', (e) => {
+            // If modal is open, don't interact with canvas
+            if (modal.style.display === 'block') {
+                // Check if they clicked outside the modal content
+                if (e.target === modal) closeModal();
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const scale = Math.min(width / logicalW, height / logicalH);
+            const offsetX = (width - logicalW * scale) / 2;
+            const offsetY = (height - logicalH * scale) / 2;
+
+            const mx = (e.clientX - rect.left - offsetX) / scale - globalDx;
+            const my = (e.clientY - rect.top - offsetY) / scale - globalDy;
+
+            // Hit detection for Blockers
+            if (mx >= rectUpper.x && mx <= rectUpper.x + rectUpper.w && my >= rectUpper.y && my <= rectUpper.y + rectUpper.h) {
+                upperBlocked = !upperBlocked;
+                return;
+            }
+            if (mx >= rectLower.x && mx <= rectLower.x + rectLower.w && my >= rectLower.y && my <= rectLower.y + rectLower.h) {
+                lowerBlocked = !lowerBlocked;
+                return;
+            }
+
+            // Hit detection for Mirrors
+            if (Math.hypot(mx - pM1.x, my - pM1.y) < 35 || Math.hypot(mx - pM2.x, my - pM2.y) < 35) {
+                showModal("Quantum Phase Shift: Mirrors", mirrorMath);
+                return;
+            }
+
+            // Hit detection for Beam Splitters
+            if (Math.hypot(mx - pBS1.x, my - pBS1.y) < 35 || Math.hypot(mx - pBS2.x, my - pBS2.y) < 35) {
+                showModal("Quantum Phase Shift: Beam Splitters", bsMath);
+                return;
+            }
+        });
+
+        // Change cursor to pointer if hovering over an interactive element
+        canvas.addEventListener('mousemove', (e) => {
+            if (modal.style.display === 'block') return;
+            const rect = canvas.getBoundingClientRect();
+            const scale = Math.min(width / logicalW, height / logicalH);
+            const offsetX = (width - logicalW * scale) / 2;
+            const offsetY = (height - logicalH * scale) / 2;
+            const mx = (e.clientX - rect.left - offsetX) / scale - globalDx;
+            const my = (e.clientY - rect.top - offsetY) / scale - globalDy;
+
+            let pointer = false;
+            if (mx >= rectUpper.x && mx <= rectUpper.x + rectUpper.w && my >= rectUpper.y && my <= rectUpper.y + rectUpper.h) pointer = true;
+            if (mx >= rectLower.x && mx <= rectLower.x + rectLower.w && my >= rectLower.y && my <= rectLower.y + rectLower.h) pointer = true;
+            if (Math.hypot(mx - pM1.x, my - pM1.y) < 35 || Math.hypot(mx - pM2.x, my - pM2.y) < 35) pointer = true;
+            if (Math.hypot(mx - pBS1.x, my - pBS1.y) < 35 || Math.hypot(mx - pBS2.x, my - pBS2.y) < 35) pointer = true;
+
+            canvas.style.cursor = pointer ? 'pointer' : 'crosshair';
+        });
+
+        const k = 0.1;
+        const omega = 0.1;
+
+        function drawSineWave(ctx, x1, y1, x2, y2, phase0, amplitude, color) {
+            if (amplitude === 0) return phase0 + k * Math.hypot(x2 - x1, y2 - y1);
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const dist = Math.hypot(dx, dy);
+            const steps = Math.floor(dist / 2);
+
+            ctx.save();
+            ctx.translate(x1, y1);
+            ctx.rotate(Math.atan2(dy, dx));
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+
+            for (let i = 0; i <= steps; i++) {
+                const d = i * 2;
+                const val = amplitude * Math.sin(k * d - omega * time + phase0);
+                if (i === 0) ctx.moveTo(d, val);
+                else ctx.lineTo(d, val);
+            }
+            ctx.stroke();
+            ctx.restore();
+            return phase0 + k * dist;
+        }
+
+        function drawComponent(ctx, x, y, type) {
+            ctx.save();
+            ctx.translate(x, y);
+            const color = isLight ? '#333' : '#fff';
+            ctx.strokeStyle = color;
+            ctx.fillStyle = isLight ? '#eee' : '#222';
+            ctx.lineWidth = 2;
+
+            ctx.rotate(-Math.PI / 4);
+
+            if (type === 'BS') {
+                ctx.fillRect(-5, -25, 10, 50);
+                ctx.strokeRect(-5, -25, 10, 50);
+                ctx.fillStyle = '#4CAF50';
+                ctx.fillText("BS", 10, 25);
+            } else if (type === 'M') {
+                ctx.beginPath();
+                ctx.moveTo(0, -25);
+                ctx.lineTo(0, 25);
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                ctx.fillStyle = '#2196F3';
+                ctx.fillText("M", 5, 25);
+            }
+
+            // Add a subtle hit target hint
+            ctx.restore();
+        }
+
+        function drawBlocker(ctx, rect, blocked) {
+            ctx.save();
+            if (blocked) {
+                ctx.fillStyle = '#f44336';
+                ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+                ctx.fillStyle = '#fff';
+                ctx.font = '16px sans-serif';
+                ctx.fillText('BLOCKED', rect.x + 10, rect.y + 25);
+            } else {
+                ctx.strokeStyle = isLight ? '#ccc' : '#444';
+                ctx.setLineDash([5, 5]);
+                ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+                ctx.fillStyle = isLight ? '#999' : '#888';
+                ctx.font = '12px sans-serif';
+                ctx.fillText('Click to block', rect.x + 15, rect.y + 25);
+            }
+            ctx.restore();
+        }
+
+        function drawGraph(ctx, x, y, title, phase1, amp1, phase2, amp2) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            ctx.fillStyle = isLight ? '#fff' : '#111';
+            ctx.strokeStyle = isLight ? '#ccc' : '#444';
+            ctx.fillRect(0, 0, 150, 80);
+            ctx.strokeRect(0, 0, 150, 80);
+
+            ctx.fillStyle = isLight ? '#333' : '#eee';
+            ctx.font = '12px sans-serif';
+            ctx.fillText(title, 5, -5);
+
+            if (amp1 > 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(33, 150, 243, 0.5)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 150; i++) {
+                    const t_i = time - (150 - i) * 0.5;
+                    const v1 = amp1 * Math.sin(-omega * t_i + phase1);
+                    if (i === 0) ctx.moveTo(i, 40 - v1);
+                    else ctx.lineTo(i, 40 - v1);
+                }
+                ctx.stroke();
+            }
+
+            if (amp2 > 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(244, 67, 54, 0.5)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 150; i++) {
+                    const t_i = time - (150 - i) * 0.5;
+                    const v2 = amp2 * Math.sin(-omega * t_i + phase2);
+                    if (i === 0) ctx.moveTo(i, 40 - v2);
+                    else ctx.lineTo(i, 40 - v2);
+                }
+                ctx.stroke();
+            }
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#9C27B0';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 150; i++) {
+                const t_i = time - (150 - i) * 0.5;
+                const v1 = amp1 * Math.sin(-omega * t_i + phase1);
+                const v2 = amp2 * Math.sin(-omega * t_i + phase2);
+                const val = v1 + v2;
+                if (i === 0) ctx.moveTo(i, 40 - val);
+                else ctx.lineTo(i, 40 - val);
+            }
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, width, height);
+
+            const scale = Math.min(width / logicalW, height / logicalH);
+            const offsetX = (width - logicalW * scale) / 2;
+            const offsetY = (height - logicalH * scale) / 2;
+
+            ctx.save();
+            ctx.translate(offsetX + globalDx * scale, offsetY + globalDy * scale);
+            ctx.scale(scale, scale);
+
+            const pIn_end = drawSineWave(ctx, pIn.x, pIn.y, pBS1.x, pBS1.y, 0, 20, '#9e9e9e');
+            drawComponent(ctx, pBS1.x, pBS1.y, 'BS');
+
+            let pUpper_amp = 20 / Math.SQRT2;
+            let pUpper_p1 = drawSineWave(ctx, pBS1.x, pBS1.y, pM1.x, pM1.y, pIn_end + Math.PI / 2, pUpper_amp, '#2196F3');
+
+            drawComponent(ctx, pM1.x, pM1.y, 'M');
+
+            let pUpper_p2 = pUpper_p1 + Math.PI;
+
+            if (!upperBlocked) {
+                pUpper_p2 = drawSineWave(ctx, pM1.x, pM1.y, pBS2.x, pBS2.y, pUpper_p2, pUpper_amp, '#2196F3');
+            } else {
+                drawSineWave(ctx, pM1.x, pM1.y, rectUpper.x, pM1.y, pUpper_p2, pUpper_amp, '#2196F3');
+                pUpper_p2 += k * Math.hypot(pBS2.x - pM1.x, pBS2.y - pM1.y);
+                pUpper_amp = 0;
+            }
+
+            let pLower_amp = 20 / Math.SQRT2;
+            let pLower_p1;
+
+            if (!lowerBlocked) {
+                pLower_p1 = drawSineWave(ctx, pBS1.x, pBS1.y, pM2.x, pM2.y, pIn_end, pLower_amp, '#F44336');
+            } else {
+                drawSineWave(ctx, pBS1.x, pBS1.y, rectLower.x, pBS1.y, pIn_end, pLower_amp, '#F44336');
+                pLower_p1 = pIn_end + k * Math.hypot(pM2.x - pBS1.x, pM2.y - pBS1.y);
+                pLower_amp = 0;
+            }
+
+            drawComponent(ctx, pM2.x, pM2.y, 'M');
+
+            let pLower_p2 = pLower_p1 + Math.PI;
+            pLower_p2 = drawSineWave(ctx, pM2.x, pM2.y, pBS2.x, pBS2.y, pLower_p2, pLower_amp, '#F44336');
+
+            drawBlocker(ctx, rectUpper, upperBlocked);
+            drawBlocker(ctx, rectLower, lowerBlocked);
+
+            drawComponent(ctx, pBS2.x, pBS2.y, 'BS');
+
+            const d1_upper_phase = pUpper_p2;
+            const d1_upper_amp = pUpper_amp / Math.SQRT2;
+            const d1_lower_phase = pLower_p2 + Math.PI / 2;
+            const d1_lower_amp = pLower_amp / Math.SQRT2;
+
+            const X1 = d1_upper_amp * Math.cos(d1_upper_phase) + d1_lower_amp * Math.cos(d1_lower_phase);
+            const Y1 = d1_upper_amp * Math.sin(d1_upper_phase) + d1_lower_amp * Math.sin(d1_lower_phase);
+            const d1_res_amp = Math.hypot(X1, Y1);
+            const d1_res_phase = Math.atan2(Y1, X1);
+
+            drawSineWave(ctx, pBS2.x, pBS2.y, pD1.x, pD1.y, d1_res_phase, d1_res_amp, '#9C27B0');
+
+            const d2_upper_phase = pUpper_p2 + Math.PI / 2;
+            const d2_upper_amp = pUpper_amp / Math.SQRT2;
+            const d2_lower_phase = pLower_p2;
+            const d2_lower_amp = pLower_amp / Math.SQRT2;
+
+            const X2 = d2_upper_amp * Math.cos(d2_upper_phase) + d2_lower_amp * Math.cos(d2_lower_phase);
+            const Y2 = d2_upper_amp * Math.sin(d2_upper_phase) + d2_lower_amp * Math.sin(d2_lower_phase);
+            const d2_res_amp = Math.hypot(X2, Y2);
+            const d2_res_phase = Math.atan2(Y2, X2);
+
+            drawSineWave(ctx, pBS2.x, pBS2.y, pD2.x, pD2.y, d2_res_phase, d2_res_amp, '#9C27B0');
+
+            drawGraph(ctx, graph1Pos.x, graph1Pos.y, "Detector 1 (Constructive)", d1_upper_phase, d1_upper_amp, d1_lower_phase, d1_lower_amp);
+            drawGraph(ctx, graph2Pos.x, graph2Pos.y, "Detector 2 (Destructive)", d2_upper_phase, d2_upper_amp, d2_lower_phase, d2_lower_amp);
+
+            ctx.fillStyle = isLight ? '#000' : '#fff';
+            ctx.font = '16px sans-serif';
+            ctx.fillText("Photon Source", 10, 325);
+            ctx.fillText("D1", pD1.x + 10, pD1.y + 5);
+            ctx.fillText("D2", pD2.x - 10, pD2.y - 10);
+
+            // Draw interactive hints
+            ctx.fillStyle = isLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
+            ctx.font = '12px sans-serif';
+            ctx.fillText("(Click for QM Math)", pM1.x + 10, pM1.y - 10);
+            ctx.fillText("(Click for QM Math)", pM2.x + 10, pM2.y - 10);
+            ctx.fillText("(Click for QM Math)", pBS1.x + 15, pBS1.y - 15);
+            ctx.fillText("(Click for QM Math)", pBS2.x + 15, pBS2.y - 15);
+
+            ctx.restore();
+
+            time += 0.5;
+            requestAnimationFrame(render);
+        }
+
+        requestAnimationFrame(render);
+    </script>
+</body>
+
+</html>
