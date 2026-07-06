@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Three Polarizer Paradox Simulator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: sans-serif;
+            background-color: transparent;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        body.light-theme {
+            color: #333;
+        }
+
+        #canvas-container {
+            flex: 1;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #controls-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        body.light-theme #controls-panel {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #ccc;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-row label {
+            font-size: 14px;
+            width: 120px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+        }
+
+        /* Math Dashboard */
+        #math-dashboard {
+            height: 150px;
+            background: rgba(20, 20, 20, 0.8);
+            border-top: 1px solid #444;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+        }
+
+        body.light-theme #math-dashboard {
+            background: rgba(240, 240, 240, 0.9);
+            border-top: 1px solid #ccc;
+        }
+
+        .math-section {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .math-title {
+            font-family: sans-serif;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        body.light-theme .math-title {
+            color: #666;
+        }
+
+        .math-expr {
+            display: flex;
+            align-items: center;
+        }
+
+        .arrow {
+            font-size: 18px;
+            margin: 0 2px;
+            color: #888;
+        }
+
+        .val {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .val-r {
+            color: #F44336;
+        }
+
+        .val-b {
+            color: #2196F3;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px !important;
+            height: 20px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider-round {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #F44336;
+            transition: .2s;
+            border-radius: 20px;
+        }
+
+        .slider-round:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider-round {
+            background-color: #2196F3;
+        }
+
+        input:checked+.slider-round:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="canvas-container">
+        <div id="controls-panel">
+            <div class="control-row">
+                <label><b>Middle Filter:</b></label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="filter-type">
+                    <span class="slider-round"></span>
+                </label>
+                <span id="filter-label"
+                    style="font-size: 14px; font-weight: bold; width: 80px; color: #F44336;">Attenuator</span>
+            </div>
+            <div class="control-row" id="angle-row" style="opacity: 0.5; pointer-events: none;">
+                <label>Rotation Angle $\theta$:</label>
+                <input type="range" id="angle-slider" min="0" max="90" value="45">
+                <span id="angle-display" style="width: 30px; text-align: right;">45&deg;</span>
+            </div>
+            <div style="font-size: 11px; color: #aaa; margin-top: 5px; width: 300px;">
+                <b>Paradox:</b> Turn on the Polarizer and drag the slider. A simple attenuator only scales the wave,
+                meaning the final horizontal filter blocks everything. A polarizer <i>rotates</i> the state vector,
+                allowing light to pass!
+            </div>
+        </div>
+        <canvas id="simCanvas"></canvas>
+    </div>
+
+    <div id="math-dashboard">
+        <div class="math-section">
+            <div class="math-title">Initial State</div>
+            <div class="math-expr">
+                $|\psi_1\rangle =$
+                <span class="val" style="margin: 0 4px;">1.00</span>$|\uparrow\rangle$
+            </div>
+        </div>
+
+        <div class="arrow">&rarr;</div>
+
+        <div class="math-section">
+            <div class="math-title" id="m-f2-title">Filter 2 ($\hat{A}$)</div>
+            <div class="math-expr" style="display: flex; flex-direction: column; align-items: flex-end; font-size: 14px;">
+                <div style="white-space: nowrap;">
+                    <span id="m-f2-symb" style="margin-right: 5px;">$\hat{A} =$</span>
+                    <span id="m00" class="val-r" style="margin-right: 2px;">0.71</span>$|\uparrow\rangle\langle\uparrow| +$
+                    <span id="m01" class="val-r" style="margin: 0 2px;">0.00</span>$|\uparrow\rangle\langle\rightarrow|$
+                </div>
+                <div style="white-space: nowrap;">
+                    $+$ <span id="m10" class="val-r" style="margin: 0 2px;">0.00</span>$|\rightarrow\rangle\langle\uparrow| +$
+                    <span id="m11" class="val-r" style="margin: 0 2px;">0.71</span>$|\rightarrow\rangle\langle\rightarrow|$
+                </div>
+            </div>
+        </div>
+
+        <div class="arrow">&rarr;</div>
+
+        <div class="math-section">
+            <div class="math-title">State after F2</div>
+            <div class="math-expr">
+                $|\psi_2\rangle =$
+                <span id="v2_0" class="val" style="margin: 0 4px;">0.71</span>$|\uparrow\rangle + $
+                <span id="v2_1" class="val" style="margin: 0 4px;">0.00</span>$|\rightarrow\rangle$
+            </div>
+        </div>
+
+        <div class="arrow">&rarr;</div>
+
+        <div class="math-section">
+            <div class="math-title">Filter 3</div>
+            <div class="math-expr">
+                $\hat{P}_H =$ <span class="val-b"
+                    style="margin: 0 4px;">1.00</span>$|\rightarrow\rangle\langle\rightarrow|$
+            </div>
+        </div>
+
+        <div class="arrow">&rarr;</div>
+
+        <div class="math-section">
+            <div class="math-title">Final State ($I \propto \|\psi_3\|^2$)</div>
+            <div class="math-expr">
+                $|\psi_3\rangle =$
+                <span id="v3_0" class="val" style="margin: 0 4px;">0.00</span>$|\uparrow\rangle + $
+                <span id="v3_1" class="val" style="margin: 0 4px;">0.00</span>$|\rightarrow\rangle$
+            </div>
+            <div class="math-title" style="color: #F44336; font-weight: bold; font-size: 14px; margin-top: 5px;"
+                id="final-intensity">Intensity: 0.0%</div>
+        </div>
+    </div>
+
+    <!-- MathJax for the static math symbols -->
+    <script>
+        MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        let isLight = false;
+
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'theme-change') {
+                isLight = e.data.theme === 'light';
+                document.body.classList.toggle('light-theme', isLight);
+            }
+        });
+        window.parent.postMessage({ type: 'get-theme' }, '*');
+
+        // Controls
+        const filterToggle = document.getElementById('filter-type');
+        const filterLabel = document.getElementById('filter-label');
+        const angleSlider = document.getElementById('angle-slider');
+        const angleDisplay = document.getElementById('angle-display');
+        const angleRow = document.getElementById('angle-row');
+
+        // Math Elements
+        const el_m00 = document.getElementById('m00');
+        const el_m01 = document.getElementById('m01');
+        const el_m10 = document.getElementById('m10');
+        const el_m11 = document.getElementById('m11');
+        const el_v20 = document.getElementById('v2_0');
+        const el_v21 = document.getElementById('v2_1');
+        const el_v30 = document.getElementById('v3_0');
+        const el_v31 = document.getElementById('v3_1');
+        const el_f2Title = document.getElementById('m-f2-title');
+        const el_f2Symb = document.getElementById('m-f2-symb');
+        const el_finalInt = document.getElementById('final-intensity');
+
+        let isPolarizer = false;
+        let thetaDeg = 45;
+
+        function updateMath() {
+            thetaDeg = parseInt(angleSlider.value);
+            angleDisplay.innerHTML = thetaDeg + "&deg;";
+
+            let m00, m01, m10, m11;
+
+            if (isPolarizer) {
+                const rad = thetaDeg * Math.PI / 180;
+                m00 = Math.cos(rad) * Math.cos(rad);
+                m01 = Math.sin(rad) * Math.cos(rad);
+                m10 = Math.sin(rad) * Math.cos(rad);
+                m11 = Math.sin(rad) * Math.sin(rad);
+                el_f2Title.innerHTML = "Filter 2 ($\\hat{P}_D$)";
+                if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el_f2Title]);
+                el_f2Symb.innerHTML = "$\\hat{P}$";
+                if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el_f2Symb]);
+            } else {
+                m00 = 1 / Math.SQRT2;
+                m01 = 0;
+                m10 = 0;
+                m11 = 1 / Math.SQRT2;
+                el_f2Title.innerHTML = "Filter 2 ($\\hat{A}$)";
+                if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el_f2Title]);
+                el_f2Symb.innerHTML = "$\\hat{A}$";
+                if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el_f2Symb]);
+            }
+
+            el_m00.innerText = m00.toFixed(2);
+            el_m01.innerText = m01.toFixed(2);
+            el_m10.innerText = m10.toFixed(2);
+            el_m11.innerText = m11.toFixed(2);
+
+            // psi_1 = [1, 0] (Vertical)
+            // psi_2 = M * psi_1
+            const v2_0 = m00 * 1 + m01 * 0;
+            const v2_1 = m10 * 1 + m11 * 0;
+
+            el_v20.innerText = v2_0.toFixed(2);
+            el_v21.innerText = v2_1.toFixed(2);
+
+            // psi_3 = P_H * psi_2 where P_H = [[0, 0], [0, 1]]
+            const v3_0 = 0;
+            const v3_1 = v2_1;
+
+            el_v30.innerText = v3_0.toFixed(2);
+            el_v31.innerText = v3_1.toFixed(2);
+
+            const intensity = (v3_0 * v3_0 + v3_1 * v3_1) * 100; // Relative to psi_1 (which is 100%)
+            // Actually, unpolarized is I0, P1 makes it I0/2. So psi_1 norm squared is 1, meaning 50% of I0.
+            // Let's just show percentage relative to psi_1 intensity.
+            el_finalInt.innerText = "Intensity: " + intensity.toFixed(1) + "%";
+            if (intensity > 0.1) el_finalInt.style.color = "#4CAF50";
+            else el_finalInt.style.color = "#F44336";
+        }
+
+        filterToggle.addEventListener('change', (e) => {
+            isPolarizer = e.target.checked;
+            if (isPolarizer) {
+                filterLabel.innerText = "Polarizer";
+                filterLabel.style.color = "#2196F3";
+                angleRow.style.opacity = "1";
+                angleRow.style.pointerEvents = "auto";
+            } else {
+                filterLabel.innerText = "Attenuator";
+                filterLabel.style.color = "#F44336";
+                angleRow.style.opacity = "0.5";
+                angleRow.style.pointerEvents = "none";
+            }
+            updateMath();
+        });
+
+        angleSlider.addEventListener('input', updateMath);
+
+        let width, height;
+        let time = 0;
+
+        function resize() {
+            width = canvas.parentElement.clientWidth;
+            height = canvas.parentElement.clientHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resize);
+        // Initial call after small delay to ensure DOM is ready
+        setTimeout(resize, 100);
+
+        const logicalW = 850;
+        const logicalH = 300;
+        const globalDx = 0;
+        const globalDy = 0;
+
+        const pSource = { x: 50, y: 150 };
+        const pF1 = { x: 250, y: 150 };
+        const pF2 = { x: 450, y: 150 };
+        const pF3 = { x: 650, y: 150 };
+        const pTarget = { x: 800, y: 150 };
+
+        function drawFilter(ctx, x, y, type, angleRad) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Draw glass plate
+            ctx.fillStyle = isLight ? 'rgba(200, 220, 255, 0.4)' : 'rgba(100, 150, 255, 0.2)';
+            ctx.strokeStyle = isLight ? '#888' : '#aaa';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 15, 60, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.clip(); // Clip grating lines to the ellipse
+
+            if (type === 'P') {
+                // Polarizer grating lines
+                ctx.rotate(angleRad);
+                ctx.strokeStyle = isLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
+                ctx.lineWidth = 1;
+                for (let i = -70; i <= 70; i += 6) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, -70);
+                    ctx.lineTo(i, 70);
+                    ctx.stroke();
+                }
+            } else if (type === 'A') {
+                // Attenuator dots or uniform shading
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.fillRect(-70, -70, 140, 140);
+            }
+
+            ctx.restore();
+
+            // Label
+            ctx.fillStyle = isLight ? '#333' : '#eee';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            if (x === pF1.x) ctx.fillText("P1 (Vertical)", x, y - 75);
+            if (x === pF2.x) {
+                if (isPolarizer) ctx.fillText("P2 (" + thetaDeg + "°)", x, y - 75);
+                else ctx.fillText("A2 (Neutral)", x, y - 75);
+            }
+            if (x === pF3.x) ctx.fillText("P3 (Horizontal)", x, y - 75);
+        }
+
+        function drawBeam(ctx, x1, y1, x2, y2, intensity, angleRad, isUnpolarized) {
+            if (intensity <= 0.01) return;
+
+            ctx.save();
+            // Core beam
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = `rgba(255, 235, 59, ${intensity})`; // Yellow beam
+            ctx.lineWidth = 15 * Math.sqrt(intensity); // Thickness scales with sqrt(intensity) roughly
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Core bright center
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${intensity})`;
+            ctx.lineWidth = 5 * Math.sqrt(intensity);
+            ctx.stroke();
+
+            // Draw polarization arrows animating along the beam
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const dist = Math.hypot(dx, dy);
+
+            ctx.translate(x1, y1);
+            ctx.rotate(Math.atan2(dy, dx));
+
+            ctx.strokeStyle = isLight ? '#000' : '#fff';
+            ctx.lineWidth = 2;
+
+            // Number of arrows depends on distance
+            const numArrows = Math.floor(dist / 40);
+            const speed = 20;
+            const offset = (time * speed) % 40;
+
+            for (let i = -1; i <= numArrows; i++) {
+                const arrowX = i * 40 + offset;
+                if (arrowX > 10 && arrowX < dist - 10) {
+                    ctx.save();
+                    ctx.translate(arrowX, 0);
+
+                    if (isUnpolarized) {
+                        // Draw starburst for unpolarized
+                        for (let a = 0; a < Math.PI; a += Math.PI / 4) {
+                            ctx.rotate(a);
+                            ctx.beginPath();
+                            ctx.moveTo(0, -12); ctx.lineTo(0, 12);
+                            // Arrowheads
+                            ctx.moveTo(-3, -9); ctx.lineTo(0, -12); ctx.lineTo(3, -9);
+                            ctx.moveTo(-3, 9); ctx.lineTo(0, 12); ctx.lineTo(3, 9);
+                            ctx.stroke();
+                            ctx.rotate(-a);
+                        }
+                    } else {
+                        // Draw specific angle arrow (0 is vertical, 90 is horizontal)
+                        // In 2D canvas, vertical is y-axis. So angle 0 means along Y axis.
+                        ctx.rotate(angleRad);
+                        ctx.beginPath();
+                        ctx.moveTo(0, -15);
+                        ctx.lineTo(0, 15);
+                        // Arrowheads
+                        ctx.moveTo(-4, -10); ctx.lineTo(0, -15); ctx.lineTo(4, -10);
+                        ctx.moveTo(-4, 10); ctx.lineTo(0, 15); ctx.lineTo(4, 10);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+            }
+
+            ctx.restore();
+        }
+
+        function render() {
+            if (!width) resize();
+            ctx.clearRect(0, 0, width, height);
+
+            const scale = Math.min(width / logicalW, height / logicalH);
+            const offsetX = (width - logicalW * scale) / 2;
+            const offsetY = (height - logicalH * scale) / 2;
+
+            ctx.save();
+            ctx.translate(offsetX + globalDx * scale, offsetY + globalDy * scale);
+            ctx.scale(scale, scale);
+
+            // Draw filters
+            drawFilter(ctx, pF1.x, pF1.y, 'P', 0); // Vertical
+            if (isPolarizer) {
+                drawFilter(ctx, pF2.x, pF2.y, 'P', thetaDeg * Math.PI / 180);
+            } else {
+                drawFilter(ctx, pF2.x, pF2.y, 'A', 0);
+            }
+            drawFilter(ctx, pF3.x, pF3.y, 'P', Math.PI / 2); // Horizontal
+
+            // Calculate intensities and states
+            // Input unpolarized: I0 = 1.0 (we represent 100% relative intensity as 1.0, but unpolarized means 50% makes it through P1)
+
+            // Beam 1: Source to F1 (Unpolarized, intensity 1.0)
+            drawBeam(ctx, pSource.x, pSource.y, pF1.x, pF1.y, 1.0, 0, true);
+
+            // Beam 2: F1 to F2
+            // P1 is vertical. State becomes [1, 0]. Intensity is 0.5.
+            let i1 = 0.5;
+            let v1_0 = 1;
+            let v1_1 = 0;
+            drawBeam(ctx, pF1.x, pF1.y, pF2.x, pF2.y, i1, 0, false);
+
+            // Beam 3: F2 to F3
+            let i2 = 0;
+            let v2_0 = 0;
+            let v2_1 = 0;
+            let angle2 = 0;
+
+            if (isPolarizer) {
+                const rad = thetaDeg * Math.PI / 180;
+                // P2 operator applied to v1
+                v2_0 = Math.cos(rad) * Math.cos(rad) * v1_0 + Math.sin(rad) * Math.cos(rad) * v1_1;
+                v2_1 = Math.sin(rad) * Math.cos(rad) * v1_0 + Math.sin(rad) * Math.sin(rad) * v1_1;
+                i2 = i1 * (v2_0 * v2_0 + v2_1 * v2_1); // which is i1 * cos^2(theta)
+                angle2 = Math.atan2(v2_1, v2_0);
+            } else {
+                // Attenuator: 1/sqrt(2) scaling.
+                v2_0 = (1 / Math.SQRT2) * v1_0;
+                v2_1 = (1 / Math.SQRT2) * v1_1;
+                i2 = i1 * 0.5;
+                angle2 = Math.atan2(v2_1, v2_0); // which is 0 (Vertical)
+            }
+
+            // Normalize v2 for drawing the arrow angle correctly if it's an attenuator, 
+            // but atan2 handles that.
+            drawBeam(ctx, pF2.x, pF2.y, pF3.x, pF3.y, i2, angle2, false);
+
+            // Beam 4: F3 to Target
+            let i3 = 0;
+            let v3_0 = 0;
+            let v3_1 = 0;
+            let angle3 = Math.PI / 2; // F3 is Horizontal
+
+            // P3 operator applied to v2 (Horizontal projector [[0,0],[0,1]])
+            v3_0 = 0;
+            v3_1 = v2_1;
+            i3 = i1 * (v3_0 * v3_0 + v3_1 * v3_1);
+
+            drawBeam(ctx, pF3.x, pF3.y, pTarget.x, pTarget.y, i3, angle3, false);
+
+            // Draw Target Screen
+            ctx.fillStyle = isLight ? '#555' : '#888';
+            ctx.fillRect(pTarget.x, pTarget.y - 40, 10, 80);
+
+            ctx.fillStyle = isLight ? '#000' : '#fff';
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText("Unpolarized", pSource.x - 30, pSource.y - 40);
+            ctx.fillText("Source", pSource.x - 15, pSource.y - 20);
+
+            ctx.restore();
+
+            time += 0.05;
+            requestAnimationFrame(render);
+        }
+
+        updateMath();
+        requestAnimationFrame(render);
+    </script>
+</body>
+
+</html>
