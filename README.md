@@ -14,11 +14,10 @@ A semester course exploring deep mathematical topics through hands-on Python pro
 
 ### Module 1: Quantum Mechanics
 **Session 2 — Lecture: The Split-Operator Method**
-- Time-Dependent Schrödinger Equation, wavepackets, Fourier methods
+- Lecture: [Quantum Mechanics](https://fbeilstein.github.io/math_python/01_quantum_mechanics/lectures/quantum_mechanics.html)
 
 **Session 3 — Practice: Quantum Tunneling**
-- Discretizing space/time, FFT, complex arrays, wavepacket propagation
-- Practice: [`quantum_problem`](01_quantum_mechanics/practice/quantum_problem/)
+- Practice: [Quantum Tunneling](https://github.com/fbeilstein/math_python/releases/download/quanta_v0/quantum_problem.zip)
 
 ---
 
