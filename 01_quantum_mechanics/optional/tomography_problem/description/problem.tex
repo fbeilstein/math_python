@@ -1,0 +1,99 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{booktabs}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Optional Problem: Inverse Quantum Tomography \\ \large Differentiable Physics \& Gradient-Based Inversion}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Prerequisites}
+
+\begin{itemize}
+    \item Completed QM Problem 5 (split-operator method)
+    \item Basic familiarity with gradient-based optimization
+\end{itemize}
+
+\section*{PyTorch Quick Reference}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{@{} >{\ttfamily\small}l X @{}}
+\toprule
+\textcolor{blue}{PyTorch} & \textcolor{blue}{NumPy equivalent / Notes} \\ \midrule
+import torch & import numpy as np \\
+torch.tensor(arr) & Creates a tensor from a NumPy array \\
+t.numpy() & Converts tensor back to NumPy \\
+torch.fft.fft(t) / ifft(t) & Same as numpy.fft.fft / ifft \\
+torch.fft.fftfreq(n, d=dx) & Same as numpy.fft.fftfreq \\
+torch.exp, torch.sin, \ldots & Element-wise, same as NumPy \\
+t.requires\_grad\_(True) & Enable gradient tracking on tensor \\
+loss.backward() & Compute $\nabla_\theta \mathcal{L}$ via backprop \\
+optimizer.step() & $\theta \leftarrow \theta - \alpha \nabla_\theta \mathcal{L}$ \\
+torch.no\_grad() & Context manager: disable autograd \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{Install:} \lstinline|pip install torch| \quad
+\textbf{Docs:} \url{https://pytorch.org/docs/stable/}
+
+\textbf{Key idea:} PyTorch tensors track every operation. Calling \lstinline|loss.backward()| differentiates the loss with respect to all tensors that have \lstinline|requires_grad=True|. This lets us differentiate \emph{through} a physics simulation.
+
+
+\section*{Problem: Reconstructing an Unknown Potential}
+
+You built a split-operator solver (QM Problem~5). Now imagine you are an experimentalist: you observe a wavepacket scattering off an \textbf{unknown} potential $V_{\text{true}}(x)$, and you want to reconstruct it from measurements.
+
+\subsection*{Mathematical Background}
+
+\textbf{The Inverse Problem.} Given sparse observations $\{|\psi(x_j, t_k)|^2\}$ at various times, find $V(x)$ such that propagating $\psi_0$ through $V$ reproduces the data. The map $V \mapsto \psi(\cdot, t)$ is given by $e^{-i\hat{H}t}$, which depends on $V$ nonlinearly.
+
+\textbf{Teacher Forcing.} Naively unrolling the full simulation and backpropagating causes \emph{cycle skipping}: if $V_\theta$ is slightly wrong, the predicted wave drifts out of phase, and the gradient points the wrong way. The fix: break the trajectory into short segments and \textbf{reset to the true state} at each segment boundary. This bounds phase error and convexifies the loss landscape.
+
+
+\subsection*{Implementation}
+
+Open \lstinline|implementation_tasks.py|. Implement:
+
+\begin{enumerate}
+    \item \textbf{\lstinline|pt_split_operator_step(psi, k_sq, V, dt)|} — the same Trotter step as Problem~5, but in PyTorch (\lstinline|torch.fft.fft/ifft|, \lstinline|torch.exp|). No \lstinline|.numpy()| calls!
+    \item \textbf{\lstinline|GridPotential.__init__ / forward|} — learnable $V_\theta(x)$ as an \lstinline|nn.Parameter| smoothed by a Gaussian kernel.
+    \item \textbf{\lstinline|run_teacher_forcing(...)|} — for each consecutive pair of snapshots, propagate from the true state and accumulate $\mathcal{L} = \|\psi_\text{pred} - \psi_\text{true}\|^2$.
+\end{enumerate}
+
+\subsection*{Test}
+
+\begin{lstlisting}[language=bash]
+python levels/level_1_tomography.py
+\end{lstlisting}
+
+The learned $V_\theta(x)$ should converge to the hidden $V_\text{true}(x)$ within 100--300 iterations.
+
+\end{document}

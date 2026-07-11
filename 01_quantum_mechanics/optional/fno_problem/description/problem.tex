@@ -1,0 +1,104 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{booktabs}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Optional Problem: Mini Fourier Neural Operator \\ \large Learning the Quantum Time-Evolution Operator}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Prerequisites}
+
+\begin{itemize}
+    \item Completed QM Problem 5 (split-operator method)
+    \item Basic PyTorch (see reference below)
+\end{itemize}
+
+\section*{PyTorch Quick Reference}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{@{} >{\ttfamily\small}l X @{}}
+\toprule
+\textcolor{blue}{PyTorch} & \textcolor{blue}{NumPy equivalent / Notes} \\ \midrule
+import torch & import numpy as np \\
+torch.tensor(arr) & Creates a tensor from a NumPy array \\
+torch.fft.rfft(t) / irfft(t) & Real-valued FFT and inverse \\
+torch.einsum("bix,iox->box", A, B) & Einstein summation (batched matmul) \\
+nn.Parameter(tensor) & Learnable parameter (tracked by optimizer) \\
+nn.Linear(in, out) & Fully connected layer \\
+nn.Conv1d(in, out, kernel=1) & Pointwise 1D convolution \\
+F.gelu(x) & GeLU activation function \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{Install:} \lstinline|pip install torch| \quad
+\textbf{Docs:} \url{https://pytorch.org/docs/stable/}
+
+
+\section*{Problem: Learning the Time-Evolution Operator}
+
+The split-operator method is exact but sequential: predicting $\psi(x, t)$ requires stepping through every intermediate time. A \textbf{Fourier Neural Operator} (FNO) learns to approximate the time-evolution operator directly, giving $\mathcal{O}(1)$ inference regardless of target time.
+
+\subsection*{Mathematical Background}
+
+\textbf{Spectral Convolution.} A general integral operator $(\mathcal{K}v)(x) = \int \kappa(x,y)\,v(y)\,dy$ requires $\mathcal{O}(N^2)$ parameters. If the kernel is translation-invariant, the Convolution Theorem gives:
+$$
+\mathcal{F}[\mathcal{K}(v)](k) = \hat{\kappa}(k) \cdot \hat{v}(k)
+$$
+The FNO learns the Fourier-space kernel $R(k) \in \mathbb{C}^{c_\text{in} \times c_\text{out} \times k_\text{max}}$ directly, with cost $\mathcal{O}(k_\text{max})$ instead of $\mathcal{O}(N^2)$.
+
+\textbf{FNO Layer:}
+$$
+v_{\ell+1}(x) = \sigma\!\left( W\,v_\ell(x) + \mathcal{F}^{-1}\!\left[R \cdot \mathcal{F}(v_\ell)\right](x) \right)
+$$
+where $W$ is a local bypass (1$\times$1 convolution), $R$ is the learnable spectral weight, and $\sigma$ is GeLU.
+
+
+\subsection*{Implementation}
+
+Open \lstinline|implementation_tasks.py|. Implement:
+
+\begin{enumerate}
+    \item \textbf{\lstinline|SpectralConv1d.__init__ / forward|} — FFT the input, multiply first $k_\text{max}$ modes by learnable complex weights $R$, zero-pad, IFFT back.
+    \item \textbf{\lstinline|MiniFNO.__init__ / forward|} — lifting ($3 \to 32$ channels), 2 spectral layers with bypass + GeLU, projection ($32 \to 2$ channels).
+\end{enumerate}
+
+Training data is generated automatically using the NumPy solver.
+
+\subsection*{Test}
+
+\begin{lstlisting}[language=bash]
+python levels/level_1_fno.py
+\end{lstlisting}
+
+Even a 2-layer mini-FNO should achieve reasonable accuracy on simple barriers. Watch the loss curve drop and the predicted $|\psi|^2$ converge to the ground truth.
+
+\end{document}

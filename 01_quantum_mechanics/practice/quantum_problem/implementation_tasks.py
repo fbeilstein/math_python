@@ -10,7 +10,7 @@ m    = 1.0
 #  STUDENT IMPLEMENTATION (ASSIGNMENTS 1-3)
 # =============================================================================
 
-def gaussian_packet(x, x0, sigma, k0): #contains solution
+def gaussian_packet(x, x0, sigma, k0): #
     """
     Create a normalized Gaussian wave packet.
 
@@ -26,7 +26,7 @@ def gaussian_packet(x, x0, sigma, k0): #contains solution
     return psi
 
 
-def momentum_wavefunction(psi, dx): #contains solution
+def momentum_wavefunction(psi, dx): #
     """
     Compute the momentum-space wavefunction phi(k) using FFT.
     Normalized so that integral |phi|^2 dk = 1.
@@ -39,7 +39,7 @@ def momentum_wavefunction(psi, dx): #contains solution
     return k, phi
 
 
-def evolve_free_particle(psi, k, dt): #contains solution
+def evolve_free_particle(psi, k, dt): #
     """
     Evolve psi by dt under the free-particle propagator.
     H = hbar^2 k^2 / (2m)  =>  phase = exp(-i hbar k^2 dt / 2m)
@@ -53,7 +53,7 @@ def evolve_free_particle(psi, k, dt): #contains solution
 #  STUDENT IMPLEMENTATION (ASSIGNMENT 4)
 # =============================================================================
 
-def well_eigenfunction(x, n, L): #contains solution
+def well_eigenfunction(x, n, L): #
     """
     n-th eigenfunction of the infinite square well [0, L].
     Normalized for integer n; boundary conditions break for non-integer n.
@@ -66,7 +66,7 @@ def well_eigenfunction(x, n, L): #contains solution
 #  STUDENT IMPLEMENTATION (ASSIGNMENTS 5-6)
 # =============================================================================
 
-def split_operator_step(psi, k, V, dt): #contains solution
+def split_operator_step(psi, k, V, dt): #
     """
     One Trotter split-operator step.
     exp(-iHdt) ≈ exp(-iV dt/2) · exp(-iT dt) · exp(-iV dt/2)
@@ -79,7 +79,7 @@ def split_operator_step(psi, k, V, dt): #contains solution
     return psi
 
 
-def dst_energy_levels(N, L): #contains solution
+def dst_energy_levels(N, L): #
     """
     DST energy eigenvalues for infinite well: E_n = (n*pi/L)^2 / 2.
     """
@@ -92,7 +92,7 @@ def dst_energy_levels(N, L): #contains solution
 #  STUDENT IMPLEMENTATION (ASSIGNMENT 7)
 # =============================================================================
 
-def absorbing_mask(N, gobble_frac=0.1): #contains solution
+def absorbing_mask(N, gobble_frac=0.1): #
     """
     Sine-squared absorbing boundary mask (the Gobbler).
     """
@@ -108,7 +108,7 @@ def absorbing_mask(N, gobble_frac=0.1): #contains solution
 #  BONUS (EXTRA CREDIT)
 # =============================================================================
 
-def compute_tunneling_probability(V0, k0, a): #contains solution
+def compute_tunneling_probability(V0, k0, a): #
     """
     Analytic tunneling transmission for a rectangular barrier.
     """
