@@ -4,9 +4,9 @@
 \usepackage{geometry}
 \usepackage{listings}
 \usepackage{xcolor}
-\usepackage{hyperref}
 \usepackage{tabularx}
 \usepackage{booktabs}
+\usepackage{hyperref}
 
 \geometry{a4paper, margin=1in}
 
@@ -25,7 +25,7 @@
     showstringspaces=false
 }
 
-\title{Optional Problem: Mini Fourier Neural Operator \\ \large Learning the Quantum Time-Evolution Operator}
+\title{Quantum Dynamics Lab: Mini Fourier Neural Operator \\ \large Problem Set \& Implementation Guide}
 \author{VB}
 \date{\today}
 
@@ -33,14 +33,24 @@
 
 \maketitle
 
-\section*{Prerequisites}
+\section*{Problem 0: Start the engine}
 
-\begin{itemize}
-    \item Completed QM Problem 5 (split-operator method)
-    \item Basic PyTorch (see reference below)
-\end{itemize}
+Consider the files given.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the architecture of the neural operator intended for student implementation. You can add your own \lstinline|unittest.TestCase| classes at the bottom and run \lstinline|python implementation_tasks.py| to execute them. \\
+\lstinline|levels/level_1_fno.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for training and testing your FNO model against the numerical simulator ground truth. \\
+\bottomrule
+\end{tabularx}
+\end{center}
 
-\section*{PyTorch Quick Reference}
+\textbf{Prerequisites:} You will need PyTorch for this lab. Install it via \lstinline|pip install torch|.
+
+\section*{PyTorch Mini-Reference}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.3}
@@ -59,46 +69,58 @@ F.gelu(x) & GeLU activation function \\
 \end{tabularx}
 \end{center}
 
-\textbf{Install:} \lstinline|pip install torch| \quad
-\textbf{Docs:} \url{https://pytorch.org/docs/stable/}
+\section*{Problem 1: Spectral Convolution (Level 1)}
 
+\subsubsection*{Mathematical part}
+The split-step Fourier method is exact, but sequential: predicting $\psi(x, t)$ requires stepping through every intermediate time step $\Delta t$. A \textbf{Fourier Neural Operator} (FNO) learns to approximate the time-evolution operator directly, effectively allowing $\mathcal{O}(1)$ inference to leap forward to any target time.
 
-\section*{Problem: Learning the Time-Evolution Operator}
+Traditional neural networks use discrete convolutions, which are limited by small local receptive fields. The Schrödinger equation is non-local; a wave packet spreading globally cannot be captured easily by local kernels. A general integral operator $(\mathcal{K}v)(x) = \int \kappa(x, y)\,v(y)\,dy$ has a global receptive field, but requires learning $\mathcal{O}(N^2)$ parameters.
 
-The split-operator method is exact but sequential: predicting $\psi(x, t)$ requires stepping through every intermediate time. A \textbf{Fourier Neural Operator} (FNO) learns to approximate the time-evolution operator directly, giving $\mathcal{O}(1)$ inference regardless of target time.
-
-\subsection*{Mathematical Background}
-
-\textbf{Spectral Convolution.} A general integral operator $(\mathcal{K}v)(x) = \int \kappa(x,y)\,v(y)\,dy$ requires $\mathcal{O}(N^2)$ parameters. If the kernel is translation-invariant, the Convolution Theorem gives:
+However, if the kernel is translation-invariant ($\kappa(x, y) = \kappa(x-y)$), the \textbf{Convolution Theorem} gives:
 $$
 \mathcal{F}[\mathcal{K}(v)](k) = \hat{\kappa}(k) \cdot \hat{v}(k)
 $$
-The FNO learns the Fourier-space kernel $R(k) \in \mathbb{C}^{c_\text{in} \times c_\text{out} \times k_\text{max}}$ directly, with cost $\mathcal{O}(k_\text{max})$ instead of $\mathcal{O}(N^2)$.
+A global integral convolution becomes a simple pointwise multiplication in Fourier space! The FNO explicitly leverages this by learning the Fourier-space kernel $R(k)$ directly. We discard the higher-frequency modes, keeping only $k_{\text{max}}$ modes, effectively creating a low-pass filter that acts as a continuous, mesh-free operator.
 
-\textbf{FNO Layer:}
+\subsubsection*{Implementation part}
+\textbf{Implement:}
+1. \lstinline|SpectralConv1d.__init__(self, in_channels, out_channels, modes)|: Initialize a learnable parameter of size \lstinline|(in_channels, out_channels, modes)| using \lstinline|torch.empty(..., dtype=torch.cfloat)|. Initialize the real and imaginary parts using \lstinline|nn.init.xavier_normal_|.
+2. \lstinline|SpectralConv1d.forward(self, x)|: 
+    - Compute the real FFT along the spatial dimension.
+    - Create a zero-tensor of the correct size in Fourier space.
+    - Use \lstinline|torch.einsum| to multiply the first \lstinline|modes| of the input with your learned weights, and store the result in the zero-tensor.
+    - Compute the inverse real FFT and return it.
+
+\section*{Problem 2: Mini FNO Architecture (Level 2)}
+
+\subsubsection*{Mathematical part}
+The full Fourier layer consists of the spectral convolution plus a linear bypass connection (a standard $1\times 1$ convolution), followed by a non-linear activation $\sigma$:
 $$
-v_{\ell+1}(x) = \sigma\!\left( W\,v_\ell(x) + \mathcal{F}^{-1}\!\left[R \cdot \mathcal{F}(v_\ell)\right](x) \right)
+v_{\ell+1}(x) = \sigma\!\left( W\,v_\ell(x) + \mathcal{F}^{-1}\!\left[R \cdot \mathcal{F}(v_\ell)\right]\!(x) \right)
 $$
-where $W$ is a local bypass (1$\times$1 convolution), $R$ is the learnable spectral weight, and $\sigma$ is GeLU.
 
+The overall architecture lifts the input features into a higher-dimensional channel space, applies several of these Fourier layers, and projects back down to the target dimension. In our case:
+* \textbf{Input:} A stack of $V(x)$, $\text{Re}[\psi_0(x)]$, and $\text{Im}[\psi_0(x)]$. (3 channels)
+* \textbf{Output:} The predicted $\text{Re}[\psi(x,t)]$ and $\text{Im}[\psi(x,t)]$. (2 channels)
 
-\subsection*{Implementation}
+\subsubsection*{Implementation part}
+\textbf{Implement:}
+1. \lstinline|MiniFNO.__init__(self, modes=32, width=32)|: Construct the architecture. You will need:
+    - \lstinline|self.fc0|: A \lstinline|Linear| layer from 3 to \lstinline|width|.
+    - Two layers of spectral blocks. Each block requires a \lstinline|SpectralConv1d| and a bypass \lstinline|Conv1d(..., kernel_size=1)|.
+    - \lstinline|self.fc1| and \lstinline|self.fc2|: Two projection \lstinline|Linear| layers mapping from \lstinline|width| down to 128, and then to 2.
+2. \lstinline|MiniFNO.forward(self, V, psi0, t)|:
+    - Stack $V$, \lstinline|psi0.real|, and \lstinline|psi0.imag| along the last dimension.
+    - Pass through the lifting layer.
+    - PyTorch convolutions expect inputs of shape \lstinline|(batch, channels, spatial)|. Permute your dimensions accordingly.
+    - Apply the two spectral blocks (SpectralConv + Conv1d + GeLU).
+    - Permute back to \lstinline|(batch, spatial, channels)|.
+    - Apply the projection layers (Linear + GeLU + Linear).
 
-Open \lstinline|implementation_tasks.py|. Implement:
+Once implemented, run \lstinline|python levels/level_1_fno.py| to watch the model learn to predict wave packet propagation!
 
-\begin{enumerate}
-    \item \textbf{\lstinline|SpectralConv1d.__init__ / forward|} — FFT the input, multiply first $k_\text{max}$ modes by learnable complex weights $R$, zero-pad, IFFT back.
-    \item \textbf{\lstinline|MiniFNO.__init__ / forward|} — lifting ($3 \to 32$ channels), 2 spectral layers with bypass + GeLU, projection ($32 \to 2$ channels).
-\end{enumerate}
+\section*{\textcolor{red}{Submission}}
 
-Training data is generated automatically using the NumPy solver.
-
-\subsection*{Test}
-
-\begin{lstlisting}[language=bash]
-python levels/level_1_fno.py
-\end{lstlisting}
-
-Even a 2-layer mini-FNO should achieve reasonable accuracy on simple barriers. Watch the loss curve drop and the predicted $|\psi|^2$ converge to the ground truth.
+Submit the file \texttt{implementation\_tasks.py}.
 
 \end{document}

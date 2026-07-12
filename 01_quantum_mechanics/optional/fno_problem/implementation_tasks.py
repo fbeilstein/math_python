@@ -37,60 +37,123 @@ def np_split_operator_step(psi, k, V, dt):
 
 class SpectralConv1d(nn.Module):
     """
-    Spectral convolution layer operating in Fourier space.
+    Level 1: Spectral convolution layer operating in Fourier space.
 
     Operations:
         1. FFT the input along the spatial dimension
         2. Multiply the first k_max modes by learnable complex weights R
         3. Zero-pad the remaining modes
         4. IFFT back to physical space
-
-    Args:
-        in_channels:  number of input channels
-        out_channels: number of output channels
-        modes:        number of Fourier modes to keep (k_max)
     """
-    def __init__(self, in_channels, out_channels, modes):
+    def __init__(self, in_channels, out_channels, modes): #contains solution
         super().__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
         self.modes = modes
-        # Hint: create nn.Parameter of shape (in_ch, out_ch, modes)
-        # with dtype=torch.cfloat. Scale by 1/(in_ch * out_ch).
-        pass
+        
+        # Learnable complex weights for the Fourier modes
+        self.weights = nn.Parameter(
+            torch.empty(in_channels, out_channels, modes, dtype=torch.cfloat)
+        )
+        # Proper initialization for complex parameters
+        nn.init.xavier_normal_(self.weights.real, gain=1/(in_channels*out_channels))
+        nn.init.xavier_normal_(self.weights.imag, gain=1/(in_channels*out_channels))
 
-    def forward(self, x):
+    def forward(self, x): #contains solution
         """
         Args:
             x: (batch, channels, N_x)
         Returns:
             (batch, out_channels, N_x)
         """
-        # Hint: torch.fft.rfft, torch.einsum("bix,iox->box", ...), torch.fft.irfft
-        pass
+        batch_size = x.shape[0]
+        N_x = x.shape[-1]
+        
+        # 1. FFT
+        x_ft = torch.fft.rfft(x)
+        
+        # 2. Multiply modes
+        # Output tensor in Fourier space, initialized to zero
+        out_ft = torch.zeros(batch_size, self.out_channels, x_ft.shape[-1], 
+                             dtype=torch.cfloat, device=x.device)
+                             
+        # Einsum: b=batch, i=in_channels, o=out_channels, x=spatial
+        out_ft[:, :, :self.modes] = torch.einsum(
+            "bix,iox->box", 
+            x_ft[:, :, :self.modes], 
+            self.weights
+        )
+        
+        # 3. IFFT back to physical space
+        x_out = torch.fft.irfft(out_ft, n=N_x)
+        return x_out
 
 
 class MiniFNO(nn.Module):
     """
-    Minimal Fourier Neural Operator for 1D quantum dynamics.
+    Level 2: Minimal Fourier Neural Operator for 1D quantum dynamics.
 
     Architecture:
         Lifting:    Linear(3, width)  — input: [V(x), Re(ψ₀), Im(ψ₀)]
         2× layers:  SpectralConv1d(width, width, modes) + Conv1d(width, width, 1) + GeLU
         Projection: Linear(width, 2)  — output: [Re(ψ), Im(ψ)]
-
-    Forward args:
-        V:    (batch, N_x) — potential
-        psi0: (batch, N_x) — initial wavefunction (complex)
-        t:    (batch, 1)   — target time
     """
-    def __init__(self, modes=32, width=32):
+    def __init__(self, modes=32, width=32): #contains solution
         super().__init__()
-        pass
+        
+        self.modes = modes
+        self.width = width
+        
+        # Lifting layer (applied point-wise)
+        self.fc0 = nn.Linear(3, self.width)
+        
+        # First spectral block
+        self.conv0 = SpectralConv1d(self.width, self.width, self.modes)
+        self.w0 = nn.Conv1d(self.width, self.width, 1)
+        
+        # Second spectral block
+        self.conv1 = SpectralConv1d(self.width, self.width, self.modes)
+        self.w1 = nn.Conv1d(self.width, self.width, 1)
+        
+        # Projection layer
+        self.fc1 = nn.Linear(self.width, 128)
+        self.fc2 = nn.Linear(128, 2)
 
-    def forward(self, V, psi0, t):
+    def forward(self, V, psi0, t): #contains solution
         """
         Returns: (batch, N_x, 2) — [Re(ψ), Im(ψ)] at time t
         """
-        pass
+        # Note: t is currently ignored in this mini version for simplicity,
+        # it just learns the mapping for the specific dataset timestep distribution.
+        
+        # Stack inputs into (batch, N_x, 3)
+        x = torch.stack([V, psi0.real, psi0.imag], dim=-1)
+        
+        # Lifting: (batch, N_x, width)
+        x = self.fc0(x)
+        
+        # Permute to (batch, channels, N_x) for convolutions
+        x = x.permute(0, 2, 1)
+        
+        # Layer 1
+        x1 = self.conv0(x)
+        x2 = self.w0(x)
+        x = torch.nn.functional.gelu(x1 + x2)
+        
+        # Layer 2
+        x1 = self.conv1(x)
+        x2 = self.w1(x)
+        x = torch.nn.functional.gelu(x1 + x2)
+        
+        # Permute back to (batch, N_x, channels)
+        x = x.permute(0, 2, 1)
+        
+        # Projection
+        x = self.fc1(x)
+        x = torch.nn.functional.gelu(x)
+        x = self.fc2(x)
+        
+        return x
 
 
 # =============================================================================
