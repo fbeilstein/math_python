@@ -1,1 +1,3 @@
-numpy\nscipy\nmatplotlib
+matplotlib
+numpy
+scipy

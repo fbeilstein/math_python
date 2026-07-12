@@ -43,12 +43,12 @@ Consider the files given.
 \textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
 \multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
 \lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core physics functions intended for student implementation. You can add your own \lstinline|unittest.TestCase| classes at the bottom and run \lstinline|python implementation_tasks.py| to execute them. \\
-\lstinline|levels/level_1_tomography.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging the physics engine and inverse optimization. It provides real-time visualization of the wavepackets. \\
+\lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging the physics engine and inverse optimization. It provides real-time visualization of the wavepackets. \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-\textbf{Prerequisites:} You will need PyTorch for this lab. Install it via \lstinline|pip install torch|.
+\textbf{Prerequisites:} You will need to install the basic dependencies via \lstinline|pip install -r requirements.txt|. Then, run \lstinline|python install_pytorch.py| which will automatically detect your hardware (Mac, new GPU, old GPU, or CPU) and install the correct PyTorch version for your device.
 
 \section*{PyTorch Mini-Reference}
 
@@ -76,7 +76,7 @@ torch.no\_grad() & Context manager: disable autograd (inference) \\
 \textbf{Key concept:} PyTorch tensors behave like NumPy arrays, but they remember every operation applied to them. Calling \lstinline|loss.backward()| automatically computes derivatives of \lstinline|loss| with respect to all tensors that have \lstinline|requires_grad=True|. This is how we differentiate \emph{through} the split-operator simulation.
 
 
-\section*{Problem 1: Differentiable SSFM (Level 1)}
+\section*{Task 1: Differentiable SSFM}
 
 \subsubsection*{Mathematical part}
 You have previously built a split-operator solver (QM Problem 5). In standard numerical methods, we compute the wave function $\psi(x,t)$ given the potential $V(x)$. This is the \emph{forward} problem. 
@@ -92,7 +92,7 @@ Because all operations involved (multiplication by complex exponentials, FFT, IF
 \textbf{Implement:}
 1. \lstinline|pt_split_operator_step(psi, k_sq, V, dt)|: Implement one Trotter step using PyTorch operations. Ensure you use \lstinline|torch.fft.fft| and \lstinline|torch.fft.ifft|. Do \textbf{not} call \lstinline|.numpy()| anywhere inside this function, as it will break the computational graph.
 
-\section*{Problem 2: Learnable Potential (Level 2)}
+\section*{Task 2: Learnable Potential}
 
 \subsubsection*{Mathematical part}
 Now imagine you are an experimentalist: you observe a wave packet scattering off an \textbf{unknown} potential $V_{\text{true}}(x)$. We want to find a $V_\theta(x)$ that produces the same scattering dynamics.
@@ -107,10 +107,10 @@ where $\kappa$ is a discrete Gaussian kernel.
 
 \subsubsection*{Implementation part}
 \textbf{Implement:}
-1. \lstinline|GridPotential.__init__(self, n_points)|: Create a \lstinline|torch.nn.Parameter| initialized to zero. Create a 1D Gaussian kernel and register it as a buffer (so it moves to the correct device but is not trained).
+1. The \lstinline|__init__| method is provided for you to save you from writing PyTorch boilerplate. Notice how it creates a \lstinline|torch.nn.Parameter| initialized to zero, and creates a 1D Gaussian kernel registered as a buffer (so it moves to the correct device but is not trained).
 2. \lstinline|GridPotential.forward(self)|: Apply \lstinline|torch.nn.functional.conv1d| to your raw parameter using the Gaussian kernel, and return the smoothed potential.
 
-\section*{Problem 3: Teacher Forcing (Level 3)}
+\section*{Task 3: Teacher Forcing}
 
 \subsubsection*{Mathematical part}
 Given sparse observations $\{|\psi(x_j, t_k)|^2\}$ at various times, we want to find $V(x)$ such that propagating $\psi_0$ through $V$ reproduces the observations.
@@ -123,7 +123,7 @@ The fix is \textbf{Teacher Forcing}: break the trajectory into short segments (e
 \textbf{Implement:}
 1. \lstinline|run_teacher_forcing(V_pred, psi_observations, psi0, k_sq, dt)|: Loop over the consecutive pairs of snapshots. For each pair $(i, i+1)$, set the state to the true $\psi_i$. Evolve it forward using your \lstinline|pt_split_operator_step| and $V_{\text{pred}}$ until the time matches $i+1$. Compute the Mean Squared Error against the true $\psi_{i+1}$ and accumulate it. Return the total loss.
 
-Once you have implemented these functions, run \lstinline|python levels/level_1_tomography.py|. You will see the optimization process live: the predicted potential will slowly converge to the hidden $V_{\text{true}}$.
+Once you have implemented these functions, run \lstinline|python lab_dashboard.py|. You will see the optimization process live: the predicted potential will slowly converge to the hidden $V_{\text{true}}$.
 
 \section*{\textcolor{red}{Submission}}
 

@@ -1,17 +1,15 @@
 """
-Level 1 — Inverse Quantum Tomography
-=======================================
+Quantum Mechanics Lab: Inverse Tomography
+===========================================
 Visual debugger: watch the learned potential converge to the hidden one.
 
 Student implements functions in: implementation_tasks.py
 This file only provides the visualization / test harness.
 
-Run:  python levels/level_1_tomography.py
+Run:  python lab_dashboard.py
 """
 import sys
 import os
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     import torch
@@ -34,6 +32,8 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 # ═══════════════════════════════════════════════
 #  Physics Setup
 # ═══════════════════════════════════════════════
+import data_generation as data_gen
+
 L, N = 40.0, 512
 x_np = np.linspace(-L / 2, L / 2, N, endpoint=False)
 dx = x_np[1] - x_np[0]
@@ -43,7 +43,7 @@ SAVE_EVERY = STEPS // N_SNAP
 
 k_np = 2 * np.pi * np.fft.fftfreq(N, d=dx)
 k_sq = torch.tensor(k_np**2, dtype=torch.float32, device=DEVICE)
-psi0_np = tasks.gaussian_packet(x_np, -18.0, 0.5, 10.0)
+psi0_np = data_gen.gaussian_packet(x_np, -18.0, 0.5, 10.0)
 psi0 = torch.tensor(psi0_np, dtype=torch.complex64, device=DEVICE)
 
 # Hidden potential
@@ -57,7 +57,7 @@ for step in range(STEPS + 1):
     if step % SAVE_EVERY == 0:
         observations.append((step, torch.tensor(psi_np, dtype=torch.complex64, device=DEVICE)))
     if step < STEPS:
-        psi_np = tasks.np_split_operator_step(psi_np, k_np, V_true_np, dt)
+        psi_np = data_gen.np_split_operator_step(psi_np, k_np, V_true_np, dt)
 
 print(f"Device: {DEVICE} | {len(observations)} snapshots")
 

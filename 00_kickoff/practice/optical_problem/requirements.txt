@@ -1,7 +1,2 @@
-numpy       # any version should do so no pinning, I used 2.4.2
-matplotlib  # any version should do so no pinning, I used 3.10.8
-
-# If you are on Ubuntu/Linux and get a "tkinter not found" error, 
-# tkinter is a system package. Install it via your terminal:
-# sudo apt install python3-tk
-
+matplotlib
+numpy

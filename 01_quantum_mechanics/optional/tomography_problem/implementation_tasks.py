@@ -1,43 +1,14 @@
 import torch
 import torch.nn as nn
-import numpy as np
-from numpy.fft import fft, ifft, fftfreq
-
-# --- Natural units: hbar = m = 1 ---
-hbar = 1.0
-m    = 1.0
-
-# =============================================================================
-#  HELPERS (provided)
-# =============================================================================
-
-def gaussian_packet(x, x0, sigma, k0):
-    """Normalized Gaussian wave packet (NumPy)."""
-    psi = (1 / (2 * np.pi * sigma**2))**0.25 * \
-          np.exp(-(x - x0)**2 / (4 * sigma**2)) * \
-          np.exp(1j * k0 * x)
-    dx = x[1] - x[0]
-    psi /= np.sqrt(np.sum(np.abs(psi)**2) * dx)
-    return psi
-
-
-def np_split_operator_step(psi, k, V, dt):
-    """NumPy split-operator step (reference — from QM Problem 5)."""
-    psi = psi * np.exp(-1j * V * dt / (2 * hbar))
-    psi_k = fft(psi)
-    psi_k = psi_k * np.exp(-1j * hbar * k**2 * dt / (2 * m))
-    psi = ifft(psi_k)
-    psi = psi * np.exp(-1j * V * dt / (2 * hbar))
-    return psi
-
 
 # =============================================================================
 #  STUDENT IMPLEMENTATION
 # =============================================================================
 
+
 def pt_split_operator_step(psi, k_sq, V, dt): #contains solution
     """
-    Level 1: One Trotter split-operator step in PyTorch (differentiable).
+    One Trotter split-operator step in PyTorch (differentiable).
 
     Same physics as np_split_operator_step, but using torch operations
     so that autograd can backpropagate through it.
@@ -61,12 +32,12 @@ def pt_split_operator_step(psi, k_sq, V, dt): #contains solution
 
 class GridPotential(nn.Module):
     """
-    Level 2: Learnable potential V(x) represented as a smoothed grid.
+    Learnable potential V(x) represented as a smoothed grid.
 
     The raw parameter V_raw is convolved with a small Gaussian kernel
     to prevent unphysical high-frequency ringing.
     """
-    def __init__(self, n_points): #contains solution
+    def __init__(self, n_points):
         """
         Create nn.Parameter for V_raw, build a fixed Gaussian
         smoothing kernel and register it as a buffer.
@@ -92,7 +63,7 @@ class GridPotential(nn.Module):
 
 def run_teacher_forcing(V_pred, psi_observations, psi0, k_sq, dt): #contains solution
     """
-    Level 3: Compute the teacher-forcing loss over sparse observations.
+    Compute the teacher-forcing loss over sparse observations.
 
     For each pair of consecutive snapshots (psi_i, psi_{i+1}):
       1. Start from the TRUE state psi_i (teacher forcing)

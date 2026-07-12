@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Find problem folders
-folders=($(find . -maxdepth 1 -type d -name "*_problem" -exec basename {} \;))
+# Find problem folders recursively and remove leading './'
+folders=($(find . -type d -name "*_problem" | sed 's|^\./||'))
 
 if [ ${#folders[@]} -eq 0 ]; then
     echo "No problem folders found."
@@ -77,6 +77,11 @@ def process(filepath):
                 in_func = True
                 base_indent = indent
                 added_pass = False
+            elif stripped.startswith("class ") and "#contains solution" in line:
+                out.append(line.replace("#contains solution", "").rstrip() + "\n")
+                in_func = True
+                base_indent = indent
+                added_pass = False
             else:
                 out.append(line)
             continue
@@ -112,7 +117,7 @@ def process(filepath):
                     out.append(" " * (base_indent + 4) + "pass\n")
                 
                 # Re-evaluate line as not in_func
-                if stripped.startswith("def ") and "#contains solution" in line:
+                if (stripped.startswith("def ") or stripped.startswith("class ")) and "#contains solution" in line:
                     out.append(line.replace("#contains solution", "").rstrip() + "\n")
                     in_func = True
                     base_indent = indent
@@ -143,14 +148,18 @@ rm -f /tmp/strip_solutions.py
 # Remove grading infrastructure from student bundle
 rm -rf "$release_dir/tests"
 
-# Create zip archive
+# Move the problem folder up so it doesn't have the full path tree in the zip
+problem_name=$(basename "$problem")
 cd "$staging_dir"
-zip_file="${problem}.zip"
-zip -r "$zip_file" "$problem" > /dev/null
 
-# Move the zip file back to the original working directory
-cd "$ORIG_DIR" || exit 1
-mv "$staging_dir/$zip_file" .
-rm -rf "$staging_dir"
+# Assuming the directory structure was extracted into $staging_dir, 
+# $release_dir is where the actual problem folder is
+mv "$release_dir" "$staging_dir/$problem_name" 2>/dev/null || true
 
+zip_file="${problem_name}.zip"
+zip -r "$zip_file" "$problem_name" > /dev/null
+
+cp "$zip_file" "$ORIG_DIR/"
 echo "Release successfully prepared: $zip_file"
+
+rm -rf "$staging_dir"
