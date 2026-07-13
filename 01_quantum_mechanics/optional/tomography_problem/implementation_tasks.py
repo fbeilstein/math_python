@@ -5,6 +5,9 @@ import torch.nn as nn
 #  STUDENT IMPLEMENTATION
 # =============================================================================
 
+hbar = 1.0
+m = 1.0
+
 
 def pt_split_operator_step(psi, k_sq, V, dt): #contains solution
     """
