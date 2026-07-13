@@ -6,17 +6,13 @@ A semester course exploring deep mathematical topics through hands-on Python pro
 ## Course Structure
 
 ### The Kickoff
-**Session 1 — Linear Algebra & Optics** (Combined Lecture + Practice)
 - Lecture: [Linear Algebra & Optics](https://fbeilstein.github.io/math_python/00_kickoff/lectures/01_linear_algebra_optics.html)
 - Practice: [Optics](https://github.com/fbeilstein/math_python/releases/download/optics_v0/optical_problem.zip)
 
 ---
 
 ### Module 1: Quantum Mechanics
-**Session 2 — Lecture: The Split-Operator Method**
 - Lecture: [Quantum Mechanics](https://fbeilstein.github.io/math_python/01_quantum_mechanics/lectures/quantum_mechanics.html)
-
-**Session 3 — Practice: Quantum Tunneling**
 - Practice: [Quantum Tunneling](https://github.com/fbeilstein/math_python/releases/download/quanta_v0/quantum_problem.zip)
 
 ---
