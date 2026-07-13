@@ -6,7 +6,7 @@ A semester course exploring deep mathematical topics through hands-on Python pro
 ## Course Structure
 
 ### The Kickoff
-- Lecture: [Linear Algebra & Optics](https://fbeilstein.github.io/math_python/00_kickoff/lectures/01_linear_algebra_optics.html)
+- Lecture: [Linear Algebra & Optics](https://fbeilstein.github.io/math_python/00_kickoff/lectures/linear_algebra_optics.html)
 - Practice: [Optics](https://github.com/fbeilstein/math_python/releases/download/optics_v0/optical_problem.zip)
 
 ---
