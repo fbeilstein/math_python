@@ -7,13 +7,16 @@ A semester course exploring deep mathematical topics through hands-on Python pro
 
 ### The Kickoff
 - Lecture: [Linear Algebra & Optics](https://fbeilstein.github.io/math_python/00_kickoff/lectures/linear_algebra_optics.html)
-- Practice: [Optics](https://github.com/fbeilstein/math_python/releases/download/optics_v0/optical_problem.zip)
+- Practice: [Optics](https://github.com/fbeilstein/math_python/releases/download/optics_v1/optical_problem.zip)
 
 ---
 
 ### Module 1: Quantum Mechanics
 - Lecture: [Quantum Mechanics](https://fbeilstein.github.io/math_python/01_quantum_mechanics/lectures/quantum_mechanics.html)
-- Practice: [Quantum Tunneling](https://github.com/fbeilstein/math_python/releases/download/quanta_v0/quantum_problem.zip)
+- Practice: [Quantum Tunneling](https://github.com/fbeilstein/math_python/releases/download/quanta_v1/quantum_problem.zip)
+- Optional:
+    - [Fourier Neural Operator](https://github.com/fbeilstein/math_python/releases/download/fno_v0/fno_problem.zip)
+    - [Quantum Tomography](https://github.com/fbeilstein/math_python/releases/download/qtomography_v0/tomography_problem.zip)
 
 ---
 
