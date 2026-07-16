@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GF(p) Polynomial Calculator</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; }
+.sidebar {
+    width: 260px; background: #161b22; padding: 14px; display: flex; flex-direction: column; gap: 10px;
+    border-right: 1px solid #30363d; overflow-y: auto;
+}
+.sidebar h2 { color: #58a6ff; font-size: 15px; }
+.sidebar label { font-size: 11px; color: #8b949e; display: block; margin-bottom: 3px; }
+.sidebar input, .sidebar select {
+    width: 100%; padding: 5px 7px; background: #0d1117; border: 1px solid #30363d;
+    color: #c9d1d9; border-radius: 4px; font-size: 13px; font-family: 'Courier New', monospace;
+}
+.btn-row { display: flex; gap: 5px; flex-wrap: wrap; }
+.sidebar button {
+    flex: 1; padding: 7px 4px; border: none; border-radius: 5px;
+    font-weight: bold; cursor: pointer; font-size: 12px; color: white; min-width: 50px;
+}
+.btn-add { background: #238636; } .btn-add:hover { background: #2ea043; }
+.btn-mul { background: #1f6feb; } .btn-mul:hover { background: #388bfd; }
+.btn-div { background: #da3633; } .btn-div:hover { background: #f85149; }
+.info { font-size: 11px; color: #8b949e; line-height: 1.5; border-top: 1px solid #30363d; padding-top: 8px; }
+.main { flex: 1; padding: 20px; overflow-y: auto; }
+.result { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+.result h3 { color: #58a6ff; font-size: 14px; margin-bottom: 8px; }
+.step { margin: 4px 0; padding: 6px 10px; background: #0d1117; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; }
+.step.highlight { border-left: 3px solid #ffa657; }
+.poly { color: #7ee787; }
+.op { color: #ffa657; }
+.err { color: #ff7b72; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <h2>GF(p) Polynomial Calc</h2>
+    <div>
+        <label>Prime p</label>
+        <select id="p">
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="5">5</option>
+            <option value="7">7</option>
+        </select>
+    </div>
+    <div>
+        <label>f(x) — coefficients, highest degree first</label>
+        <input id="poly1" value="2, 0, 1" placeholder="e.g. 2, 0, 1 for 2x²+1">
+    </div>
+    <div>
+        <label>g(x) — coefficients, highest degree first</label>
+        <input id="poly2" value="1, 2" placeholder="e.g. 1, 2 for x+2">
+    </div>
+    <div class="btn-row">
+        <button class="btn-add" onclick="compute('add')">f + g</button>
+        <button class="btn-mul" onclick="compute('mul')">f × g</button>
+        <button class="btn-div" onclick="compute('div')">f ÷ g</button>
+    </div>
+    <div class="info">
+        Enter coefficients separated by commas.<br>
+        Highest degree first: <code>2,0,1</code> = 2x²+1<br><br>
+        All arithmetic is mod p.<br>
+        Division shows step-by-step long division.
+    </div>
+</div>
+<div class="main" id="output">
+    <div class="result"><h3>Enter polynomials and click an operation</h3></div>
+</div>
+
+<script>
+function mod(a, p) { return ((a % p) + p) % p; }
+
+function parsePoly(s) {
+    return s.split(',').map(c => parseInt(c.trim()) || 0);
+}
+
+function polyStr(coeffs, p) {
+    coeffs = coeffs.map(c => mod(c, p));
+    while (coeffs.length > 1 && coeffs[0] === 0) coeffs.shift();
+    if (coeffs.length === 0 || (coeffs.length === 1 && coeffs[0] === 0)) return '0';
+    const terms = [];
+    const deg = coeffs.length - 1;
+    for (let i = 0; i <= deg; i++) {
+        const c = coeffs[i], d = deg - i;
+        if (c === 0) continue;
+        let term = '';
+        if (d === 0) term = String(c);
+        else if (d === 1) term = (c === 1 ? '' : String(c)) + 'x';
+        else term = (c === 1 ? '' : String(c)) + 'x' + superscript(d);
+        terms.push(term);
+    }
+    return terms.join(' + ') || '0';
+}
+
+function superscript(n) {
+    const s = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+    return String(n).split('').map(c => s[+c]).join('');
+}
+
+function polyAdd(a, b, p) {
+    const diff = a.length - b.length;
+    if (diff > 0) b = Array(diff).fill(0).concat(b);
+    if (diff < 0) a = Array(-diff).fill(0).concat(a);
+    return a.map((c, i) => mod(c + b[i], p));
+}
+
+function polyMul(a, b, p) {
+    const res = Array(a.length + b.length - 1).fill(0);
+    for (let i = 0; i < a.length; i++)
+        for (let j = 0; j < b.length; j++)
+            res[i + j] = mod(res[i + j] + a[i] * b[j], p);
+    return res;
+}
+
+function modInverse(a, p) {
+    a = mod(a, p);
+    for (let x = 1; x < p; x++) if (mod(a * x, p) === 1) return x;
+    return -1;
+}
+
+function polyDiv(dividend, divisor, p) {
+    dividend = dividend.map(c => mod(c, p));
+    divisor = divisor.map(c => mod(c, p));
+    while (dividend.length > 1 && dividend[0] === 0) dividend.shift();
+    while (divisor.length > 1 && divisor[0] === 0) divisor.shift();
+
+    if (divisor.length === 1 && divisor[0] === 0) return { error: 'Division by zero!' };
+    if (dividend.length < divisor.length) return { q: [0], r: [...dividend], steps: ['Degree of dividend < degree of divisor → quotient = 0'] };
+
+    const steps = [];
+    const q = Array(dividend.length - divisor.length + 1).fill(0);
+    const rem = [...dividend];
+    const invLead = modInverse(divisor[0], p);
+
+    for (let i = 0; i < q.length; i++) {
+        if (rem[i] === 0) { steps.push(`Step ${i+1}: leading term is 0, skip`); continue; }
+        const coef = mod(rem[i] * invLead, p);
+        q[i] = coef;
+
+        const termDeg = dividend.length - divisor.length - i;
+        const termStr = termDeg === 0 ? String(coef) : (coef === 1 ? '' : String(coef)) + 'x' + (termDeg > 1 ? superscript(termDeg) : '');
+
+        steps.push(`Step ${i+1}: ${rem[i]}x${superscript(rem.length-1-i)} ÷ ${divisor[0]}x${superscript(divisor.length-1)} = ${termStr}`);
+
+        const sub = [];
+        for (let j = 0; j < divisor.length; j++) {
+            const val = mod(coef * divisor[j], p);
+            sub.push(val);
+            rem[i + j] = mod(rem[i + j] - val, p);
+        }
+        steps.push(`  Multiply: ${termStr} × g(x) = [${sub.join(', ')}]`);
+        steps.push(`  Subtract → remainder: [${rem.slice(i, i + divisor.length + 1).join(', ')}]`);
+    }
+
+    let r = rem.slice(q.length);
+    while (r.length > 1 && r[0] === 0) r.shift();
+    if (r.length === 0) r = [0];
+
+    return { q, r, steps };
+}
+
+function compute(op) {
+    const p = parseInt(document.getElementById('p').value);
+    const a = parsePoly(document.getElementById('poly1').value);
+    const b = parsePoly(document.getElementById('poly2').value);
+    const out = document.getElementById('output');
+
+    let html = `<div class="result"><h3>Input (mod ${p})</h3>`;
+    html += `<div class="step">f(x) = <span class="poly">${polyStr(a, p)}</span>  →  [${a.map(c=>mod(c,p)).join(', ')}]</div>`;
+    html += `<div class="step">g(x) = <span class="poly">${polyStr(b, p)}</span>  →  [${b.map(c=>mod(c,p)).join(', ')}]</div></div>`;
+
+    if (op === 'add') {
+        const r = polyAdd(a, b, p);
+        html += `<div class="result"><h3>f(x) + g(x)  <span class="op">(mod ${p})</span></h3>`;
+        html += `<div class="step">Result = <span class="poly">${polyStr(r, p)}</span>  →  [${r.map(c=>mod(c,p)).join(', ')}]</div></div>`;
+    } else if (op === 'mul') {
+        const r = polyMul(a, b, p);
+        html += `<div class="result"><h3>f(x) × g(x)  <span class="op">(mod ${p})</span></h3>`;
+        html += `<div class="step">Result = <span class="poly">${polyStr(r, p)}</span>  →  [${r.map(c=>mod(c,p)).join(', ')}]</div></div>`;
+    } else if (op === 'div') {
+        const res = polyDiv(a, b, p);
+        if (res.error) {
+            html += `<div class="result"><h3 class="err">Error</h3><div class="step err">${res.error}</div></div>`;
+        } else {
+            html += `<div class="result"><h3>f(x) ÷ g(x)  <span class="op">(mod ${p})</span> — Step by Step</h3>`;
+            for (const step of res.steps) {
+                const cls = step.startsWith('Step') ? 'step highlight' : 'step';
+                html += `<div class="${cls}">${step}</div>`;
+            }
+            html += `</div>`;
+            html += `<div class="result"><h3>Result</h3>`;
+            html += `<div class="step">Quotient  q(x) = <span class="poly">${polyStr(res.q, p)}</span>  →  [${res.q.map(c=>mod(c,p)).join(', ')}]</div>`;
+            html += `<div class="step">Remainder r(x) = <span class="poly">${polyStr(res.r, p)}</span>  →  [${res.r.map(c=>mod(c,p)).join(', ')}]</div>`;
+            const check = polyAdd(polyMul(res.q, b, p), res.r, p);
+            html += `<div class="step">Verify: q(x)·g(x) + r(x) = <span class="poly">${polyStr(check, p)}</span> ${polyStr(check,p)===polyStr(a,p)?'✓':'✗'}</div>`;
+            html += `</div>`;
+        }
+    }
+    out.innerHTML = html;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Reed-Solomon Encoder / Decoder</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; }
+.sidebar {
+    width: 260px; background: #161b22; padding: 14px; display: flex; flex-direction: column; gap: 8px;
+    border-right: 1px solid #30363d; overflow-y: auto;
+}
+.sidebar h2 { color: #58a6ff; font-size: 15px; }
+.sidebar label { font-size: 11px; color: #8b949e; }
+.sidebar input, .sidebar select {
+    width: 100%; padding: 5px 7px; background: #0d1117; border: 1px solid #30363d;
+    color: #c9d1d9; border-radius: 4px; font-size: 12px;
+}
+.sidebar button {
+    padding: 7px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 12px; color: white; width: 100%;
+}
+.btn-enc { background: #238636; } .btn-enc:hover { background: #2ea043; }
+.btn-dec { background: #da3633; } .btn-dec:hover { background: #f85149; }
+.btn-reset { background: #30363d; } .btn-reset:hover { background: #484f58; }
+.info { font-size: 11px; color: #8b949e; line-height: 1.4; border-top: 1px solid #30363d; padding-top: 8px; }
+.info strong { color: #58a6ff; }
+.main { flex: 1; padding: 16px; overflow-y: auto; }
+.section { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+.section h3 { color: #58a6ff; font-size: 13px; margin-bottom: 8px; }
+.codeword { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
+.symbol {
+    width: 40px; height: 36px; display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer;
+    transition: all 0.2s; font-family: 'Courier New', monospace;
+}
+.symbol.data { background: #0d4429; color: #7ee787; border: 1px solid #238636; }
+.symbol.parity { background: #3d1a00; color: #ffa657; border: 1px solid #9e6a03; }
+.symbol.error { background: #67000d; color: #ff7b72; border: 2px solid #ff7b72; animation: pulse 1s infinite; }
+.symbol.corrected { background: #0a3069; color: #58a6ff; border: 2px solid #58a6ff; }
+.symbol:hover { transform: scale(1.15); z-index: 1; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+.step { margin: 3px 0; padding: 5px 8px; background: #0d1117; border-radius: 4px; font-size: 12px; font-family: 'Courier New', monospace; }
+.step.ok { border-left: 3px solid #7ee787; }
+.step.warn { border-left: 3px solid #ffa657; }
+.step.fix { border-left: 3px solid #58a6ff; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <h2>RS Encoder / Decoder</h2>
+    <div>
+        <label>Working in GF(2³) with x³ + x + 1</label>
+    </div>
+    <div>
+        <label>Message (integers 0-7, comma-separated)</label>
+        <input id="msg" value="5, 3, 6" placeholder="e.g. 5, 3, 6">
+    </div>
+    <div>
+        <label>Error correction (t)</label>
+        <select id="t">
+            <option value="1">t=1 (2 parity, correct 1)</option>
+            <option value="2" selected>t=2 (4 parity, correct 2)</option>
+        </select>
+    </div>
+    <button class="btn-enc" onclick="encode()">1. Encode</button>
+    <button class="btn-dec" onclick="decode()">3. Decode & Correct</button>
+    <button class="btn-reset" onclick="reset()">Reset</button>
+    <div class="info">
+        <strong>Workflow:</strong><br>
+        1. Click <b>Encode</b> to generate codeword<br>
+        2. Click symbols to inject errors<br>
+        3. Click <b>Decode</b> to watch correction<br><br>
+        <strong>Colors:</strong><br>
+        🟢 Data &nbsp; 🟠 Parity &nbsp; 🔴 Error &nbsp; 🔵 Corrected
+    </div>
+</div>
+<div class="main" id="output"></div>
+
+<script>
+// ─── GF(2^3) with primitive polynomial x³+x+1 ───
+const P = 2, N = 3, Q = 8; // GF(8)
+const EXP = [1, 2, 4, 3, 6, 7, 5, 1]; // α^0..α^6, α^7=α^0
+const LOG = [0, 0, 1, 3, 2, 6, 4, 5]; // log[0] unused
+
+function gfAdd(a, b) { return a ^ b; }
+function gfMul(a, b) { if (a === 0 || b === 0) return 0; return EXP[(LOG[a] + LOG[b]) % 7]; }
+function gfDiv(a, b) { if (b === 0) throw 'div by zero'; if (a === 0) return 0; return EXP[(LOG[a] - LOG[b] + 7) % 7]; }
+function gfPow(a, n) { if (a === 0) return 0; return EXP[(LOG[a] * n) % 7]; }
+function gfInv(a) { return EXP[(7 - LOG[a]) % 7]; }
+
+function gfPolyMul(a, b) {
+    const r = Array(a.length + b.length - 1).fill(0);
+    for (let i = 0; i < a.length; i++) for (let j = 0; j < b.length; j++) r[i+j] = gfAdd(r[i+j], gfMul(a[i], b[j]));
+    return r;
+}
+function gfPolyRem(div, d) {
+    div = [...div]; d = [...d];
+    if (div.length < d.length) return div;
+    for (let i = 0; i <= div.length - d.length; i++) {
+        if (div[i] === 0) continue;
+        const c = gfDiv(div[i], d[0]);
+        for (let j = 0; j < d.length; j++) div[i+j] = gfAdd(div[i+j], gfMul(c, d[j]));
+    }
+    return div.slice(div.length - d.length + 1);
+}
+
+let codeword = null;
+let corrupted = null;
+let errorPositions = new Set();
+
+function genPoly(t) {
+    let g = [1];
+    for (let i = 0; i < 2*t; i++) g = gfPolyMul(g, [1, EXP[i]]);
+    return g;
+}
+
+function encode() {
+    const msg = document.getElementById('msg').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 0 && n < Q);
+    const t = parseInt(document.getElementById('t').value);
+    if (msg.length === 0) { alert('Enter at least one message symbol (0-7)'); return; }
+
+    const g = genPoly(t);
+    const shifted = [...msg, ...Array(2*t).fill(0)];
+    const rem = gfPolyRem(shifted, g);
+    while (rem.length < 2*t) rem.unshift(0);
+    codeword = [...msg, ...rem];
+    corrupted = [...codeword];
+    errorPositions.clear();
+
+    let html = `<div class="section"><h3>Step 1: Encoding</h3>`;
+    html += `<div class="step ok">Message: [${msg.join(', ')}]</div>`;
+    html += `<div class="step ok">Generator g(x) = [${g.join(', ')}] (degree ${g.length-1})</div>`;
+    html += `<div class="step ok">Parity symbols: [${rem.join(', ')}]</div>`;
+    html += `<div class="step ok">Codeword (${msg.length} data + ${2*t} parity = ${codeword.length} symbols):</div>`;
+    html += renderCodeword(codeword, msg.length);
+    html += `</div>`;
+    html += `<div class="section"><h3>Step 2: Click symbols below to inject errors</h3>`;
+    html += `<div id="corrupt-area">${renderCorrupted(msg.length)}</div></div>`;
+    document.getElementById('output').innerHTML = html;
+}
+
+function renderCodeword(cw, dataLen) {
+    let html = '<div class="codeword">';
+    for (let i = 0; i < cw.length; i++) {
+        const cls = i < dataLen ? 'data' : 'parity';
+        html += `<div class="symbol ${cls}">${cw[i]}</div>`;
+    }
+    return html + '</div>';
+}
+
+function renderCorrupted(dataLen) {
+    if (!corrupted) return '';
+    let html = '<div class="codeword">';
+    for (let i = 0; i < corrupted.length; i++) {
+        const isErr = errorPositions.has(i);
+        const cls = isErr ? 'error' : (i < dataLen ? 'data' : 'parity');
+        html += `<div class="symbol ${cls}" onclick="toggleError(${i})" title="Click to toggle error">${corrupted[i]}</div>`;
+    }
+    html += '</div>';
+    html += `<div class="step ${errorPositions.size > 0 ? 'warn' : 'ok'}">${errorPositions.size} error(s) injected</div>`;
+    return html;
+}
+
+function toggleError(pos) {
+    if (!codeword) return;
+    const t = parseInt(document.getElementById('t').value);
+    const msg = document.getElementById('msg').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 0 && n < Q);
+
+    if (errorPositions.has(pos)) {
+        errorPositions.delete(pos);
+        corrupted[pos] = codeword[pos];
+    } else {
+        if (errorPositions.size >= t) { return; }
+        errorPositions.add(pos);
+        // Flip to a different value
+        corrupted[pos] = gfAdd(codeword[pos], 1 + Math.floor(Math.random() * 6));
+        corrupted[pos] = corrupted[pos] % Q;
+        if (corrupted[pos] === codeword[pos]) corrupted[pos] = gfAdd(codeword[pos], 1);
+    }
+    document.getElementById('corrupt-area').innerHTML = renderCorrupted(msg.length);
+}
+
+function decode() {
+    if (!codeword || !corrupted) { alert('Encode first!'); return; }
+    const t = parseInt(document.getElementById('t').value);
+    const msg = document.getElementById('msg').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 0 && n < Q);
+    const r = [...corrupted];
+    const ec = 2 * t;
+
+    let html = document.getElementById('output').innerHTML;
+
+    // Syndromes
+    const synd = [];
+    for (let i = 0; i < ec; i++) {
+        let val = 0;
+        for (const c of r) { val = gfAdd(gfMul(val, EXP[i]), c); }
+        synd.push(val);
+    }
+    const allZero = synd.every(s => s === 0);
+    html += `<div class="section"><h3>Step 3: Syndromes</h3>`;
+    for (let i = 0; i < ec; i++) html += `<div class="step ${synd[i]===0?'ok':'warn'}">S${i} = r(α${superscript(i)}) = ${synd[i]}</div>`;
+    html += `<div class="step ${allZero?'ok':'warn'}">${allZero ? 'All zero — no errors!' : 'Non-zero syndromes — errors detected!'}</div></div>`;
+
+    if (allZero) { document.getElementById('output').innerHTML = html; return; }
+
+    // PGZ: find error locator
+    let sigma = null;
+    for (let numErr = t; numErr >= 1; numErr--) {
+        const A = [], b = [];
+        for (let i = 0; i < numErr; i++) {
+            const row = [];
+            for (let j = 0; j < numErr; j++) row.push(synd[i + j]);
+            A.push(row);
+            b.push(synd[i + numErr]);
+        }
+        try {
+            const x = gfSolve(A, b);
+            sigma = [...x, 1];
+            html += `<div class="section"><h3>Step 4: Error Locator (PGZ, t=${numErr})</h3>`;
+            html += `<div class="step ok">Σ(x) = [${sigma.join(', ')}]</div></div>`;
+            break;
+        } catch(e) {
+            continue;
+        }
+    }
+    if (!sigma) { html += `<div class="section"><h3>Error: Could not find error locator</h3></div>`; document.getElementById('output').innerHTML = html; return; }
+
+    // Chien search
+    const errPos = [];
+    for (let i = 0; i < r.length; i++) {
+        const root = EXP[(Q - 1 - i) % (Q - 1)];
+        let val = 0;
+        for (const c of sigma) val = gfAdd(gfMul(val, root), c);
+        if (val === 0) errPos.push(i);
+    }
+    html += `<div class="section"><h3>Step 5: Chien Search (root finding)</h3>`;
+    for (const p of errPos) html += `<div class="step warn">Error at position ${p}</div>`;
+    html += `</div>`;
+
+    // Magnitudes via linear system
+    const numE = errPos.length;
+    const X = errPos.map(p => EXP[(r.length - 1 - p) % (Q-1)]);
+    const Am = [], bm = [];
+    for (let k = 0; k < numE; k++) {
+        const row = [];
+        for (let i = 0; i < numE; i++) row.push(X[i] === 0 ? (k===0?1:0) : gfPow(X[i], k));
+        Am.push(row);
+        bm.push(synd[k]);
+    }
+    let Y;
+    try { Y = gfSolve(Am, bm); } catch(e) { html += `<div class="section"><h3>Error solving magnitudes</h3></div>`; document.getElementById('output').innerHTML = html; return; }
+
+    html += `<div class="section"><h3>Step 6: Error Magnitudes</h3>`;
+    const corrected = [...r];
+    for (let i = 0; i < numE; i++) {
+        corrected[errPos[i]] = gfAdd(r[errPos[i]], Y[i]);
+        html += `<div class="step fix">Position ${errPos[i]}: received ${r[errPos[i]]}, error magnitude ${Y[i]}, corrected → ${corrected[errPos[i]]}</div>`;
+    }
+    html += `</div>`;
+
+    // Show corrected codeword
+    const matches = corrected.every((v, i) => v === codeword[i]);
+    html += `<div class="section"><h3>Result: ${matches ? '✅ Perfect correction!' : '❌ Correction failed'}</h3>`;
+    html += '<div class="codeword">';
+    for (let i = 0; i < corrected.length; i++) {
+        const wasErr = errorPositions.has(i);
+        const cls = wasErr ? 'corrected' : (i < msg.length ? 'data' : 'parity');
+        html += `<div class="symbol ${cls}">${corrected[i]}</div>`;
+    }
+    html += '</div></div>';
+
+    document.getElementById('output').innerHTML = html;
+}
+
+function gfSolve(A, b) {
+    const n = b.length;
+    A = A.map(r => [...r]); b = [...b];
+    for (let i = 0; i < n; i++) {
+        let pivot = i;
+        while (pivot < n && A[pivot][i] === 0) pivot++;
+        if (pivot === n) throw 'singular';
+        [A[i], A[pivot]] = [A[pivot], A[i]];
+        [b[i], b[pivot]] = [b[pivot], b[i]];
+        const inv = gfInv(A[i][i]);
+        for (let j = i; j < n; j++) A[i][j] = gfMul(A[i][j], inv);
+        b[i] = gfMul(b[i], inv);
+        for (let k = 0; k < n; k++) {
+            if (k === i || A[k][i] === 0) continue;
+            const f = A[k][i];
+            for (let j = i; j < n; j++) A[k][j] = gfAdd(A[k][j], gfMul(f, A[i][j]));
+            b[k] = gfAdd(b[k], gfMul(f, b[i]));
+        }
+    }
+    return b;
+}
+
+function superscript(n) { return String(n).split('').map(c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+c]).join(''); }
+function reset() { codeword = null; corrupted = null; errorPositions.clear(); document.getElementById('output').innerHTML = ''; }
+</script>
+</body>
+</html>

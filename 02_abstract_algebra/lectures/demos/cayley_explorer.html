@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cayley Graph Explorer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+.controls {
+    width: 240px; background: #161b22; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+    border-right: 1px solid #30363d;
+}
+.controls h2 { color: #58a6ff; font-size: 16px; margin-bottom: 4px; }
+.controls label { font-size: 12px; color: #8b949e; display: block; margin-bottom: 4px; }
+.controls select, .controls input {
+    width: 100%; padding: 6px 8px; background: #0d1117; border: 1px solid #30363d;
+    color: #c9d1d9; border-radius: 4px; font-size: 13px;
+}
+.controls button {
+    padding: 8px; background: #238636; color: white; border: none; border-radius: 6px;
+    font-weight: bold; cursor: pointer; font-size: 13px;
+}
+.controls button:hover { background: #2ea043; }
+.info { font-size: 11px; color: #8b949e; line-height: 1.5; border-top: 1px solid #30363d; padding-top: 10px; }
+.info strong { color: #58a6ff; }
+
+canvas { flex: 1; display: block; }
+</style>
+</head>
+<body>
+
+<div class="controls">
+    <h2>Cayley Graph Explorer</h2>
+
+    <div>
+        <label>Group Family</label>
+        <select id="family">
+            <option value="Zn">ℤₙ (cyclic)</option>
+            <option value="Dn" selected>Dₙ (dihedral)</option>
+            <option value="Sn">Sₙ (symmetric)</option>
+        </select>
+    </div>
+    <div>
+        <label>Parameter n</label>
+        <input id="param" type="number" value="3" min="2" max="6">
+    </div>
+
+    <button onclick="generate()">Generate</button>
+
+    <div class="info" id="info">
+        <strong>Order:</strong> —<br>
+        <strong>Generators:</strong> —<br>
+        <strong>Abelian:</strong> —<br>
+        <strong>Cyclic:</strong> —
+    </div>
+    <div class="info">
+        <strong>Red</strong> edges = generator 1<br>
+        <strong>Green</strong> edges = generator 2<br>
+        Drag nodes to rearrange.
+    </div>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+let nodes = [], edges = [];
+let dragging = null;
+
+function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    W = canvas.width = window.innerWidth - 240;
+    H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', () => { resize(); draw(); });
+resize();
+
+// ─── Group generation (pure JS) ───
+
+function mod(a, n) { return ((a % n) + n) % n; }
+
+function permMul(a, b) {
+    return a.map((_, i) => b[a[i]]);
+}
+function permInv(p) {
+    const inv = new Array(p.length);
+    p.forEach((v, i) => inv[v] = i);
+    return inv;
+}
+function permId(n) { return Array.from({length: n}, (_, i) => i); }
+function permEq(a, b) { return a.every((v, i) => v === b[i]); }
+function permKey(p) { return p.join(','); }
+
+function generateZn(n) {
+    const elems = Array.from({length: n}, (_, i) => i);
+    const labels = elems.map(i => i.toString());
+    const gen = [1]; // generator: +1
+    const edgeList = [];
+    for (let g of gen) {
+        for (let e of elems) {
+            edgeList.push([e, mod(e + g, n), 0]);
+        }
+    }
+    return { elems, labels, edges: edgeList, gens: ['+1'], abelian: true, cyclic: true };
+}
+
+function generateDn(n) {
+    // Elements: (k, flip) where k in [0,n), flip in {0,1}
+    // r = (1, 0), s = (0, 1)
+    // (k1,f1)*(k2,f2) = (k1 + (-1)^f1 * k2 mod n, f1 xor f2)
+    const elems = [];
+    const labels = [];
+    for (let f = 0; f < 2; f++) {
+        for (let k = 0; k < n; k++) {
+            elems.push([k, f]);
+            if (f === 0) labels.push(k === 0 ? 'e' : (k === 1 ? 'r' : 'r' + superscript(k)));
+            else labels.push(k === 0 ? 's' : 'sr' + (k === 1 ? '' : superscript(k)));
+        }
+    }
+    function mul(a, b) {
+        return [mod(a[0] + (a[1] ? -b[0] : b[0]), n), a[1] ^ b[1]];
+    }
+    function idx(e) { return e[1] * n + e[0]; }
+
+    const r = [1, 0], s = [0, 1];
+    const edgeList = [];
+    for (let e of elems) {
+        edgeList.push([idx(e), idx(mul(e, r)), 0]);
+        edgeList.push([idx(e), idx(mul(e, s)), 1]);
+    }
+    return { elems: elems.map((_, i) => i), labels, edges: edgeList, gens: ['r', 's'], abelian: n <= 2, cyclic: false };
+}
+
+function generateSn(n) {
+    // Generate all permutations
+    const allPerms = [];
+    function permute(arr, l = 0) {
+        if (l === arr.length - 1) { allPerms.push([...arr]); return; }
+        for (let i = l; i < arr.length; i++) {
+            [arr[l], arr[i]] = [arr[i], arr[l]];
+            permute(arr, l + 1);
+            [arr[l], arr[i]] = [arr[i], arr[l]];
+        }
+    }
+    permute(permId(n));
+
+    const keyMap = {};
+    allPerms.forEach((p, i) => keyMap[permKey(p)] = i);
+
+    // Generators: (1 2) and (1 2 ... n)
+    const s = permId(n); [s[0], s[1]] = [s[1], s[0]]; // transposition
+    const r = permId(n); r.push(r.shift()); // n-cycle
+
+    const labels = allPerms.map(p => {
+        if (permEq(p, permId(n))) return 'e';
+        // Cycle notation
+        const visited = new Array(n).fill(false);
+        const cycles = [];
+        for (let i = 0; i < n; i++) {
+            if (visited[i] || p[i] === i) continue;
+            const cycle = [];
+            let j = i;
+            while (!visited[j]) { visited[j] = true; cycle.push(j + 1); j = p[j]; }
+            cycles.push('(' + cycle.join(' ') + ')');
+        }
+        return cycles.join('') || 'e';
+    });
+
+    const edgeList = [];
+    for (let i = 0; i < allPerms.length; i++) {
+        const pr = permMul(allPerms[i], r);
+        const ps = permMul(allPerms[i], s);
+        edgeList.push([i, keyMap[permKey(pr)], 0]);
+        edgeList.push([i, keyMap[permKey(ps)], 1]);
+    }
+
+    return { elems: allPerms.map((_, i) => i), labels, edges: edgeList, gens: ['σ', 'τ'], abelian: n <= 2, cyclic: n <= 2 };
+}
+
+function superscript(n) {
+    const sups = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+    return String(n).split('').map(c => sups[+c]).join('');
+}
+
+// ─── Layout ───
+
+function circularLayout(count) {
+    const cx = W / 2, cy = H / 2;
+    const r = Math.min(W, H) * 0.38;
+    return Array.from({length: count}, (_, i) => {
+        const a = 2 * Math.PI * i / count - Math.PI / 2;
+        return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+    });
+}
+
+// ─── Drawing ───
+
+const COLORS = ['#ff7b72', '#7ee787', '#79c0ff', '#d2a8ff', '#ffa657'];
+
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Edges
+    for (const [from, to, gi] of edges) {
+        const a = nodes[from], b = nodes[to];
+        if (from === to) continue;
+        const color = COLORS[gi % COLORS.length];
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = 0.5;
+        ctx.lineWidth = 1.5;
+
+        // Curved edge
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const len = Math.sqrt(dx*dx + dy*dy);
+        const nx = -dy / len * 15, ny = dx / len * 15;
+
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.quadraticCurveTo(mx + nx, my + ny, b.x, b.y);
+        ctx.stroke();
+
+        // Arrowhead
+        const t = 0.85;
+        const px = (1-t)*(1-t)*a.x + 2*(1-t)*t*(mx+nx) + t*t*b.x;
+        const py = (1-t)*(1-t)*a.y + 2*(1-t)*t*(my+ny) + t*t*b.y;
+        const t2 = 0.82;
+        const px2 = (1-t2)*(1-t2)*a.x + 2*(1-t2)*t2*(mx+nx) + t2*t2*b.x;
+        const py2 = (1-t2)*(1-t2)*a.y + 2*(1-t2)*t2*(my+ny) + t2*t2*b.y;
+        const adx = px - px2, ady = py - py2;
+        const al = Math.sqrt(adx*adx + ady*ady) || 1;
+        const ax1 = adx/al, ay1 = ady/al;
+
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(px - 8*ax1 + 4*ay1, py - 8*ay1 - 4*ax1);
+        ctx.lineTo(px - 8*ax1 - 4*ay1, py - 8*ay1 + 4*ax1);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+
+    // Nodes
+    const R = nodes.length > 20 ? 14 : 20;
+    for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, R, 0, Math.PI * 2);
+        ctx.fillStyle = '#58a6ff';
+        ctx.fill();
+        ctx.strokeStyle = '#79c0ff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#0d1117';
+        ctx.font = `bold ${nodes.length > 20 ? 8 : 11}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(n.label, n.x, n.y);
+    }
+}
+
+function generate() {
+    const family = document.getElementById('family').value;
+    const n = parseInt(document.getElementById('param').value);
+
+    let data;
+    try {
+        if (family === 'Zn') data = generateZn(n);
+        else if (family === 'Dn') data = generateDn(n);
+        else if (family === 'Sn') {
+            if (n > 5) { alert('S_n with n>5 has too many elements (' + factorial(n) + ')'); return; }
+            data = generateSn(n);
+        }
+    } catch(e) { alert(e.message); return; }
+
+    const positions = circularLayout(data.elems.length);
+    nodes = data.elems.map((_, i) => ({
+        x: positions[i].x, y: positions[i].y,
+        label: data.labels[i]
+    }));
+    edges = data.edges;
+
+    document.getElementById('info').innerHTML =
+        `<strong>Order:</strong> ${data.elems.length}<br>` +
+        `<strong>Generators:</strong> ${data.gens.join(', ')}<br>` +
+        `<strong>Abelian:</strong> ${data.abelian ? 'Yes' : 'No'}<br>` +
+        `<strong>Cyclic:</strong> ${data.cyclic ? 'Yes' : 'No'}`;
+
+    // Force-directed relaxation
+    for (let iter = 0; iter < 200; iter++) {
+        for (let i = 0; i < nodes.length; i++) {
+            let fx = 0, fy = 0;
+            for (let j = 0; j < nodes.length; j++) {
+                if (i === j) continue;
+                let dx = nodes[i].x - nodes[j].x;
+                let dy = nodes[i].y - nodes[j].y;
+                let d = Math.sqrt(dx*dx + dy*dy) || 1;
+                let repulsion = 5000 / (d * d);
+                fx += (dx / d) * repulsion;
+                fy += (dy / d) * repulsion;
+            }
+            for (const [from, to] of edges) {
+                let other = -1;
+                if (from === i) other = to;
+                else if (to === i) other = from;
+                if (other < 0) continue;
+                let dx = nodes[other].x - nodes[i].x;
+                let dy = nodes[other].y - nodes[i].y;
+                let d = Math.sqrt(dx*dx + dy*dy) || 1;
+                let attraction = d * 0.01;
+                fx += (dx / d) * attraction;
+                fy += (dy / d) * attraction;
+            }
+            // Center gravity
+            fx += (W/2 - nodes[i].x) * 0.001;
+            fy += (H/2 - nodes[i].y) * 0.001;
+
+            nodes[i].x += fx * 0.5;
+            nodes[i].y += fy * 0.5;
+        }
+    }
+
+    draw();
+}
+
+function factorial(n) { return n <= 1 ? 1 : n * factorial(n-1); }
+
+// ─── Dragging ───
+
+canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const R = nodes.length > 20 ? 14 : 20;
+    for (let i = 0; i < nodes.length; i++) {
+        const dx = nodes[i].x - mx, dy = nodes[i].y - my;
+        if (dx*dx + dy*dy < R*R) { dragging = i; break; }
+    }
+});
+canvas.addEventListener('mousemove', e => {
+    if (dragging === null) return;
+    const rect = canvas.getBoundingClientRect();
+    nodes[dragging].x = e.clientX - rect.left;
+    nodes[dragging].y = e.clientY - rect.top;
+    draw();
+});
+canvas.addEventListener('mouseup', () => dragging = null);
+
+generate();
+</script>
+</body>
+</html>
