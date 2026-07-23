@@ -20,7 +20,7 @@ In $\mathbb{Z}_6$: $2 \cdot 3 \equiv 0$. Two nonzero elements multiply to zero.
 
 This breaks everything: if $ab = 0$ and $a \neq 0$, we can't "divide by $a$" — the cancellation law fails.
 
-:::matrix { cols="50/50" rows="100" height="75%"}
+:::matrix { cols="50/50" height="65%"}
 
 [[0, 0]]
 ![](./assets/cayley_table_z6_mul.png){height=85% center}
@@ -44,7 +44,7 @@ The **quotient ring** $R/I$ has elements $\{a + I\}$ with operations $(a+I) + (b
 
 **Universal property:** Any ring homomorphism $\phi: R \to S$ with $I \subseteq \ker\phi$ factors uniquely through $R/I$:
 
-$$R \xrightarrow{\;\pi\;} R/I \xrightarrow{\;\bar{\phi}\;} S$$
+$$R \xrightarrow{\\;\pi\\;} R/I \xrightarrow{\\;\bar{\phi}\\;} S$$
 
 Same diagram as for groups — the universal property is a *pattern* that repeats across algebraic structures.
 
@@ -56,7 +56,7 @@ Polynomials with coefficients in a ring $R$ form the polynomial ring $R[x]$.
 
 **Universal property:** $R[x]$ is the **free commutative $R$-algebra on one generator**. Any ring homomorphism $\phi: R \to S$ and any choice of element $s \in S$ extends uniquely to $\bar{\phi}: R[x] \to S$ via $x \mapsto s$:
 
-$$R[x] \xrightarrow{\;\bar{\phi}\;} S, \qquad f(x) \mapsto f(s)$$
+$$R[x] \xrightarrow{\\;\bar{\phi}\\;} S, \qquad f(x) \mapsto f(s)$$
 
 **Consequence:** $GF(p)[x] / \langle P(x) \rangle$ is the smallest ring containing $GF(p)$ and a root of $P(x)$.
 
@@ -87,7 +87,7 @@ $$f(x) = q(x) \cdot g(x) + r(x), \quad \deg r < \deg g$$
 
 # Interactive: Polynomial Calculator over $GF(p)$
 
-<iframe src="demos/poly_calculator.html" style="width: 100%; height: 72vh; border: 1px solid #30363d; border-radius: 8px;"></iframe>
+<iframe src="demos/poly_calculator.html" style="width: 100%; height: 62vh; border: 1px solid #30363d; border-radius: 8px;"></iframe>
 
 ---
 
@@ -128,9 +128,11 @@ There are exactly $p^n$ such polynomials → $|GF(p^n)| = p^n$.
 
 $GF(4) = GF(2)[x] / \langle x^2 + x + 1 \rangle$. Let $\alpha$ be a root, so $\alpha^2 + \alpha + 1 = 0$, i.e., $\alpha^2 = \alpha + 1$.
 
-:::matrix { cols="50/50" rows="100" height="78%"}
+:::matrix { cols="50/50" gap="5%" height="78%"}
 
 [[0, 0]]
+
+The multiplicative group $GF(4)^* = \{1, \alpha, \alpha+1\}$ is cyclic of order $3$.
 
 | Element | Poly | Power |
 |---------|------|-------|
@@ -138,8 +140,6 @@ $GF(4) = GF(2)[x] / \langle x^2 + x + 1 \rangle$. Let $\alpha$ be a root, so $\a
 | $1$ | $1$ | $\alpha^0$ |
 | $\alpha$ | $x$ | $\alpha^1$ |
 | $\alpha+1$ | $x+1$ | $\alpha^2$ |
-
-The multiplicative group $GF(4)^* = \{1, \alpha, \alpha+1\}$ is cyclic of order $3$.
 
 [[0, 1]]
 
@@ -199,7 +199,7 @@ We precompute two lookup tables:
 
 Then: $a \cdot b = \text{exp}[(\text{log}[a] + \text{log}[b]) \bmod (p^n - 1)]$ — **one addition and two table lookups!**
 
-![](./assets/gf8_table.png){width=85% center}
+![](./assets/gf8_table.png){width=65% center}
 
 ---
 

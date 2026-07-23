@@ -124,7 +124,7 @@ $$\Lambda(x) \cdot S(x) \equiv \Omega(x) \pmod{x^{2t}}$$
 
 Expanding: the coefficient of $x^k$ for $k \geq t$ must be zero, giving a linear system:
 
-$$\begin{pmatrix} S_0 & S_1 & \cdots & S_{t-1} \\ S_1 & S_2 & \cdots & S_t \\ \vdots & & \ddots & \vdots \\ S_{t-1} & S_t & \cdots & S_{2t-2} \end{pmatrix} \begin{pmatrix} \Lambda_t \\ \Lambda_{t-1} \\ \vdots \\ \Lambda_1 \end{pmatrix} = - \begin{pmatrix} S_t \\ S_{t+1} \\ \vdots \\ S_{2t-1} \end{pmatrix}$$
+$$\begin{pmatrix} S_0 & S_1 & \cdots & S_{t-1} \\ S_1 & S_2 & \cdots & S_t \\\\ \vdots & & \ddots & \vdots \\\\ S_{t-1} & S_t & \cdots & S_{2t-2} \end{pmatrix} \begin{pmatrix} \Lambda_t \\\\ \Lambda_{t-1} \\\\ \vdots \\\\ \Lambda_1 \end{pmatrix} = - \begin{pmatrix} S_t \\\\ S_{t+1} \\\\ \vdots \\\\ S_{2t-1} \end{pmatrix}$$
 
 Solve via **Gaussian Elimination over $GF(p^n)$** — the *exact same algorithm* as over $\mathbb{R}$, but using log/exp tables for arithmetic.
 
@@ -187,11 +187,24 @@ You will implement this once and reuse it twice:
 
 # Interactive: RS Encoder / Decoder
 
-<iframe src="demos/rs_demo.html" style="width: 100%; height: 72vh; border: 1px solid #30363d; border-radius: 8px;"></iframe>
+<iframe src="demos/rs_demo.html" style="width: 100%; height: 62vh; border: 1px solid #30363d; border-radius: 8px;"></iframe>
 
 ---
 
 # QR Code Anatomy
+
+
+<style>
+  .shrink-qr-slide p, 
+  .shrink-qr-slide table, 
+  .shrink-qr-slide th, 
+  .shrink-qr-slide td, 
+  .shrink-qr-slide li {
+    font-size: 75% !important;
+  }
+</style>
+<div class="shrink-qr-slide">
+
 
 A QR code is a $21 \times 21$ (or larger) matrix that uses Reed-Solomon over $GF(2^8)$.
 
@@ -212,6 +225,8 @@ The standard defines four error correction levels:
 | H | ~30% | High |
 
 In your practice problem, you implement the full algebraic pipeline and generate a real, scannable QR code.
+
+</div>
 
 ---
 

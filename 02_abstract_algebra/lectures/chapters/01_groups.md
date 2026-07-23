@@ -3,10 +3,10 @@
 A **group** $(G, \cdot)$ is a set $G$ with a binary operation satisfying:
 1. **Closure**: $a \cdot b \in G$
 2. **Associativity**: $(a \cdot b) \cdot c = a \cdot (b \cdot c)$
-3. **Identity**: $\exists\, e \in G$ such that $e \cdot a = a \cdot e = a$
-4. **Inverse**: $\forall a \in G,\ \exists\, a^{-1}$ such that $a \cdot a^{-1} = e$
+3. **Identity**: $\exists\\, e \in G$ such that $e \cdot a = a \cdot e = a$
+4. **Inverse**: $\forall a \in G, \exists\\, a^{-1}$ such that $a \cdot a^{-1} = e$
 
-If $a \cdot b = b \cdot a$ for all $a, b$, the group is **abelian** (commutative).
+If $a \cdot b = b \cdot a$ for all $a$, $b$, the group is **abelian** (commutative).
 
 ---
 
@@ -43,12 +43,8 @@ $U(n) = \{a \in \mathbb{Z}_n \mid \gcd(a, n) = 1\}$ under multiplication mod $n$
 
 These are exactly the elements of $\mathbb{Z}_n$ that have multiplicative inverses.
 
-:::matrix { cols="100" rows="100" height="80%"}
+![](./assets/un_comparison.png){width=80% center}
 
-[[0, 0]]
-![](./assets/un_comparison.png){width=90% center}
-
-:::
 
 When $p$ is prime, $U(p) = \{1, 2, \ldots, p-1\}$ is always cyclic. A generator is called a **primitive root**.
 
@@ -60,7 +56,7 @@ This is the multiplicative group of the field $GF(p)$ — the starting point for
 
 A group's entire structure is captured by its multiplication table. Each row and column is a permutation of the elements (Latin square property).
 
-:::matrix { cols="50/50" rows="100" height="80%"}
+:::matrix { cols="50/50" height="60%"}
 
 [[0, 0]]
 ![](./assets/cayley_table_z4.png){height=85% center}
@@ -76,7 +72,7 @@ $\mathbb{Z}_4$: diagonal stripes — every element has a unique order. $U(8)$: e
 
 # Interactive: Multiplication Table Explorer
 
-<iframe src="demos/multiplication_table.html" style="width: 100%; height: 72vh; border: 1px solid #30363d; border-radius: 8px;"></iframe>
+<iframe src="demos/multiplication_table.html" style="width: 100%; height: 62vh; border: 1px solid #30363d; border-radius: 8px;"></iframe>
 
 ---
 
@@ -87,7 +83,7 @@ Every group can be visualized as a directed graph. Given generators $S \subset G
 - **Nodes** = group elements
 - **Edges** = right-multiplication by a generator: $g \xrightarrow{s} g \cdot s$
 
-:::matrix { cols="33/33/33" rows="100" height="80%"}
+:::matrix { cols="33/33/33" height="60%"}
 
 [[0, 0]]
 ![](./assets/cayley_z6.png){height=90% center}
@@ -106,7 +102,7 @@ The Cayley graph encodes the entire group structure: subgroups appear as sub-gra
 
 # Interactive: Cayley Graph Explorer
 
-<iframe src="demos/cayley_explorer.html" style="width: 100%; height: 72vh; border: 1px solid #30363d; border-radius: 8px;"></iframe>
+<iframe src="demos/cayley_explorer.html" style="width: 100%; height: 62vh; border: 1px solid #30363d; border-radius: 8px;"></iframe>
 
 ---
 
@@ -131,7 +127,7 @@ The symmetries of a regular $n$-gon form the **dihedral group** $D_n$ of order $
 
 **Key relation:** $srs^{-1} = r^{-1}$ — conjugating a rotation by a reflection *reverses* it. This is why $D_n$ is non-abelian for $n \geq 3$.
 
-**Presentation:** $D_n = \langle\, r, s \mid r^n = s^2 = e,\ srs = r^{-1}\,\rangle$
+**Presentation:** $D_n = \langle\\, r, s \mid r^n = s^2 = e,\ srs = r^{-1}\\,\rangle$
 
 **Semi-direct product:** $D_n \cong \mathbb{Z}_n \rtimes \mathbb{Z}_2$, where $\mathbb{Z}_2$ acts on $\mathbb{Z}_n$ by inversion. The "twist" distinguishes this from the direct product $\mathbb{Z}_n \times \mathbb{Z}_2$.
 
@@ -145,7 +141,7 @@ A **subgroup** $H \leq G$ is a subset closed under the group operation and inver
 
 The **index** $[G:H] = |G| / |H|$ counts the number of distinct cosets.
 
-:::matrix { cols="50/50" rows="100" height="75%"}
+:::matrix { cols="50/50" height="65%"}
 
 [[0, 0]]
 ![](./assets/coset_partition.png){height=90% center}
@@ -170,16 +166,16 @@ A **group homomorphism** $\phi: G \to H$ preserves structure: $\phi(ab) = \phi(a
 
 The **kernel** $\ker\phi = \{g \in G \mid \phi(g) = e_H\}$ measures "what gets collapsed."
 
-The **image** $\mathrm{im}\,\phi = \{\phi(g) \mid g \in G\}$ is what $G$ "looks like" inside $H$.
+The **image** $\mathrm{im}\\,\phi = \{\phi(g) \mid g \in G\}$ is what $G$ "looks like" inside $H$.
 
 **Key facts:**
 - $\ker\phi$ is always a normal subgroup of $G$
-- $\mathrm{im}\,\phi$ is always a subgroup of $H$
+- $\mathrm{im}\\,\phi$ is always a subgroup of $H$
 - $\phi$ is injective $\iff$ $\ker\phi = \{e\}$
 
 **Example:** $\phi: \mathbb{Z} \to \mathbb{Z}_n$, $\phi(k) = k \bmod n$.
 - $\ker\phi = n\mathbb{Z} = \{\ldots, -n, 0, n, 2n, \ldots\}$
-- $\mathrm{im}\,\phi = \mathbb{Z}_n$ (surjective)
+- $\mathrm{im}\\,\phi = \mathbb{Z}_n$ (surjective)
 
 ---
 
@@ -203,11 +199,11 @@ Equivalently: left cosets = right cosets, so $gH = Hg$.
 
 # First Isomorphism Theorem
 
-$$G / \ker\phi \;\cong\; \mathrm{im}\,\phi$$
+$$G / \ker\phi \\;\cong\\; \mathrm{im}\\,\phi$$
 
 Every homomorphism $\phi: G \to H$ factors through the quotient by its kernel:
 
-$$G \xrightarrow{\;\pi\;} G/\ker\phi \xrightarrow{\;\bar{\phi}\;} \mathrm{im}\,\phi$$
+$$G \xrightarrow{\\;\pi\\;} G/\ker\phi \xrightarrow{\\;\bar{\phi}\\;} \mathrm{im}\\,\phi$$
 
 where $\pi$ is the canonical projection and $\bar{\phi}$ is the induced isomorphism.
 
@@ -224,13 +220,13 @@ where $\pi$ is the canonical projection and $\bar{\phi}$ is the induced isomorph
 
 The **direct product** $G \times H$ has componentwise operations: $(g_1, h_1) \cdot (g_2, h_2) = (g_1 g_2, h_1 h_2)$.
 
-**Key fact:** $\mathbb{Z}_m \times \mathbb{Z}_n \cong \mathbb{Z}_{mn}$ if and only if $\gcd(m, n) = 1$.
+**Key fact:** $\mathbb{Z}\_m \times \mathbb{Z}\_n \cong \mathbb{Z}\_{mn}$ if and only if $\gcd(m, n) = 1$.
 
-So $\mathbb{Z}_2 \times \mathbb{Z}_3 \cong \mathbb{Z}_6$, but $\mathbb{Z}_2 \times \mathbb{Z}_2 \ncong \mathbb{Z}_4$ (every element of $\mathbb{Z}_2 \times \mathbb{Z}_2$ has order $\leq 2$).
+So $\mathbb{Z}\_2 \times \mathbb{Z}\_3 \cong \mathbb{Z}\_6$, but $\mathbb{Z}\_2 \times \mathbb{Z}\_2 \ncong \mathbb{Z}\_4$ (every element of $\mathbb{Z}\_2 \times \mathbb{Z}\_2$ has order $\leq 2$).
 
 **Fundamental Theorem of Finite Abelian Groups:** Every finite abelian group is isomorphic to a direct product of cyclic groups of prime-power order:
 
-$$G \cong \mathbb{Z}_{p_1^{a_1}} \times \mathbb{Z}_{p_2^{a_2}} \times \cdots \times \mathbb{Z}_{p_k^{a_k}}$$
+$$G \cong \mathbb{Z}\_{p\_1^{a\_1}} \times \mathbb{Z}\_{p\_2^{a\_2}} \times \cdots \times \mathbb{Z}\_{p\_k^{a\_k}}$$
 
 This decomposition is unique (up to reordering). Finite abelian groups are completely classified.
 
@@ -240,13 +236,13 @@ This decomposition is unique (up to reordering). Finite abelian groups are compl
 
 The **free group** $F(S)$ on generators $S$ is the universal group: every function $f: S \to G$ to any group $G$ extends uniquely to a homomorphism $\bar{f}: F(S) \to G$.
 
-$$S \xhookrightarrow{\;\iota\;} F(S) \xrightarrow{\;\bar{f}\;} G$$
+$$S \xhookrightarrow{\\;\iota\\;} F(S) \xrightarrow{\\;\bar{f}\\;} G$$
 
 Elements of $F(S)$ are reduced words in the generators and their formal inverses.
 
 A **group presentation** $\langle S \mid R \rangle = F(S) / \langle\langle R \rangle\rangle$ — quotient by the normal closure of the relations:
 
-$$D_4 = \langle\, r, s \mid r^4 = s^2 = e,\ srs = r^{-1}\,\rangle$$
+$$D_4 = \langle\\, r, s \mid r^4 = s^2 = e,\ srs = r^{-1}\\,\rangle$$
 
 This is exactly what you type into the warm-up problem dashboard. The SymPy engine solves the word problem via the Todd-Coxeter coset enumeration algorithm.
 
@@ -254,7 +250,7 @@ This is exactly what you type into the warm-up problem dashboard. The SymPy engi
 
 # Python: Modular Arithmetic Essentials
 
-The tools you'll need for the practice problems — none of these spoil any solutions:
+The tools you'll need for the practice problems:
 
 ```python
 # Modular arithmetic is native in Python
