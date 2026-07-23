@@ -1,7 +1,7 @@
 
 # Math with Python
 
-A semester course exploring deep mathematical topics through hands-on Python programming. The course is structured as **4 modules** with a kickoff session, each pairing a theory lecture with a practice lab.
+Schedule: DBA
 
 ## Course Structure
 
@@ -21,13 +21,11 @@ A semester course exploring deep mathematical topics through hands-on Python pro
 ---
 
 ### Module 2: Abstract Algebra
-**Session 4 — Lecture: Theory of Galois Fields**
-- Polynomial arithmetic, finite fields, Reed-Solomon error correction
+- Lecture: [Abstract Algebra](https://fbeilstein.github.io/math_python/02_abstract_algebra/lectures/abstract_algebra.html)
+- Warm-up:
+- Practice:
+- Optional:
 
-**Session 5 — Practice: Generating QR Codes**
-- Bitwise operations, binary matrix manipulation, encoding strings into scannable QR grids
-- Practice: [`qr_problem`](02_abstract_algebra/practice/qr_problem/)
-- Related optional problems: [`cayley_problem`](02_abstract_algebra/optional/cayley_problem/), [`rsa_problem`](02_abstract_algebra/optional/rsa_problem/)
 
 ---
 
@@ -50,23 +48,6 @@ A semester course exploring deep mathematical topics through hands-on Python pro
 - Practice: [`biochem_problem`](04_systems_biochemistry/practice/biochem_problem/)
 
 ---
-
-## Optional Problem Sets
-
-Additional problems for warm-up or advanced students:
-
-| Problem | Topic |
-|---|---|
-| [autodiff_duals_problem](optional/autodiff_duals_problem/) | Automatic Differentiation with Dual Numbers |
-| [esher_droste_problem](optional/esher_droste_problem/) | Escher-Droste Transformation |
-| [evolutionary_game_problem](optional/evolutionary_game_problem/) | Evolutionary Game Theory |
-| [fractals_problem](optional/fractals_problem/) | Drawing Fractals |
-| [kinematics_problem](optional/kinematics_problem/) | Kinematics with Hypercomplex Numbers |
-| [lsh_problem](optional/lsh_problem/) | Locality-Sensitive Hashing |
-| [markov_chain_problem](optional/markov_chain_problem/) | Markov Chains |
-| [spectral_graph_problem](optional/spectral_graph_problem/) | Spectral Graph Theory |
-| [stability_problem](optional/stability_problem/) | Differential Equation Stability |
-| [tron_problem](optional/tron_problem/) | Topological Game |
 
 ## Lectures
 
