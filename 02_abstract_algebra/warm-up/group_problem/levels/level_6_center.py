@@ -78,9 +78,9 @@ class Level6Center(TabbedLevel):
             return
 
         # Compute Intersection of Centralizers
-        centralizer = set(range(self._group.order)) if self.selected_elements else set()
+        centralizer = set(self._group.elements) if self.selected_elements else set()
         for x in self.selected_elements:
-            cx = {g for g in range(self._group.order) if self._group.multiply(g, x) == self._group.multiply(x, g)}
+            cx = {g for g in self._group.elements if g * x == x * g}
             centralizer = centralizer.intersection(cx)
 
         # Compute Union of Conjugacy Classes
@@ -91,12 +91,12 @@ class Level6Center(TabbedLevel):
                     union_classes.update(cls)
                     break
 
-        z_str = ', '.join(self._group.label(e) for e in sorted(center))
-        c_str = ', '.join(self._group.label(e) for e in sorted(commutator))
+        z_str = ', '.join(str(e) for e in sorted(center, key=str))
+        c_str = ', '.join(str(e) for e in sorted(commutator, key=str))
         lines = [
             f"Z(G) = {{{z_str}}}  |Z|={len(center)}",
             f"[G,G] = {{{c_str}}}  |[G,G]|={len(commutator)}",
-            f"Abelian: {'Yes' if len(center) == self._group.order else 'No'}",
+            f"Abelian: {'Yes' if len(center) == len(self._group.elements) else 'No'}",
         ]
         
         if self.view_mode == "conjugacy":
@@ -104,15 +104,15 @@ class Level6Center(TabbedLevel):
             if self.selected_elements:
                 if len(self.selected_elements) == 1:
                     sel = next(iter(self.selected_elements))
-                    sel_lbl = self._group.label(sel)
+                    sel_lbl = str(sel)
                     lines.append(f"|Class({sel_lbl})| * |C({sel_lbl})| = |G|")
-                    lines.append(f"      {len(union_classes)}      *     {len(centralizer)}     = {self._group.order}")
+                    lines.append(f"      {len(union_classes)}      *     {len(centralizer)}     = {len(self._group.elements)}")
                 else:
                     lines.append(f"Selected: {len(self.selected_elements)} elements")
                     lines.append(f"Union of Classes size: {len(union_classes)}")
                     lines.append(f"Intersection of Centralizers size: {len(centralizer)}")
         else:
-            lines.append(f"\nQuotient G/[G,G] order: {self._group.order // len(commutator)}")
+            lines.append(f"\nQuotient G/[G,G] order: {len(self._group.elements) // len(commutator)}")
             
         self.info_label.config(text='\n'.join(lines))
 
@@ -126,7 +126,7 @@ class Level6Center(TabbedLevel):
         import networkx as nx
         
         # Sort classes by size, then min element
-        sorted_classes = sorted(list(conj_classes), key=lambda s: (len(s), min(s)))
+        sorted_classes = sorted(list(conj_classes), key=lambda s: (len(s), min(str(x) for x in s)))
         k = len(sorted_classes)
         
         # Calculate cluster positions (circle of circles)
@@ -136,7 +136,7 @@ class Level6Center(TabbedLevel):
             theta = 2 * np.pi * i / k
             cx, cy = R * np.cos(theta), R * np.sin(theta)
             r = 0.2 + 0.05 * len(cls)
-            for j, e in enumerate(sorted(cls)):
+            for j, e in enumerate(sorted(cls, key=str)):
                 if len(cls) == 1:
                     self._node_pos[e] = (cx, cy)
                 else:
@@ -144,9 +144,9 @@ class Level6Center(TabbedLevel):
                     self._node_pos[e] = (cx + r * np.cos(phi), cy + r * np.sin(phi))
 
         # Re-compute sets for coloring
-        centralizer = set(range(self._group.order)) if self.selected_elements else set()
+        centralizer = set(self._group.elements) if self.selected_elements else set()
         for x in self.selected_elements:
-            cx = {g for g in range(self._group.order) if self._group.multiply(g, x) == self._group.multiply(x, g)}
+            cx = {g for g in self._group.elements if g * x == x * g}
             centralizer = centralizer.intersection(cx)
 
         union_classes = set()
@@ -157,7 +157,7 @@ class Level6Center(TabbedLevel):
                     break
 
         H = nx.Graph()
-        H.add_nodes_from(range(self._group.order))
+        H.add_nodes_from(self._group.elements)
         
         # Color nodes
         node_colors = []
@@ -188,7 +188,7 @@ class Level6Center(TabbedLevel):
         nx.draw_networkx_nodes(H, self._node_pos, ax=self.ax, node_color=node_colors, 
                                edgecolors=edge_colors, linewidths=line_widths, node_size=600)
         
-        labels = {i: self._group.label(i) for i in H.nodes()}
+        labels = {i: str(i) for i in H.nodes()}
         label_colors = {i: 'black' if (i in self.selected_elements or i in union_classes) else 'white' for i in H.nodes()}
         
         for node, (x, y) in self._node_pos.items():
@@ -213,7 +213,7 @@ class Level6Center(TabbedLevel):
         
         # Elements of G/[G,G] are cosets of the commutator subgroup
         cosets = tasks.compute_left_cosets(self._group, commutator)
-        sorted_cosets = sorted(list(cosets), key=lambda s: (self._group.identity not in s, min(s)))
+        sorted_cosets = sorted(list(cosets), key=lambda s: (self._group.identity_element not in s, min(str(x) for x in s)))
         k = len(sorted_cosets)
         
         # Create multiplication table of cosets
@@ -223,7 +223,7 @@ class Level6Center(TabbedLevel):
                 # Pick representatives
                 a = next(iter(sorted_cosets[i]))
                 b = next(iter(sorted_cosets[j]))
-                c = self._group.multiply(a, b)
+                c = a * b
                 # Find which coset contains c
                 for m in range(k):
                     if c in sorted_cosets[m]:
@@ -263,7 +263,7 @@ class Level6Center(TabbedLevel):
         self.ax.tick_params(colors='white')
         
         # Subtitle to explain bubbles
-        desc = ", ".join([f"C{i}={{{','.join(self._group.label(e) for e in sorted(sorted_cosets[i]))}}}" for i in range(min(k, 4))])
+        desc = ", ".join([f"C{i}={{{','.join(str(e) for e in sorted(sorted_cosets[i], key=str))}}}" for i in range(min(k, 4))])
         if k > 4: desc += "..."
         self.ax.text(0.5, -0.15, desc, ha='center', va='top', fontsize=8, color='#c9d1d9', transform=self.ax.transAxes, wrap=True)
         

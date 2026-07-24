@@ -33,9 +33,9 @@ class Level5Cosets(TabbedLevel):
         # Use first group generator if available as default selection
         if hasattr(group, 'generators') and group.generators:
             self.selected_elements.add(group.generators[0])
-        elif group.order > 1:
+        elif len(group.elements) > 1:
             # Fallback to the first non-identity element
-            first_non_id = next(i for i in range(group.order) if i != group.identity)
+            first_non_id = next(g for g in group.elements if g != group.identity_element)
             self.selected_elements.add(first_non_id)
         
         for widget in self.elements_frame.winfo_children():
@@ -44,25 +44,25 @@ class Level5Cosets(TabbedLevel):
         self.element_buttons.clear()
         
         # Create grid of buttons for elements
-        for i in range(group.order):
-            btn = tk.Button(self.elements_frame, text=group.label(i), width=4,
-                            bg="#58a6ff" if i in self.selected_elements else "#2d2d30",
+        for i, g in enumerate(group.elements):
+            btn = tk.Button(self.elements_frame, text=str(g), width=4,
+                            bg="#58a6ff" if g in self.selected_elements else "#2d2d30",
                             fg="white", font=("Arial", 9),
-                            command=lambda idx=i: self.toggle_element(idx))
+                            command=lambda elem=g: self.toggle_element(elem))
             row = i // 5
             col = i % 5
             btn.grid(row=row, column=col, padx=2, pady=2)
-            self.element_buttons[i] = btn
+            self.element_buttons[g] = btn
             
         self.compute()
 
-    def toggle_element(self, idx):
-        if idx in self.selected_elements:
-            self.selected_elements.remove(idx)
-            self.element_buttons[idx].config(bg="#2d2d30")
+    def toggle_element(self, elem):
+        if elem in self.selected_elements:
+            self.selected_elements.remove(elem)
+            self.element_buttons[elem].config(bg="#2d2d30")
         else:
-            self.selected_elements.add(idx)
-            self.element_buttons[idx].config(bg="#58a6ff")
+            self.selected_elements.add(elem)
+            self.element_buttons[elem].config(bg="#58a6ff")
         
         self.compute()
 
@@ -74,9 +74,9 @@ class Level5Cosets(TabbedLevel):
             if self.selected_elements:
                 gen_indices = list(self.selected_elements)
             else:
-                gen_indices = [self._group.identity]
+                gen_indices = [self._group.identity_element]
                 
-            subgroup = tasks.generate_subgroup(self._group, gen_indices)
+            subgroup = tasks.generate_group(gen_indices)
             left = tasks.compute_left_cosets(self._group, subgroup)
             right = tasks.compute_right_cosets(self._group, subgroup)
             normal = tasks.is_normal(self._group, subgroup)
@@ -84,7 +84,7 @@ class Level5Cosets(TabbedLevel):
             self.show_error(str(e))
             return
 
-        sg_str = ', '.join(self._group.label(e) for e in sorted(subgroup))
+        sg_str = ', '.join(str(e) for e in sorted(subgroup, key=str))
         lines = [
             f"H = {{{sg_str}}}  |H|={len(subgroup)}",
             f"[G:H] = {len(left)} cosets",
@@ -104,8 +104,8 @@ class Level5Cosets(TabbedLevel):
                     color='#7ee787', fontweight='bold', transform=self.ax.transAxes)
 
         # Sort cosets so they appear in a consistent order (subgroup first)
-        left_sorted = sorted(list(left), key=lambda s: (self._group.identity not in s, min(s)))
-        right_sorted = sorted(list(right), key=lambda s: (self._group.identity not in s, min(s)))
+        left_sorted = sorted(list(left), key=lambda s: (self._group.identity_element not in s, sorted([str(x) for x in s])))
+        right_sorted = sorted(list(right), key=lambda s: (self._group.identity_element not in s, sorted([str(x) for x in s])))
 
         y_step = 0.8 / max(n_cosets, 1)
         font_sz = max(7, min(11, int(40 / max(n_cosets, 1))))
@@ -114,7 +114,7 @@ class Level5Cosets(TabbedLevel):
         for ci, coset in enumerate(left_sorted):
             y = 0.85 - ci * y_step
             c = colors[ci % len(colors)]
-            elems = ',  '.join(self._group.label(e) for e in sorted(coset))
+            elems = ',  '.join(str(e) for e in sorted(coset, key=str))
             self.ax.text(0.25, y, f"{{{elems}}}", fontsize=font_sz, color='black',
                         ha='center', va='center', fontweight='bold', transform=self.ax.transAxes,
                         bbox=dict(boxstyle=f"round,pad={pad}", facecolor=c, alpha=0.8, edgecolor='white', linewidth=1.5))
@@ -129,7 +129,7 @@ class Level5Cosets(TabbedLevel):
                     break
             c = colors[match_idx % len(colors)]
             
-            elems = ',  '.join(self._group.label(e) for e in sorted(coset))
+            elems = ',  '.join(str(e) for e in sorted(coset, key=str))
             self.ax.text(0.75, y, f"{{{elems}}}", fontsize=font_sz, color='black',
                         ha='center', va='center', fontweight='bold', transform=self.ax.transAxes,
                         bbox=dict(boxstyle=f"round,pad={pad}", facecolor=c, alpha=0.8, edgecolor='white', linewidth=1.5))

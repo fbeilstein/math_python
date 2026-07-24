@@ -42,7 +42,7 @@ PRESETS = [
     ("Group: U(8) mult", 4, [[0,1,2,3],[1,0,3,2],[2,3,0,1],[3,2,1,0]]),
     ("Error: Not closed", 3, [[0,1,2],[1,2,3],[2,3,4]]),
     ("Error: No associativity", 3, [[0,1,2],[1,0,2],[2,2,0]]),
-    ("Error: No identity", 3, [[1,2,0],[2,0,1],[0,1,2]]),
+    ("Error: No identity", 3, [[0,0,0],[0,1,1],[0,1,1]]),
     ("Error: No inverses", 3, [[0,1,2],[1,1,1],[2,1,2]]),
 ]
 
@@ -245,8 +245,23 @@ class Level1Axioms(BaseLevel):
         def report_err(msg):
             tk.Label(self.error_frame, text=f"✗ {msg}", font=("Arial", 14, "bold"), fg="#ff7b72", bg="#2d2d30").pack(pady=4)
 
+        # Build mock GridElements
+        class GridElement(tasks.GroupElement):
+            def __init__(self, idx, table_ref):
+                self.idx = idx
+                self.table_ref = table_ref
+            def __mul__(self, other):
+                val = self.table_ref[self.idx][other.idx]
+                return GridElement(val, self.table_ref)
+            def __eq__(self, other):
+                return isinstance(other, GridElement) and self.idx == other.idx
+            def __hash__(self):
+                return hash(self.idx)
+                
+        elements = [GridElement(i, table) for i in range(n)]
+
         try:
-            ok_c = tasks.check_closure(table)
+            ok_c = tasks.check_closure(elements)
             if not ok_c:
                 msg_c = self._get_closure_error(table)
                 report_err(f"Closure Failed: {msg_c}")
@@ -255,7 +270,7 @@ class Level1Axioms(BaseLevel):
             pass
 
         try:
-            ok_a = tasks.check_associativity(table)
+            ok_a = tasks.check_associativity(elements)
             if not ok_a:
                 msg_a = self._get_assoc_error(table)
                 report_err(f"Associativity Failed: {msg_a}")
@@ -264,11 +279,11 @@ class Level1Axioms(BaseLevel):
             pass
 
         try:
-            identity = tasks.find_identity(table)
+            identity = tasks.find_identity(elements)
             if identity is not None:
-                ok_i = tasks.check_inverses(table, identity)
+                ok_i = tasks.check_inverses(elements, identity)
                 if not ok_i:
-                    msg_i = self._get_inverse_error(table, identity)
+                    msg_i = self._get_inverse_error(table, identity.idx)
                     report_err(f"Inverses Failed: {msg_i}")
                     return
                 else:

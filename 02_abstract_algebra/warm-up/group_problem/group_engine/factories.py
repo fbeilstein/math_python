@@ -1,78 +1,7 @@
-"""
-Group engine: unified representation for finite groups.
-
-All input methods (catalog, permutations, presentations, matrices)
-produce a ConcreteGroup, which stores the full multiplication table
-and exposes a uniform interface for structural analysis.
-"""
 import numpy as np
 from math import gcd
 from itertools import product
-
-
-class ConcreteGroup:
-    """A finite group backed by an explicit multiplication table.
-
-    Attributes:
-        labels:   list[str]   — human-readable names for each element
-        order:    int         — number of elements
-        identity: int         — index of the identity element
-        table:    np.ndarray  — (order x order) multiplication table, table[i][j] = i*j
-    """
-
-    def __init__(self, labels, table, identity=None, generators=None):
-        self.labels = list(labels)
-        self.order = len(labels)
-        self.table = np.array(table, dtype=int)
-        assert self.table.shape == (self.order, self.order)
-
-        if identity is not None:
-            self.identity = identity
-        else:
-            # Find identity: row i equals [0,1,...,n-1]
-            target = np.arange(self.order)
-            for i in range(self.order):
-                if np.array_equal(self.table[i], target) and np.array_equal(self.table[:, i], target):
-                    self.identity = i
-                    break
-            else:
-                raise ValueError("No identity element found in multiplication table")
-
-        # Precompute inverse table
-        self._inv = np.zeros(self.order, dtype=int)
-        for i in range(self.order):
-            for j in range(self.order):
-                if self.table[i][j] == self.identity:
-                    self._inv[i] = j
-                    break
-                    
-        self.generators = generators or []
-
-    def multiply(self, a, b):
-        """Return the index of the product a·b."""
-        return int(self.table[a][b])
-
-    def inverse(self, a):
-        """Return the index of a⁻¹."""
-        return int(self._inv[a])
-
-    def element_order(self, a):
-        """Return the smallest k ≥ 1 such that a^k = identity."""
-        val = a
-        for k in range(1, self.order + 1):
-            if val == self.identity:
-                return k
-            val = self.multiply(val, a)
-        return self.order  # fallback
-
-    def label(self, i):
-        """Human-readable label for element i."""
-        return self.labels[i]
-
-    def all_elements(self):
-        """Return list of all element indices."""
-        return list(range(self.order))
-
+from .core import Group, GroupElement, ConcreteGroupElement
 
 # ────────────────────────────────────────────────────────────
 # Factory methods: build ConcreteGroup from various sources
@@ -82,7 +11,7 @@ def from_Zn(n):
     """Cyclic group Z_n under addition mod n."""
     labels = [str(i) for i in range(n)]
     table = [[(i + j) % n for j in range(n)] for i in range(n)]
-    return ConcreteGroup(labels, table, identity=0)
+    return Group(labels, table, identity=0, generators=[1 if n > 1 else 0])
 
 
 def from_Un(n):
@@ -92,7 +21,25 @@ def from_Un(n):
     labels = [str(e) for e in elems]
     m = len(elems)
     table = [[idx[(elems[i] * elems[j]) % n] for j in range(m)] for i in range(m)]
-    return ConcreteGroup(labels, table, identity=idx[1])
+    gen_idx = []
+    generated = {1}
+    for e in elems:
+        if len(generated) == m: break
+        if e not in generated:
+            gen_idx.append(idx[e])
+            # closure with new generator
+            new_gen = set(generated)
+            q = list(new_gen)
+            while q:
+                c = q.pop(0)
+                for g_idx in gen_idx:
+                    nxt = (c * elems[g_idx]) % n
+                    if nxt not in new_gen:
+                        new_gen.add(nxt)
+                        q.append(nxt)
+            generated = new_gen
+            
+    return Group(labels, table, identity=idx[1], generators=gen_idx)
 
 
 def _sup(k):
@@ -124,7 +71,7 @@ def from_Dn(n):
     idx = {e: i for i, e in enumerate(elems)}
     m = len(elems)
     table = [[idx[mul(elems[i], elems[j])] for j in range(m)] for i in range(m)]
-    return ConcreteGroup(labels, table, identity=idx[(0, 0)])
+    return Group(labels, table, identity=idx[(0, 0)], generators=[idx[(1, 0)], idx[(0, 1)]])
 
 
 def from_Sn(n):
@@ -157,7 +104,16 @@ def from_Sn(n):
     labels = [perm_label(p) for p in perms]
     m = len(perms)
     table = [[idx[compose(perms[i], perms[j])] for j in range(m)] for i in range(m)]
-    return ConcreteGroup(labels, table, identity=idx[identity])
+    
+    gen_idx = []
+    if n > 1:
+        gen1 = tuple([1, 0] + list(range(2, n)))
+        gen2 = tuple(list(range(1, n)) + [0])
+        gen_idx.append(idx[gen1])
+        if gen2 != gen1:
+            gen_idx.append(idx[gen2])
+            
+    return Group(labels, table, identity=idx[identity], generators=gen_idx)
 
 
 def from_table(table_2d):
@@ -166,7 +122,7 @@ def from_table(table_2d):
     """
     n = len(table_2d)
     labels = [str(i) for i in range(n)]
-    return ConcreteGroup(labels, table_2d)
+    return Group(labels, table_2d)
 
 
 def from_permutation_generators(generators, n):
@@ -218,7 +174,7 @@ def from_permutation_generators(generators, n):
     table = [[idx[_perm_compose(elements[i], elements[j], n)] for j in range(m)] for i in range(m)]
     
     gen_indices = [idx[g] for g in generators if g in idx]
-    return ConcreteGroup(labels, table, identity=idx[identity], generators=gen_indices)
+    return Group(labels, table, identity=idx[identity], generators=gen_indices)
 
 
 def from_matrix_generators(generators, p):
@@ -292,7 +248,7 @@ def from_matrix_generators(generators, p):
     table = [[idx[mat_key(mat_mul(mat_list[i], mat_list[j]))] for j in range(m_count)] for i in range(m_count)]
     
     gen_indices = [idx[mat_key(g)] for g in generators if mat_key(g) in idx]
-    return ConcreteGroup(labels, table, identity=idx[mat_key(identity)], generators=gen_indices)
+    return Group(labels, table, identity=idx[mat_key(identity)], generators=gen_indices)
 
 
 # ── Helpers ──
@@ -410,7 +366,7 @@ def from_presentation(generators, relations_str_list):
                 gen_indices.append(i)
                 break
                 
-    return ConcreteGroup(labels, table, generators=gen_indices)
+    return Group(labels, table, generators=gen_indices)
 
 
 CATALOG = [

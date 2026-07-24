@@ -11,6 +11,54 @@ PERM_COLORS = ['#7ee787', '#ff7b72', '#58a6ff', '#ffa657', '#d2a8ff',
                '#79c0ff', '#f0e68c', '#ff69b4', '#56d4dd', '#f78166']
 
 
+def one_line_to_cycles(perm):
+    """Convert one-line notation to cycle notation.
+    """
+    n = len(perm)
+    visited = [False] * n
+    cycles = []
+    for i in range(n):
+        if visited[i] or perm[i] == i:
+            continue
+        cycle = []
+        j = i
+        while not visited[j]:
+            visited[j] = True
+            cycle.append(j)
+            j = perm[j]
+        cycles.append(cycle)
+    return cycles
+
+
+def cycles_to_one_line(cycles, n):
+    """Convert cycle notation to one-line notation.
+    """
+    perm = list(range(n))
+    for cycle in cycles:
+        for i in range(len(cycle)):
+            perm[cycle[i]] = cycle[(i + 1) % len(cycle)]
+    return perm
+
+
+def is_even_permutation(p):
+    """Determine if a permutation is even (True) or odd (False).
+    """
+    n = len(p)
+    visited = [False] * n
+    transpositions = 0
+    for i in range(n):
+        if not visited[i]:
+            cycle_len = 0
+            j = i
+            while not visited[j]:
+                visited[j] = True
+                j = p[j]
+                cycle_len += 1
+            if cycle_len > 0:
+                transpositions += cycle_len - 1
+    return transpositions % 2 == 0
+
+
 def draw_perm_diagram(canvas, perm, n, x0, y0, w, h,
                       colors=None, show_labels=True, lw=2, tag=""):
     """Draw a permutation as a wiring diagram (top dots → bottom dots).
@@ -158,7 +206,7 @@ def perm_to_cycle_str(perm):
     """Convert one-line perm to cycle string like '(0 1 2)(3 4)'."""
     if perm is None:
         return ""
-    cycles = tasks.one_line_to_cycles(list(perm))
+    cycles = one_line_to_cycles(list(perm))
     if not cycles:
         return "e"
     return ''.join(f"({' '.join(str(x) for x in c)})" for c in cycles)

@@ -136,7 +136,7 @@ class Group:
             self._elements.append(item)
             self._identity = None # invalidate cache
 
-    def update(self, items):
+    def add_elements(self, items):
         for item in items:
             self.add(item)
 

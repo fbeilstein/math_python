@@ -27,7 +27,7 @@
     showstringspaces=false
 }
 
-\title{Abstract Algebra Warm-Up: Group Theory Lab \\ \large Problem Set \& Implementation Guide}
+\title{Abstract Algebra Laboratory: Finite Groups \\ \large Problem Set \& Implementation Guide}
 \author{VB}
 \date{\today}
 
@@ -35,9 +35,9 @@
 
 \maketitle
 
-\section*{Problem 0: Start the engine}
+\section*{Problem 0: Start the Engine}
 
-Welcome to the Abstract Algebra computational laboratory. This lab provides a bridge between the axiomatic definitions of abstract groups and concrete algorithmic implementations. 
+Welcome to the computational group theory laboratory. This lab bridges abstract mathematical axioms and concrete algorithmic implementations using a pure Object-Oriented representation of Algebraic structures.
 
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
@@ -45,77 +45,235 @@ Welcome to the Abstract Algebra computational laboratory. This lab provides a br
 \toprule
 \textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
 \multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
-\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains 21 function stubs for group operations, from axiom checking to computing normalizer subgroups. \\
-\lstinline|lab_dashboard.py| & \textbf{The visual sandbox.} Run this using \lstinline|python lab_dashboard.py| to launch a graphical interface. As you implement functions in \lstinline|implementation_tasks.py|, the dashboard will unlock new visual insights (Cayley graphs, Hasse diagrams, Coset tilings). \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains function stubs for group operations, leveraging abstract \lstinline|Group| and \lstinline|GroupElement| objects. \\
+\lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} The visual sandbox. Run this using \lstinline|python lab_dashboard.py| to launch a graphical interface for debugging your algorithms. \\
+\lstinline|tests/test_implementation.py| & Automated test suite. Run \lstinline|python3 -m unittest tests.test_implementation| to quickly verify your logic. \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
+\lstinline|group_engine/| & Contains the core \lstinline|Group| and \lstinline|GroupElement| object hierarchy, abstracting all underlying groups (Symmetric, Dihedral, Modular) into a unified interface. \\
+\lstinline|levels/| & Contains the interactive UI dashboards for each level. \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
 \vspace{0.5cm}
-\noindent \textbf{Testing your code:} You can verify your implementation continuously using the test suite:
-\begin{lstlisting}[language=bash]
-pytest tests/test_implementation.py
-\end{lstlisting}
+\noindent \textbf{Self-Testing (Optional):} You can verify your implementation continuously using the test suite. If you want to write your own custom unit tests to debug edge cases, you can add them directly to \lstinline|tests/test_implementation.py|.
+
+\vspace{0.5cm}
+\noindent Now proceed with the following problems. For each problem, first recall or find the mathematical definitions in any standard abstract algebra textbook. Then, carefully implement the algorithm. Finally, launch the dashboard, navigate to the respective level tab, and use the UI to verify your logic visually.
 
 \newpage
 
-\section*{Phase 1: Building Representations}
+\section*{Problem 1: Multiplication Table Axioms (Level 1)}
 
-In Phase 1, you will implement the foundational mechanics of discrete groups. We use three distinct ways to represent finite groups on a computer.
+\subsubsection*{Mathematical part}
+\textbf{Recall:} The four fundamental axioms that define a group $(G, \cdot)$. You are expected to know these intimately. If you have forgotten, consult your textbook to review:
+\begin{enumerate}
+    \item \textbf{Closure:} $\forall a, b \in G, a \cdot b \in G$.
+    \item \textbf{Associativity:} $\forall a, b, c \in G, (a \cdot b) \cdot c = a \cdot (b \cdot c)$.
+    \item \textbf{Identity:} $\exists e \in G$ such that $\forall a \in G, e \cdot a = a \cdot e = a$.
+    \item \textbf{Inverses:} $\forall a \in G, \exists a^{-1} \in G$ such that $a \cdot a^{-1} = a^{-1} \cdot a = e$.
+\end{enumerate}
 
-\subsection*{Level 1: The Multiplication Table (Axiom Checker)}
-The most naive representation of a finite group is its Cayley table. Given an $n \times n$ matrix $M$ where $M_{ij}$ represents the product $i \cdot j$, implement the functions to strictly verify the four group axioms.
-\begin{itemize}[leftmargin=*]
-    \item \lstinline|check_closure|: Verify all elements $M_{ij} \in \{0, 1, \dots, n-1\}$.
-    \item \lstinline|check_associativity|: Verify $(i \cdot j) \cdot k = i \cdot (j \cdot k)$. This takes $O(n^3)$ time!
-    \item \lstinline|find_identity|: Find an element $e$ such that $e \cdot i = i \cdot e = i$ for all $i$.
-    \item \lstinline|check_inverses|: Verify every row and column contains the identity $e$.
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement the four foundational axiom checks. 
+\textbf{Details:} In this lab, we use a pure Object-Oriented API. You are provided sets or lists of abstract \lstinline|GroupElement| objects. You must use python's overloaded multiplication operator (\lstinline|a * b|) to interact with them, without knowing their internal representation.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{r | c | c | c | c }
+\toprule
+\textbf{Function} & \lstinline|check_closure| & \lstinline|check_associativity| & \lstinline|find_identity| & \lstinline|check_inverses| \\ \midrule
+\textbf{Arguments} & \lstinline|elements| & \lstinline|elements| & \lstinline|elements| & \lstinline|elements, identity| \\ \midrule
+\textbf{Return Type} & \lstinline|bool| & \lstinline|bool| & \lstinline|GroupElement| & \lstinline|bool| \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{Task:} Run \lstinline|lab_dashboard.py| and open the "L1: Axioms" tab. 
+\textbf{UI Guide:} Select different structures from the drop-down (e.g., $Z_4$, $D_3$, or structurally flawed random tables). When you load a structure, your four implemented functions are executed. The UI will render the multiplication matrix and highlight any cells that violate the axioms (e.g., highlighting non-associative triplets in red).
+
+\vspace{1cm}
+
+\section*{Problem 2: Abstract Generators (Level 2)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} The subgroup generated by a set $S$, denoted $\langle S \rangle$, is the smallest subgroup containing $S$. Recall the definition of the order of an element $g$, which is the smallest integer $k \ge 1$ such that $g^k = e$.
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement mechanics for the \lstinline|PermutationElement| abstract subclass, and implement general order and generator functions.
+\textbf{Details:} Overload \lstinline|__mul__| for permutation composition and \lstinline|__invert__| for permutation inverses.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Function / Method & Arguments & Returns \\ \midrule
+PermutationElement.\_\_mul\_\_ & \lstinline|self, other| & \lstinline|PermutationElement| \\
+PermutationElement.\_\_invert\_\_ & \lstinline|self| & \lstinline|PermutationElement| \\
+element\_order & \lstinline|group: Group, g: GroupElement| & \lstinline|int| \\
+generate\_group & \lstinline|generators: list[GroupElement]| & \lstinline|Group| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{Task:} Open the "L2: Permutations" tab. 
+\textbf{UI Guide:} 
+\begin{itemize}
+    \item Input cycles (like \lstinline|(0 1 2)|) or one-line arrays into the text field and click "Add Element" to register them as generators.
+    \item Once you have added generators, click \textbf{Perform Closure}. This will call your \lstinline|generate_group| function to iteratively compose elements until the full group is discovered. 
+    \item If your closure function works, a grid of all generated elements will appear. 
 \end{itemize}
 
-\subsection*{Level 2: The Permutation Sandbox}
-Cayley's theorem states every finite group is isomorphic to a subgroup of the symmetric group $S_n$. In this level you build all the mechanics of one-line permutation arrays (where $p[i]$ represents the image of $i$) and then use them to interactively construct groups.
-\begin{itemize}[leftmargin=*]
-    \item \lstinline|compose_permutations|: Compute $p \circ q$ (acting $q$ first, then $p$).
-    \item \lstinline|inverse_permutation|: Find $p^{-1}$ such that $p \circ p^{-1} = e$.
-    \item \lstinline|permutation_order|: Find the smallest $k > 0$ such that $p^k = e$.
-    \item \lstinline|one_line_to_cycles| / \lstinline|cycles_to_one_line|: Convert between representations.
-    \item \lstinline|generate_permutation_group|: Given a list of generators, compute the full group $\langle g_1, g_2, \dots \rangle$ by closure (repeatedly compose until no new elements appear).
-    \item \lstinline|is_even_permutation|: Determine the parity using cycle decomposition (a $k$-cycle decomposes into $k{-}1$ transpositions).
+
+\section*{Problem 3: Cayley Graph Construction (Level 3)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} A Cayley Graph $\Gamma(G, S)$ is a directed, colored graph representing the structure of a group $G$ relative to a generating set $S$. The vertices are elements of $G$, and directed edges of a specific color represent right-multiplication by a specific generator $s \in S$. Review standard network traversal algorithms, specifically Breadth-First Search (BFS).
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement \lstinline|generate_cayley_graph(elements, generators)|.
+\textbf{Details:} Use a BFS queue starting at an element. For each node, apply all generators and record the edges. Continue until no new nodes are discovered.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{r | c | c | c }
+\toprule
+\textbf{Math Symbol} & $G$ & $S \subseteq G$ & $E \subset G \times G \times S$ \\ \midrule
+\textbf{Argument} & \lstinline|group| & \lstinline|generators| & \lstinline|return| \\ \midrule
+\textbf{Type} & \lstinline|Group| & \lstinline|list[GroupElement]| & \lstinline|tuple[list, list]| \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{Task:} Open the "L3: Cayley" tab. 
+\textbf{UI Guide:} Select a group (e.g., $S_3$). The UI will automatically extract its default generators and pass them to your BFS function. If your BFS is correct, a beautiful directed network graph will be plotted. The nodes are group elements, and colored arrows represent the action of different generators. Verify that every node has exactly one outgoing arrow of each color.
+
+\vspace{1cm}
+
+\section*{Problem 4: Subgroups and Lagrange's Theorem (Level 4)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} Lagrange's Theorem dictates that the order of any subgroup $H \le G$ must divide the order of $G$.
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement \lstinline|find_all_subgroups| using a mathematically rigorous breadth-first search over the subgroup lattice.
+\textbf{Details:} \lstinline|find_all_subgroups| should return a list of \lstinline|Group| objects.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Function & Arguments & Returns \\ \midrule
+find\_all\_subgroups & \lstinline|group: Group| & \lstinline|list[Group]| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{Task:} Open the "L4: Subgroups" tab.
+\textbf{UI Guide:} The dashboard will display a grid of all elements in the group. Left-click elements in the grid to select them as generators (they will turn blue). The UI will instantly display the generated subgroup $\langle S \rangle$ and highlight its position within the overall subgroup lattice (Hasse Diagram) drawn below. Use this to verify that Lagrange's theorem holds for every node in the diagram.
+
+
+\section*{Problem 5: Cosets and Normality (Level 5)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} Left cosets $gH$ and right cosets $Hg$. Recall that a subgroup $H$ is \textbf{normal} ($H \triangleleft G$) if and only if $gH = Hg$ for all $g \in G$. Recall that cosets partition the group into disjoint subsets of equal size.
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement left cosets, right cosets, and the normality check.
+\textbf{Details:} \lstinline|compute_left_cosets| must return a list of sets of \lstinline|GroupElement|, representing the unique left cosets.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Function & Arguments & Returns \\ \midrule
+compute\_left\_cosets & \lstinline|group: Group, subgroup: Group| & \lstinline|list[set]| \\
+compute\_right\_cosets & \lstinline|group: Group, subgroup: Group| & \lstinline|list[set]| \\
+is\_normal & \lstinline|group: Group, subgroup: Group| & \lstinline|bool| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{Task:} Open the "L5: Cosets" tab.
+\textbf{UI Guide:} Similar to L4, use the interactive element grid to select a generating set for a subgroup $H$. The UI will automatically draw "Partition Diagrams" showing how $H$ tiles the group via left and right cosets. If the partitions match perfectly, the UI will report that the subgroup is normal. Experiment with $S_3$ to find both normal and non-normal subgroups.
+
+\vspace{1cm}
+
+\section*{Problem 6: Centers, Commutators, and Conjugacy (Level 6)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} 
+\begin{itemize}
+    \item \textbf{Center} $Z(G)$: Elements that commute with everything in $G$.
+    \item \textbf{Commutator Subgroup} $[G, G]$: The subgroup generated by all elements of the form $aba^{-1}b^{-1}$.
+    \item \textbf{Conjugacy Classes}: The equivalence classes under the relation $a \sim g a g^{-1}$.
+    \item \textbf{Centralizer} $C(a)$: Elements that commute with $a$. Recall the class equation $|Cl(a)| \cdot |C(a)| = |G|$.
 \end{itemize}
-\textit{Dashboard feature: Add permutations to a visual pool (wiring diagrams), press ``Perform Closure'' to generate the full group, then inspect inverses, power chains, and even/odd parity.}
 
-\subsection*{Level 3: The Cayley Graph}
-Representing a group as a graph allows us to traverse its structure using standard network algorithms. Given a \lstinline|ConcreteGroup| object and a list of generator indices, implement \lstinline|generate_cayley_graph| using Breadth-First Search (BFS). Start at the identity element $e$ and apply all generators to discover the connected component.
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement the structural invariants.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Function & Arguments & Returns \\ \midrule
+compute\_center & \lstinline|group: Group| & \lstinline|set[GroupElement]| \\
+compute\_commutator\_subgroup & \lstinline|group: Group| & \lstinline|Group| \\
+compute\_conjugacy\_classes & \lstinline|group: Group| & \lstinline|list[set]| \\
+\bottomrule
+\end{tabularx}
+\end{center}
 
-\newpage
-
-\section*{Phase 2: Structural Analysis}
-
-The \lstinline|ConcreteGroup| engine unifies all representations behind a common interface. You can now use the interactive tabs in \lstinline|lab_dashboard.py| to swap out the underlying group (e.g., $D_4$ via Permutations vs $D_4$ via Presentations) while your structural algorithms remain completely unchanged.
-
-\subsection*{Level 4: Subgroups and Lagrange's Theorem}
-Implement \lstinline|generate_subgroup| to compute the closure of a set of elements under multiplication. Then, implement \lstinline|find_all_subgroups| using an exhaustive search over all possible generator combinations. 
-
-\textit{Dashboard feature: Observe the Hasse diagram of the subgroup lattice. Notice how Lagrange's theorem ($|H|$ divides $|G|$) strictly limits the sizes of the nodes.}
-
-\subsection*{Level 5: Cosets and Normality}
-Implement \lstinline|compute_left_cosets| ($gH$) and \lstinline|compute_right_cosets| ($Hg$). 
-Use these to implement \lstinline|is_normal(group, subgroup)| by checking if the left coset partition exactly matches the right coset partition.
-
-\subsection*{Level 6: Centers, Commutators, and Conjugacy}
-Implement the three core structural invariants of non-abelian groups:
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Center} $Z(G)$: Elements that commute with everything.
-    \item \textbf{Commutator Subgroup} $[G, G]$: The subgroup generated by all elements of the form $aba^{-1}b^{-1}$. This measures "how far" the group is from being abelian.
-    \item \textbf{Conjugacy Classes}: Partition the group under the equivalence relation $a \sim g a g^{-1}$.
+\subsubsection*{Experimentation part}
+\textbf{Task:} Open the "L6: Center \& Conjugacy" tab.
+\textbf{UI Guide:} 
+\begin{itemize}
+    \item The main view is a \textbf{Bubble Diagram} (Canvas Scatter Plot) representing Conjugacy Classes. Each cluster is a class.
+    \item Left-click any node $g$ to select it (it turns yellow). Its conjugacy class $Cl(g)$ will be outlined in green, and its centralizer $C(g)$ will turn blue. Verify the class equation dynamically!
+    \item Click the \textbf{"View Abelianization G/[G,G]"} button to switch to the Commutator Heatmap, which visually exposes commuting pairs by checking $aba^{-1}b^{-1} = e$.
 \end{itemize}
-\textit{Dashboard feature: The Commutator Heatmap visually isolates the identity element (dark cells) to reveal commuting pairs.}
 
-\subsection*{Level 7: Homomorphisms and Kernels}
-A homomorphism $\phi: G \to H$ is a structure-preserving map. 
-Implement \lstinline|is_homomorphism| to verify $\phi(a \cdot_G b) = \phi(a) \cdot_H \phi(b)$.
-Then compute the \textbf{kernel} ($\phi^{-1}(e_H)$) and the \textbf{image} ($\phi(G)$). 
 
-\textit{Dashboard feature: The Funnel Diagram dynamically visualizes the First Isomorphism Theorem ($G / \ker \phi \cong \text{im} \phi$) by collapsing the kernel into the identity.}
+\section*{Problem 7: Homomorphisms and Kernels (Level 7)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} A homomorphism $\phi: G \to H$ satisfies $\phi(ab) = \phi(a)\phi(b)$. The kernel is $\ker \phi = \{g \in G \mid \phi(g) = e_H\}$. The First Isomorphism Theorem states $G / \ker \phi \cong \text{im} \phi$.
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement homomorphism validation, constraint deduction, and kernel/image computation.
+\textbf{Details:} \lstinline|deduce_homomorphism| is a constraint solver. Given a partial dictionary of mappings, infer the rest of the mapping if forced by the homomorphism property. If a contradiction occurs, return \lstinline|None|.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Function & Arguments & Returns \\ \midrule
+deduce\_homomorphism & \lstinline|group_G, group_H, partial_phi| & \lstinline|dict | None| \\
+is\_homomorphism & \lstinline|group_G: Group, phi: dict| & \lstinline|bool| \\
+compute\_kernel & \lstinline|group_G: Group, group_H: Group, phi: dict| & \lstinline|set[GroupElement]| \\
+compute\_image & \lstinline|group_G: Group, group_H: Group, phi: dict| & \lstinline|set[GroupElement]| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{Task:} Open the "L7: Homomorphisms" tab.
+\textbf{UI Guide:} 
+\begin{itemize}
+    \item Two columns of elements are shown: Domain ($G$) and Codomain ($H$).
+    \item \textbf{Left-click} a node in $G$, drag, and release on a node in $H$ to draw a mapping arrow.
+    \item Your \lstinline|deduce_homomorphism| function will run instantly. If the single arrow forces other mappings (e.g., $1 \to 2 \implies 1\cdot 1 \to 2\cdot 2$), those arrows will be drawn automatically in gray.
+    \item If you draw an arrow that causes a contradiction (e.g., mapping an order 2 element to an order 3 element), the arrow will turn RED.
+    \item \textbf{Right-click} any drawn arrow to remove it and reset the constraints.
+\end{itemize}
+
+
+\section*{\textcolor{red}{Submission}}
+
+Submit the file \texttt{implementation\_tasks.py}. Ensure your code passes all unit tests and successfully powers the visual dashboard.
 
 \end{document}

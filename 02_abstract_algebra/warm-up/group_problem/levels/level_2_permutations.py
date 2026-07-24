@@ -9,7 +9,7 @@ Features:
 """
 import tkinter as tk
 from levels.base_level import BaseLevel
-from levels.perm_widget import draw_perm_diagram, draw_perm_stack, perm_to_cycle_str, PERM_COLORS
+from levels.perm_widget import draw_perm_diagram, draw_perm_stack, perm_to_cycle_str, PERM_COLORS, is_even_permutation
 import implementation_tasks as tasks
 
 
@@ -103,8 +103,9 @@ class Level2Permutations(BaseLevel):
         if not self.pool:
             return
         n = len(self.pool[0])
-        result = tasks.generate_permutation_group([list(p) for p in self.pool], n)
-        self.pool = [tuple(p) for p in result]
+        generators = [tasks.PermutationElement(list(p)) for p in self.pool]
+        result = tasks.generate_group(generators)
+        self.pool = [tuple(p.mapping) for p in result]
         self._redraw_pool()
 
     # ─── Card layout & Drag ───
@@ -203,7 +204,7 @@ class Level2Permutations(BaseLevel):
         if self.selected_idx is not None and self.selected_idx < len(self.pool):
             sel_perm = list(self.pool[self.selected_idx])
             if mode == "inverse":
-                inv = tuple(tasks.inverse_permutation(sel_perm))
+                inv = tuple((~tasks.PermutationElement(sel_perm)).mapping)
                 for i, p in enumerate(self.pool):
                     if p == inv:
                         highlight[i] = "#ff7b72"
@@ -211,17 +212,17 @@ class Level2Permutations(BaseLevel):
             elif mode == "powers":
                 current = sel_perm
                 k = 0
-                visited = set()
-                while tuple(current) not in visited:
-                    visited.add(tuple(current))
+                while True:
                     for i, p in enumerate(self.pool):
                         if p == tuple(current):
                             highlight[i] = PERM_COLORS[k % len(PERM_COLORS)]
-                    current = tasks.compose_permutations(sel_perm, current)
+                    current = (tasks.PermutationElement(sel_perm) * tasks.PermutationElement(current)).mapping
                     k += 1
+                    if tuple(current) == tuple(sel_perm):
+                        break
             elif mode == "parity":
                 for i, p in enumerate(self.pool):
-                    highlight[i] = "#7ee787" if tasks.is_even_permutation(list(p)) else "#ff7b72"
+                    highlight[i] = "#7ee787" if is_even_permutation(list(p)) else "#ff7b72"
 
         for idx, (x, y) in enumerate(positions):
             perm = self.pool[idx]
@@ -295,8 +296,8 @@ class Level2Permutations(BaseLevel):
 
         # Compose result
         result = list(range(n))
-        for p in perms_list:
-            result = tasks.compose_permutations(p, result)
+        for p in self.comp_stack:
+            result = (tasks.PermutationElement(p) * tasks.PermutationElement(result)).mapping
 
         # Result label
         res_y = 40 + stack_h + 20

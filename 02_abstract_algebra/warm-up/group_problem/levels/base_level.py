@@ -72,7 +72,7 @@ class TabbedLevel(BaseLevel):
                                           state="readonly", width=30)
         self.catalog_combo.pack(padx=4, pady=6)
         self.catalog_combo.current(0)
-        self.create_action_buttons(cat_frame, self._load_catalog, "Load")
+        self.create_action_buttons(cat_frame, self._load_catalog, text="Load", side=tk.TOP)
 
         # ── Permutations (Visual) tab ──
         vis_frame = tk.Frame(self.tabs, bg="#1e1e1e")
@@ -91,7 +91,7 @@ class TabbedLevel(BaseLevel):
         btn_row.pack(fill=tk.X, pady=2)
         tk.Button(btn_row, text="Clear", bg="#6e3630", fg="white", font=("Arial", 8),
                   command=self._clear_vis_pool).pack(side=tk.LEFT, padx=4)
-        self.create_action_buttons(btn_row, self._load_vis_group, "Build Group", side=tk.RIGHT)
+        self.create_action_buttons(btn_row, self._load_vis_group, text="Build Group", side=tk.RIGHT)
 
         # ── Presentation tab ──
         pres_frame = tk.Frame(self.tabs, bg="#1e1e1e")
@@ -108,12 +108,20 @@ class TabbedLevel(BaseLevel):
         self.pres_rels = tk.Entry(r2, width=20, font=("Courier", 9))
         self.pres_rels.insert(0, "aaa=e, bb=e, abab=e")
         self.pres_rels.pack(side=tk.LEFT, padx=2)
-        self.create_action_buttons(pres_frame, self._load_presentation, "Go")
+        self.create_action_buttons(pres_frame, self._load_presentation, text="Go", side=tk.TOP)
 
         # Status label
         self.status_label = tk.Label(self.left_panel, text="No group loaded",
                                      font=("Arial", 9), bg="#1e1e1e", fg="#8b949e")
         self.status_label.pack(pady=2)
+
+    def create_action_buttons(self, parent, load_command, text="Load", side=tk.TOP):
+        """Default implementation creates a single Load/Go button."""
+        btn = tk.Button(parent, text=text, bg="#238636", fg="white",
+                        command=load_command)
+        if text == "Load":
+            btn.config(font=("Arial", 9, "bold"))
+        btn.pack(side=side, pady=2 if side==tk.TOP else 0, padx=4 if side==tk.LEFT else 0)
 
     def _load_catalog(self):
         idx = self.catalog_combo.current()
@@ -147,10 +155,6 @@ class TabbedLevel(BaseLevel):
             self.on_group_loaded(self._group)
         except Exception as e:
             self.status_label.config(text=f"Error: {e}", fg="#ff7b72")
-
-    def create_action_buttons(self, parent, load_command, text="Load", side=tk.TOP):
-        tk.Button(parent, text=text, bg="#238636", fg="white", font=("Arial", 9, "bold"),
-                  command=load_command).pack(side=side, pady=2, padx=4)
 
     def _load_presentation(self):
         try:

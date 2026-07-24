@@ -22,13 +22,13 @@ class Level3Cayley(TabbedLevel):
         if hasattr(group, 'generators') and group.generators:
             self._active_gens = list(group.generators)
         else:
-            self._active_gens = [i for i in range(min(3, group.order)) if i != group.identity][:2]
+            self._active_gens = [g for g in list(group.elements)[:3] if g != group.identity_element][:2]
             if not self._active_gens:
-                self._active_gens = [group.identity]
+                self._active_gens = [group.identity_element]
         self.generate()
 
     def on_node_click(self, node):
-        if node == self._group.identity:
+        if node == self._group.identity_element:
             return
             
         if node in self._active_gens:
@@ -65,7 +65,7 @@ class Level3Cayley(TabbedLevel):
                                    node_size=400, edgecolors='#79c0ff', linewidths=1.5)
             artists['nodes'].append((list(G.nodes()), path_col))
             
-            labels = {n: self._group.label(n) for n in G.nodes()}
+            labels = {n: str(n) for n in G.nodes()}
             artists['labels'] = nx.draw_networkx_labels(G, pos, labels=labels, ax=self.ax, font_size=8,
                                     font_color='white', font_weight='bold')
                                     
@@ -81,7 +81,7 @@ class Level3Cayley(TabbedLevel):
                     for patch, (u, v) in zip(patches, gen_edges):
                         artists['edges'].append((u, v, patch))
                         
-            gen_names = ", ".join(self._group.label(g) for g in self._active_gens)
+            gen_names = ", ".join(str(g) for g in self._active_gens)
             self.ax.set_title(f"Cayley Graph (order {len(nodes)})\nGenerators: {gen_names}", color='#58a6ff', fontsize=12)
             self.ax.axis('off')
             return artists

@@ -36,24 +36,24 @@ class Level4Subgroups(TabbedLevel):
         self.element_buttons.clear()
         
         # Create grid of buttons for elements
-        for i in range(group.order):
-            btn = tk.Button(self.elements_frame, text=group.label(i), width=4,
+        for i, g in enumerate(group.elements):
+            btn = tk.Button(self.elements_frame, text=str(g), width=4,
                             bg="#2d2d30", fg="white", font=("Arial", 9),
-                            command=lambda idx=i: self.toggle_element(idx))
+                            command=lambda elem=g: self.toggle_element(elem))
             row = i // 5
             col = i % 5
             btn.grid(row=row, column=col, padx=2, pady=2)
-            self.element_buttons[i] = btn
+            self.element_buttons[g] = btn
             
         self.find_subgroups()
 
-    def toggle_element(self, idx):
-        if idx in self.selected_elements:
-            self.selected_elements.remove(idx)
-            self.element_buttons[idx].config(bg="#2d2d30")
+    def toggle_element(self, elem):
+        if elem in self.selected_elements:
+            self.selected_elements.remove(elem)
+            self.element_buttons[elem].config(bg="#2d2d30")
         else:
-            self.selected_elements.add(idx)
-            self.element_buttons[idx].config(bg="#58a6ff")
+            self.selected_elements.add(elem)
+            self.element_buttons[elem].config(bg="#58a6ff")
         
         self.find_subgroups()
 
@@ -68,12 +68,12 @@ class Level4Subgroups(TabbedLevel):
             return
 
         # Sort for stable layout across clicks
-        sg_list = sorted(list(subgroups), key=lambda s: (len(s), tuple(sorted(s))))
+        sg_list = sorted(list(subgroups), key=lambda s: (len(s), tuple(sorted([str(x) for x in s]))))
         
         if self.selected_elements:
-            generated_sg = tasks.generate_subgroup(self._group, list(self.selected_elements))
+            generated_sg = tasks.generate_group(list(self.selected_elements))
         else:
-            generated_sg = {self._group.identity}
+            generated_sg = {self._group.identity_element}
             
         highlight_idx = -1
         for i, sg in enumerate(sg_list):
@@ -82,10 +82,10 @@ class Level4Subgroups(TabbedLevel):
                 break
 
         # Info text
-        elems = ', '.join(self._group.label(e) for e in sorted(generated_sg))
+        elems = ', '.join(str(e) for e in sorted(generated_sg, key=str))
         lines = [f"Total Subgroups: {len(subgroups)}"]
         if self.selected_elements:
-            sel_str = ', '.join(self._group.label(e) for e in sorted(self.selected_elements))
+            sel_str = ', '.join(str(e) for e in sorted(self.selected_elements, key=str))
             lines.append(f"⟨{sel_str}⟩ = \n  {{{elems}}}\nOrder: {len(generated_sg)}")
         else:
             lines.append("Select elements to generate\na subgroup.")
@@ -132,7 +132,7 @@ class Level4Subgroups(TabbedLevel):
                 colors.append('#7ee787') # highlighted subgroup
             elif len(sg_list[i]) == 1:
                 colors.append('#ffd700')
-            elif len(sg_list[i]) == self._group.order:
+            elif len(sg_list[i]) == len(self._group.elements):
                 colors.append('#ff7b72')
             else:
                 colors.append('#58a6ff')
@@ -142,13 +142,13 @@ class Level4Subgroups(TabbedLevel):
                                edgecolors='white', linewidths=1.5)
         labels = {i: f"|{len(sg_list[i])}|" for i in range(len(sg_list))}
         nx.draw_networkx_labels(H, pos, labels=labels, ax=self.ax,
-                                font_size=10, font_color='black' if i == highlight_idx else 'white', 
+                                font_size=10, font_color='black', 
                                 font_weight='bold')
         nx.draw_networkx_edges(H, pos, ax=self.ax, edge_color='#484f58',
                                arrows=True, arrowsize=12, width=1.5)
 
-        divides = all(self._group.order % len(sg) == 0 for sg in sg_list)
-        self.ax.set_title(f"Subgroup Lattice — Lagrange: {'✓' if divides else '?'}",
-                          color='#58a6ff', fontsize=12)
+        divides = all(len(self._group.elements) % len(sg) == 0 for sg in sg_list)
+        msg = f"Lagrange verified: all {len(sg_list)} subgroup sizes divide {len(self._group.elements)}" if divides else "Lagrange violation!"
+        self.ax.set_title(msg, color='#7ee787' if divides else '#ff7b72', fontsize=12)
         self.ax.axis('off')
         self.canvas.draw()
