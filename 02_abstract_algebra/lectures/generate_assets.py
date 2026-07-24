@@ -338,43 +338,6 @@ def field_construction():
 field_construction()
 print("✓ Field construction analogy")
 
-# ────────────────────────────────────────────────────────────
-# 9. RS encoding conceptual diagram
-# ────────────────────────────────────────────────────────────
-def rs_encoding():
-    fig, ax = plt.subplots(figsize=(10, 3))
-    ax.axis('off')
 
-    # Data block
-    data_width = 0.5
-    ec_width = 0.25
-    y = 0.5
-    h = 0.3
-
-    # Data bytes
-    ax.add_patch(plt.Rectangle((0.05, y-h/2), data_width, h, facecolor='#58a6ff', ec='white', lw=2))
-    ax.text(0.05 + data_width/2, y, 'Data\n(k symbols)', ha='center', va='center', fontsize=12, fontweight='bold', color='white')
-
-    # EC bytes
-    ax.add_patch(plt.Rectangle((0.05 + data_width + 0.02, y-h/2), ec_width, h, facecolor='#ff7b72', ec='white', lw=2))
-    ax.text(0.05 + data_width + 0.02 + ec_width/2, y, 'Parity\n(2t symbols)', ha='center', va='center', fontsize=11, fontweight='bold', color='white')
-
-    # Arrow
-    ax.annotate('', xy=(0.05 + data_width + ec_width + 0.08, y), xytext=(0.05 + data_width + ec_width + 0.04, y),
-                arrowprops=dict(arrowstyle='->', color='white', lw=2))
-
-    # Formula
-    ax.text(0.88, y, '$m(x) \\cdot x^{2t}$  mod  $g(x)$', ha='center', va='center', fontsize=13, color='#ffd700')
-
-    ax.text(0.05 + (data_width + ec_width + 0.02)/2, y + h/2 + 0.08,
-            'Reed-Solomon Codeword (n = k + 2t symbols)', ha='center', va='top', fontsize=14, color='#58a6ff')
-    ax.text(0.88, y - 0.2, 'Can correct up to $t$ errors', ha='center', va='top', fontsize=11, color='#7ee787')
-
-    ax.set_xlim(0, 1); ax.set_ylim(0, 1)
-    fig.savefig(f'{OUT}/rs_encoding.png', dpi=150, bbox_inches='tight', transparent=True)
-    plt.close(fig)
-
-rs_encoding()
-print("✓ RS encoding diagram")
 
 print("\n✅ All assets generated successfully!")

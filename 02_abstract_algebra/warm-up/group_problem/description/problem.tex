@@ -1,0 +1,121 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Abstract Algebra Warm-Up: Group Theory Lab \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Welcome to the Abstract Algebra computational laboratory. This lab provides a bridge between the axiomatic definitions of abstract groups and concrete algorithmic implementations. 
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains 21 function stubs for group operations, from axiom checking to computing normalizer subgroups. \\
+\lstinline|lab_dashboard.py| & \textbf{The visual sandbox.} Run this using \lstinline|python lab_dashboard.py| to launch a graphical interface. As you implement functions in \lstinline|implementation_tasks.py|, the dashboard will unlock new visual insights (Cayley graphs, Hasse diagrams, Coset tilings). \\ \midrule
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\vspace{0.5cm}
+\noindent \textbf{Testing your code:} You can verify your implementation continuously using the test suite:
+\begin{lstlisting}[language=bash]
+pytest tests/test_implementation.py
+\end{lstlisting}
+
+\newpage
+
+\section*{Phase 1: Building Representations}
+
+In Phase 1, you will implement the foundational mechanics of discrete groups. We use three distinct ways to represent finite groups on a computer.
+
+\subsection*{Level 1: The Multiplication Table (Axiom Checker)}
+The most naive representation of a finite group is its Cayley table. Given an $n \times n$ matrix $M$ where $M_{ij}$ represents the product $i \cdot j$, implement the functions to strictly verify the four group axioms.
+\begin{itemize}[leftmargin=*]
+    \item \lstinline|check_closure|: Verify all elements $M_{ij} \in \{0, 1, \dots, n-1\}$.
+    \item \lstinline|check_associativity|: Verify $(i \cdot j) \cdot k = i \cdot (j \cdot k)$. This takes $O(n^3)$ time!
+    \item \lstinline|find_identity|: Find an element $e$ such that $e \cdot i = i \cdot e = i$ for all $i$.
+    \item \lstinline|check_inverses|: Verify every row and column contains the identity $e$.
+\end{itemize}
+
+\subsection*{Level 2: The Permutation Sandbox}
+Cayley's theorem states every finite group is isomorphic to a subgroup of the symmetric group $S_n$. In this level you build all the mechanics of one-line permutation arrays (where $p[i]$ represents the image of $i$) and then use them to interactively construct groups.
+\begin{itemize}[leftmargin=*]
+    \item \lstinline|compose_permutations|: Compute $p \circ q$ (acting $q$ first, then $p$).
+    \item \lstinline|inverse_permutation|: Find $p^{-1}$ such that $p \circ p^{-1} = e$.
+    \item \lstinline|permutation_order|: Find the smallest $k > 0$ such that $p^k = e$.
+    \item \lstinline|one_line_to_cycles| / \lstinline|cycles_to_one_line|: Convert between representations.
+    \item \lstinline|generate_permutation_group|: Given a list of generators, compute the full group $\langle g_1, g_2, \dots \rangle$ by closure (repeatedly compose until no new elements appear).
+    \item \lstinline|is_even_permutation|: Determine the parity using cycle decomposition (a $k$-cycle decomposes into $k{-}1$ transpositions).
+\end{itemize}
+\textit{Dashboard feature: Add permutations to a visual pool (wiring diagrams), press ``Perform Closure'' to generate the full group, then inspect inverses, power chains, and even/odd parity.}
+
+\subsection*{Level 3: The Cayley Graph}
+Representing a group as a graph allows us to traverse its structure using standard network algorithms. Given a \lstinline|ConcreteGroup| object and a list of generator indices, implement \lstinline|generate_cayley_graph| using Breadth-First Search (BFS). Start at the identity element $e$ and apply all generators to discover the connected component.
+
+\newpage
+
+\section*{Phase 2: Structural Analysis}
+
+The \lstinline|ConcreteGroup| engine unifies all representations behind a common interface. You can now use the interactive tabs in \lstinline|lab_dashboard.py| to swap out the underlying group (e.g., $D_4$ via Permutations vs $D_4$ via Presentations) while your structural algorithms remain completely unchanged.
+
+\subsection*{Level 4: Subgroups and Lagrange's Theorem}
+Implement \lstinline|generate_subgroup| to compute the closure of a set of elements under multiplication. Then, implement \lstinline|find_all_subgroups| using an exhaustive search over all possible generator combinations. 
+
+\textit{Dashboard feature: Observe the Hasse diagram of the subgroup lattice. Notice how Lagrange's theorem ($|H|$ divides $|G|$) strictly limits the sizes of the nodes.}
+
+\subsection*{Level 5: Cosets and Normality}
+Implement \lstinline|compute_left_cosets| ($gH$) and \lstinline|compute_right_cosets| ($Hg$). 
+Use these to implement \lstinline|is_normal(group, subgroup)| by checking if the left coset partition exactly matches the right coset partition.
+
+\subsection*{Level 6: Centers, Commutators, and Conjugacy}
+Implement the three core structural invariants of non-abelian groups:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Center} $Z(G)$: Elements that commute with everything.
+    \item \textbf{Commutator Subgroup} $[G, G]$: The subgroup generated by all elements of the form $aba^{-1}b^{-1}$. This measures "how far" the group is from being abelian.
+    \item \textbf{Conjugacy Classes}: Partition the group under the equivalence relation $a \sim g a g^{-1}$.
+\end{itemize}
+\textit{Dashboard feature: The Commutator Heatmap visually isolates the identity element (dark cells) to reveal commuting pairs.}
+
+\subsection*{Level 7: Homomorphisms and Kernels}
+A homomorphism $\phi: G \to H$ is a structure-preserving map. 
+Implement \lstinline|is_homomorphism| to verify $\phi(a \cdot_G b) = \phi(a) \cdot_H \phi(b)$.
+Then compute the \textbf{kernel} ($\phi^{-1}(e_H)$) and the \textbf{image} ($\phi(G)$). 
+
+\textit{Dashboard feature: The Funnel Diagram dynamically visualizes the First Isomorphism Theorem ($G / \ker \phi \cong \text{im} \phi$) by collapsing the kernel into the identity.}
+
+\end{document}

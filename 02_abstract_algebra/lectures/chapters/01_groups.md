@@ -59,10 +59,28 @@ A group's entire structure is captured by its multiplication table. Each row and
 :::matrix { cols="50/50" height="60%"}
 
 [[0, 0]]
-![](./assets/cayley_table_z4.png){height=85% center}
+<div class="cayley-table-wrapper">
+<div class="cayley-table-title" style="color:#58a6ff;">ℤ₄ (addition)</div>
+<table class="cayley-table">
+<tr><th>+</th><th>0</th><th>1</th><th>2</th><th>3</th></tr>
+<tr><th>0</th><td class="c-0">0</td><td class="c-1">1</td><td class="c-2">2</td><td class="c-3">3</td></tr>
+<tr><th>1</th><td class="c-1">1</td><td class="c-2">2</td><td class="c-3">3</td><td class="c-0">0</td></tr>
+<tr><th>2</th><td class="c-2">2</td><td class="c-3">3</td><td class="c-0">0</td><td class="c-1">1</td></tr>
+<tr><th>3</th><td class="c-3">3</td><td class="c-0">0</td><td class="c-1">1</td><td class="c-2">2</td></tr>
+</table>
+</div>
 
 [[0, 1]]
-![](./assets/cayley_table_u8.png){height=85% center}
+<div class="cayley-table-wrapper">
+<div class="cayley-table-title" style="color:#58a6ff;">U(8) (multiplication)</div>
+<table class="cayley-table">
+<tr><th>·</th><th>1</th><th>3</th><th>5</th><th>7</th></tr>
+<tr><th>1</th><td class="c-0">1</td><td class="c-1">3</td><td class="c-2">5</td><td class="c-3">7</td></tr>
+<tr><th>3</th><td class="c-1">3</td><td class="c-0">1</td><td class="c-3">7</td><td class="c-2">5</td></tr>
+<tr><th>5</th><td class="c-2">5</td><td class="c-3">7</td><td class="c-0">1</td><td class="c-1">3</td></tr>
+<tr><th>7</th><td class="c-3">7</td><td class="c-2">5</td><td class="c-1">3</td><td class="c-0">1</td></tr>
+</table>
+</div>
 
 :::
 

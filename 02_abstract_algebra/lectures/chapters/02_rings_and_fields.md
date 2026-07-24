@@ -23,10 +23,31 @@ This breaks everything: if $ab = 0$ and $a \neq 0$, we can't "divide by $a$" —
 :::matrix { cols="50/50" height="65%"}
 
 [[0, 0]]
-![](./assets/cayley_table_z6_mul.png){height=85% center}
+<div class="cayley-table-wrapper">
+<div class="cayley-table-title" style="color:#ff7b72;">ℤ₆ multiplication — has zero divisors!</div>
+<table class="cayley-table small">
+<tr><th>×</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+<tr><th>0</th><td class="c-err">0</td><td class="c-err">0</td><td class="c-err">0</td><td class="c-err">0</td><td class="c-err">0</td><td class="c-err">0</td></tr>
+<tr><th>1</th><td class="c-err">0</td><td class="c-1">1</td><td class="c-2">2</td><td class="c-3">3</td><td class="c-4">4</td><td class="c-5">5</td></tr>
+<tr><th>2</th><td class="c-err">0</td><td class="c-2">2</td><td class="c-4">4</td><td class="c-err">0</td><td class="c-2">2</td><td class="c-4">4</td></tr>
+<tr><th>3</th><td class="c-err">0</td><td class="c-3">3</td><td class="c-err">0</td><td class="c-3">3</td><td class="c-err">0</td><td class="c-3">3</td></tr>
+<tr><th>4</th><td class="c-err">0</td><td class="c-4">4</td><td class="c-2">2</td><td class="c-err">0</td><td class="c-4">4</td><td class="c-2">2</td></tr>
+<tr><th>5</th><td class="c-err">0</td><td class="c-5">5</td><td class="c-4">4</td><td class="c-3">3</td><td class="c-2">2</td><td class="c-1">1</td></tr>
+</table>
+</div>
 
 [[0, 1]]
-![](./assets/cayley_table_z5_mul.png){height=85% center}
+<div class="cayley-table-wrapper">
+<div class="cayley-table-title" style="color:#7ee787;">ℤ₅ multiplication — every row is a permutation ✓</div>
+<table class="cayley-table small">
+<tr><th>×</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr>
+<tr><th>0</th><td class="c-0">0</td><td class="c-0">0</td><td class="c-0">0</td><td class="c-0">0</td><td class="c-0">0</td></tr>
+<tr><th>1</th><td class="c-0">0</td><td class="c-1">1</td><td class="c-2">2</td><td class="c-3">3</td><td class="c-4">4</td></tr>
+<tr><th>2</th><td class="c-0">0</td><td class="c-2">2</td><td class="c-4">4</td><td class="c-1">1</td><td class="c-3">3</td></tr>
+<tr><th>3</th><td class="c-0">0</td><td class="c-3">3</td><td class="c-1">1</td><td class="c-4">4</td><td class="c-2">2</td></tr>
+<tr><th>4</th><td class="c-0">0</td><td class="c-4">4</td><td class="c-3">3</td><td class="c-2">2</td><td class="c-1">1</td></tr>
+</table>
+</div>
 
 :::
 
@@ -199,7 +220,19 @@ We precompute two lookup tables:
 
 Then: $a \cdot b = \text{exp}[(\text{log}[a] + \text{log}[b]) \bmod (p^n - 1)]$ — **one addition and two table lookups!**
 
-![](./assets/gf8_table.png){width=65% center}
+<div class="gf-table-wrapper">
+<div class="gf-table-title">Elements of $GF(2^3)$ with primitive polynomial $x^3 + x + 1$</div>
+<table class="gf-table">
+<tr><th>Power</th><th>Polynomial</th><th>Binary</th><th>Integer</th></tr>
+<tr><td class="gf-power">$\alpha^0$</td><td>$1$</td><td class="gf-bin">001</td><td>1</td></tr>
+<tr><td class="gf-power">$\alpha^1$</td><td>$\alpha$</td><td class="gf-bin">010</td><td>2</td></tr>
+<tr><td class="gf-power">$\alpha^2$</td><td>$\alpha^2$</td><td class="gf-bin">100</td><td>4</td></tr>
+<tr><td class="gf-power">$\alpha^3$</td><td>$\alpha + 1$</td><td class="gf-bin">011</td><td>3</td></tr>
+<tr><td class="gf-power">$\alpha^4$</td><td>$\alpha^2 + \alpha$</td><td class="gf-bin">110</td><td>6</td></tr>
+<tr><td class="gf-power">$\alpha^5$</td><td>$\alpha^2 + \alpha + 1$</td><td class="gf-bin">111</td><td>7</td></tr>
+<tr><td class="gf-power">$\alpha^6$</td><td>$\alpha^2 + 1$</td><td class="gf-bin">101</td><td>5</td></tr>
+</table>
+</div>
 
 ---
 
