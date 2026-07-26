@@ -76,7 +76,13 @@ Welcome to the computational group theory laboratory. This lab bridges abstract 
 
 \subsubsection*{Implementation part}
 \textbf{Task:} Implement the four foundational axiom checks. 
-\textbf{Details:} In this lab, we use a pure Object-Oriented API. You are provided sets or lists of abstract \lstinline|GroupElement| objects. You must use python's overloaded multiplication operator (\lstinline|a * b|) to interact with them, without knowing their internal representation.
+\textbf{Details:} In this lab, we use a pure Object-Oriented API. You must use python's overloaded multiplication operator (\lstinline|a * b|) and evaluate the following logic:
+\begin{itemize}
+    \item \lstinline|check_closure|: Iterate all pairs $a, b \in G$. Return false if $a \cdot b \notin G$.
+    \item \lstinline|check_associativity|: Iterate all triplets $a, b, c \in G$. Return false if $(a \cdot b) \cdot c \neq a \cdot (b \cdot c)$.
+    \item \lstinline|find_identity|: Find the element $e$ where $e \cdot a = a \cdot e = a$ for all $a \in G$. Return it.
+    \item \lstinline|check_inverses|: Given $e$, iterate all $a \in G$ and ensure there exists some $b \in G$ where $a \cdot b = b \cdot a = e$.
+\end{itemize}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
@@ -102,7 +108,13 @@ Welcome to the computational group theory laboratory. This lab bridges abstract 
 
 \subsubsection*{Implementation part}
 \textbf{Task:} Implement mechanics for the \lstinline|PermutationElement| abstract subclass, and implement general order and generator functions.
-\textbf{Details:} Overload \lstinline|__mul__| for permutation composition and \lstinline|__invert__| for permutation inverses.
+\textbf{Details:} 
+\begin{itemize}
+    \item \lstinline|PermutationElement.__mul__|: Compose permutations by evaluating $f(g(x))$. The new mapping array maps $i \to \text{self}(\text{other}(i))$.
+    \item \lstinline|PermutationElement.__invert__|: Compute the inverse mapping array where $\text{mapping}[x] = y \implies \text{inv}[y] = x$.
+    \item \lstinline|element_order|: Multiply $g$ iteratively by itself ($g, g^2, g^3\dots$) until the result equals the identity element. Return the step count.
+    \item \lstinline|generate_group|: Use a set to track discovered elements. Start with the generators and iteratively apply closure ($a \cdot b$) until no new elements are found. Return the \lstinline|Group| object.
+\end{itemize}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
@@ -159,7 +171,10 @@ generate\_group & \lstinline|generators: list[GroupElement]| & \lstinline|Group|
 
 \subsubsection*{Implementation part}
 \textbf{Task:} Implement \lstinline|find_all_subgroups| using a mathematically rigorous breadth-first search over the subgroup lattice.
-\textbf{Details:} \lstinline|find_all_subgroups| should return a list of \lstinline|Group| objects.
+\textbf{Details:} 
+\begin{itemize}
+    \item \lstinline|find_all_subgroups|: Start a BFS queue with the trivial subgroup $\{e\}$. For each subgroup $H$ in the queue, try adding an element $g \notin H$. Use your \lstinline|generate_group| function to find the new subgroup $\langle H, g \rangle$. If it's a new subgroup you haven't seen before, add it to your tracking list and push it to the queue. Return the list of all discovered subgroups.
+\end{itemize}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
@@ -183,7 +198,12 @@ find\_all\_subgroups & \lstinline|group: Group| & \lstinline|list[Group]| \\
 
 \subsubsection*{Implementation part}
 \textbf{Task:} Implement left cosets, right cosets, and the normality check.
-\textbf{Details:} \lstinline|compute_left_cosets| must return a list of sets of \lstinline|GroupElement|, representing the unique left cosets.
+\textbf{Details:} 
+\begin{itemize}
+    \item \lstinline|compute_left_cosets|: A left coset is $gH = \{g \cdot h \mid h \in H\}$. Iterate all $g \in G$ to construct these sets, and return a list of the \textit{unique} cosets.
+    \item \lstinline|compute_right_cosets|: A right coset is $Hg = \{h \cdot g \mid h \in H\}$. Construct and return the unique cosets.
+    \item \lstinline|is_normal|: Check if the set of left cosets exactly equals the set of right cosets.
+\end{itemize}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
@@ -216,6 +236,12 @@ is\_normal & \lstinline|group: Group, subgroup: Group| & \lstinline|bool| \\
 
 \subsubsection*{Implementation part}
 \textbf{Task:} Implement the structural invariants.
+\textbf{Details:}
+\begin{itemize}
+    \item \lstinline|compute_center|: Iterate all $z \in G$ and check if $z \cdot g = g \cdot z$ for all $g \in G$.
+    \item \lstinline|compute_commutator_subgroup|: Find all commutators $aba^{-1}b^{-1}$. \textbf{Warning:} commutators don't always form a subgroup directly! You must pass all discovered commutators to \lstinline|generate_group| to get the fully closed Commutator Subgroup.
+    \item \lstinline|compute_conjugacy_classes|: The conjugacy class of $a$ is $\{g \cdot a \cdot g^{-1} \mid g \in G\}$. Compute this set for all $a \in G$ and return a list of the unique classes.
+\end{itemize}
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
 \begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
@@ -252,14 +278,27 @@ compute\_conjugacy\_classes & \lstinline|group: Group| & \lstinline|list[set]| \
 \subsubsection*{Implementation part}
 \textbf{Task:} Implement a constraint-propagation engine that deduces a homomorphism from a partial mapping.
 
-\textbf{Algorithm outline for} \lstinline|deduce_homomorphism|:
+\textbf{Algorithm outline for} \lstinline|deduce_homomorphism| (Full Bidirectional Constraint Solver):
 \begin{enumerate}
     \item \textbf{Initialize candidates.} For each $g \in G$, build a set of candidate images $\text{poss}[g] \subseteq H$. If $g$ is already mapped by the user, $\text{poss}[g] = \{\phi(g)\}$. Otherwise, use the order divisibility theorem to pre-filter: $\text{poss}[g] = \{h \in H : |h| \mid |g| \}$.
-    \item \textbf{Propagate constraints.} Repeatedly scan all pairs $(a, b) \in G \times G$ and tighten $\text{poss}[a \cdot b]$ by intersecting it with the set of all achievable products:
-    $$\text{poss}[a \cdot b] \;\leftarrow\; \text{poss}[a \cdot b] \;\cap\; \{\phi_a \cdot \phi_b \;:\; \phi_a \in \text{poss}[a],\; \phi_b \in \text{poss}[b]\}$$
-    If this intersection is empty, a contradiction has been found --- return \lstinline|None|. If a set shrinks, restart the scan from the beginning (the change may trigger further reductions elsewhere). If a full scan completes with zero changes, the algorithm has reached a fixed point.
+    \item \textbf{Bidirectional Constraint Propagation.} Repeatedly scan all pairs $(a, b) \in G \times G$. Let $c = a \cdot b$. The homomorphism property requires $\phi(c) = \phi(a)\phi(b)$, which provides three mathematically equivalent structural constraints:
+    \begin{itemize}
+        \item Forward: $\phi(c) = \phi(a)\phi(b)$
+        \item Backward to $a$: $\phi(a) = \phi(c)\phi(b)^{-1}$
+        \item Backward to $b$: $\phi(b) = \phi(a)^{-1}\phi(c)$
+    \end{itemize}
+    For every pair, apply these constraints to tighten the candidate sets $\text{poss}[a], \text{poss}[b], \text{poss}[c]$ using set intersections. \textbf{Important Rule:} You must handle the $a = b$ case distinctly! If $a = b$, then $c = a^2$. You must directly restrict $\text{poss}[c]$ to the squares of elements in $\text{poss}[a]$, and restrict $\text{poss}[a]$ to elements whose squares exist in $\text{poss}[c]$.
+    
+    If any candidate set becomes empty, a contradiction has been found --- return \lstinline|None|. If any set shrinks, record that a change occurred and keep scanning. The algorithm reaches a fixed point when a full scan completes with zero changes.
     \item \textbf{Extract results.} Return all elements $g$ whose candidate set has been narrowed to a single value: $\{g : |\text{poss}[g]| = 1\}$.
 \end{enumerate}
+
+\textbf{Details for other functions:}
+\begin{itemize}
+    \item \lstinline|is_homomorphism|: Iterate all $a, b \in G$. Ensure $\phi(a \cdot b) = \phi(a) \cdot \phi(b)$. Also ensure your code gracefully handles partial mappings (returning \lstinline|False| if $a, b$ or $a \cdot b$ are missing from the dictionary).
+    \item \lstinline|compute_kernel|: Collect and return all $g \in G$ where $\phi(g) = e_H$.
+    \item \lstinline|compute_image|: Collect and return all $\phi(g)$ for $g \in G$.
+\end{itemize}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
@@ -283,6 +322,14 @@ compute\_image & \lstinline|group_G: Group, group_H: Group, phi: dict| & \lstinl
     \item Your \lstinline|deduce_homomorphism| function will run instantly. If the single arrow forces other mappings (e.g., $1 \to 2 \implies 1\cdot 1 \to 2\cdot 2$), those arrows will be drawn automatically in gray.
     \item If you draw an arrow that causes a contradiction (e.g., mapping an order 2 element to an order 3 element), the arrow will turn RED.
     \item \textbf{Right-click} any drawn arrow to remove it and reset the constraints.
+\end{itemize}
+
+\textbf{Testing the Bidirectional Solver:} 
+To verify that your solver correctly handles global structural constraints (and not just local element orders), test the following edge case:
+\begin{itemize}
+    \item Load $Z_4$ as the Source ($G$) and $U(8) \cong Z_2 \times Z_2$ as the Target ($H$).
+    \item Click the \textbf{"Deduce Rest"} button (or simply map the identity $0 \in Z_4$ to $1 \in U(8)$).
+    \item \textbf{Verification:} If your solver correctly implements the $a = b$ bidirectional propagation rule, a gray arrow should automatically appear mapping $2 \in Z_4$ to $1 \in U(8)$. This occurs because $2 = 1+1$ in $Z_4$, and in $U(8)$, any element multiplied by itself is $1$. The solver deduces $\phi(2) = 1$ out of thin air, without ever knowing what $\phi(1)$ maps to! If this arrow does not appear, your constraint propagation is incomplete.
 \end{itemize}
 
 

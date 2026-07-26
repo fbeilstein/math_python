@@ -337,45 +337,68 @@ def compute_conjugacy_classes(group):  #contains solution
 # ════════════════════════════════════════════════════════════
 
 def deduce_homomorphism(group_G, group_H, partial_phi):
-    """Deduce a homomorphism via constraint propagation on φ(ab) = φ(a)·φ(b).
-
-    For each g ∈ G, maintains a set of candidate images poss[g] ⊆ H.
-    Initializes candidates using the order divisibility theorem (|φ(g)| divides |g|),
-    then iteratively tightens candidates by enforcing the homomorphism property
-    on every pair (a, b): poss[a·b] ∩= {φ(a)·φ(b) : φ(a) ∈ poss[a], φ(b) ∈ poss[b]}.
-
-    Args:
-        group_G, group_H: Group instances.
-        partial_phi: dict {GroupElement: GroupElement}, the known arrows.
-
-    Returns:
-        dict or None: the (possibly partial) completed mapping, or None on contradiction.
     """
-    e_G, e_H = group_G.identity_element, group_H.identity_element
-    if e_G in partial_phi and partial_phi[e_G] != e_H:
-        return None
-
-    # Initialize candidate sets with order divisibility pre-filter
+    Deduce mappings using Constraint Satisfaction.
+    Evaluates both local element orders and global algebraic structure.
+    """
+    # 1. Local Constraint: Seed domains using the Order Theorem
     poss = {
-        g: {partial_phi[g]} if g in partial_phi else
+        g: {partial_phi[g]} if g in partial_phi else 
            {h for h in group_H if element_order(group_G, g) % element_order(group_H, h) == 0}
         for g in group_G
     }
 
-    # Constraint propagation: tighten poss[ab] for every pair (a, b) until fixed point
-    while True:
-        for a, b in product(group_G, repeat=2):
-            ab = a * b
-            new_poss = poss[ab] & {ha * hb for ha in poss[a] for hb in poss[b]}
+    # 2. Global Constraint: Iteratively enforce φ(a)·φ(b) = φ(ab)
+    # We use full Arc-Consistency, propagating constraints both forward and backward.
+    changed = True
+    while changed:
+        changed = False
+        for a in group_G:
+            for b in group_G:
+                c = a * b
+                
+                if a == b:
+                    # Forward: tighten c = a^2
+                    valid_c = {ha * ha for ha in poss[a]}
+                    new_poss_c = poss[c] & valid_c
+                    if not new_poss_c: return None
+                    if len(new_poss_c) < len(poss[c]):
+                        poss[c] = new_poss_c
+                        changed = True
+                        
+                    # Backward: tighten a based on c
+                    valid_a = {ha for ha in poss[a] if (ha * ha) in poss[c]}
+                    if not valid_a: return None
+                    if len(valid_a) < len(poss[a]):
+                        poss[a] = valid_a
+                        changed = True
+                else:
+                    # Forward: tighten c = a * b
+                    valid_c = {ha * hb for ha in poss[a] for hb in poss[b]}
+                    new_poss_c = poss[c] & valid_c
+                    if not new_poss_c: return None
+                    if len(new_poss_c) < len(poss[c]):
+                        poss[c] = new_poss_c
+                        changed = True
+                        
+                    # Backward: tighten a = c * b^-1
+                    valid_a = {hc * (~hb) for hc in poss[c] for hb in poss[b]}
+                    new_poss_a = poss[a] & valid_a
+                    if not new_poss_a: return None
+                    if len(new_poss_a) < len(poss[a]):
+                        poss[a] = new_poss_a
+                        changed = True
+                        
+                    # Backward: tighten b = a^-1 * c
+                    valid_b = {(~ha) * hc for hc in poss[c] for ha in poss[a]}
+                    new_poss_b = poss[b] & valid_b
+                    if not new_poss_b: return None
+                    if len(new_poss_b) < len(poss[b]):
+                        poss[b] = new_poss_b
+                        changed = True
 
-            if not new_poss:
-                return None
-
-            if len(new_poss) < len(poss[ab]):
-                poss[ab] = new_poss
-                break
-        else:
-            return {g: next(iter(p)) for g, p in poss.items() if len(p) == 1}
+    # 3. Return the mappings that are mathematically forced (domain size 1)
+    return {g: list(p)[0] for g, p in poss.items() if len(p) == 1}
 
 
 def is_homomorphism(group_G, phi):  #contains solution
