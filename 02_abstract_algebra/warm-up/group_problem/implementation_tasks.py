@@ -7,6 +7,7 @@ Phase 2 (L4–L7): Structural analysis.
 Each function has a docstring specifying the expected behavior.
 """
 import numpy as np
+from itertools import product
 from group_engine import GroupElement, Group
 
 
@@ -336,9 +337,12 @@ def compute_conjugacy_classes(group):  #contains solution
 # ════════════════════════════════════════════════════════════
 
 def deduce_homomorphism(group_G, group_H, partial_phi):
-    """Deduce a homomorphism by BFS closure of φ(ab) = φ(a)·φ(b).
+    """Deduce a homomorphism via constraint propagation on φ(ab) = φ(a)·φ(b).
 
-    Structurally identical to generate_group, operating on (key, value) pairs.
+    For each g ∈ G, maintains a set of candidate images poss[g] ⊆ H.
+    Initializes candidates using the order divisibility theorem (|φ(g)| divides |g|),
+    then iteratively tightens candidates by enforcing the homomorphism property
+    on every pair (a, b): poss[a·b] ∩= {φ(a)·φ(b) : φ(a) ∈ poss[a], φ(b) ∈ poss[b]}.
 
     Args:
         group_G, group_H: Group instances.
@@ -351,67 +355,27 @@ def deduce_homomorphism(group_G, group_H, partial_phi):
     if e_G in partial_phi and partial_phi[e_G] != e_H:
         return None
 
-    poss = {}
-    for g in group_G:
-        if g in partial_phi:
-            poss[g] = {partial_phi[g]}
-        else:
-            poss[g] = set(group_H)
-            
-    # Enforce identity mapping
-    poss[e_G] = {e_H}
-    
-    changed = True
-    while changed:
-        changed = False
-        
-        for a in group_G:
-            for b in group_G:
-                ab = a * b
-                
-                # Check valid assignments for unique elements among a, b, ab
-                elements = list(set([a, b, ab]))
-                valid_assignments = []
-                
-                def search(idx, current_assignment):
-                    if idx == len(elements):
-                        h_a = current_assignment[a]
-                        h_b = current_assignment[b]
-                        h_ab = current_assignment[ab]
-                        if h_a * h_b == h_ab:
-                            valid_assignments.append(current_assignment.copy())
-                        return
-                    elem = elements[idx]
-                    for h in poss[elem]:
-                        current_assignment[elem] = h
-                        search(idx + 1, current_assignment)
-                        del current_assignment[elem]
-                        
-                search(0, {})
-                
-                if not valid_assignments:
-                    return None
-                    
-                # Rebuild poss
-                new_poss = {e: set() for e in elements}
-                for asgn in valid_assignments:
-                    for e in elements:
-                        new_poss[e].add(asgn[e])
-                        
-                for e in elements:
-                    if len(new_poss[e]) < len(poss[e]):
-                        poss[e] = new_poss[e]
-                        changed = True
+    # Initialize candidate sets with order divisibility pre-filter
+    poss = {
+        g: {partial_phi[g]} if g in partial_phi else
+           {h for h in group_H if element_order(group_G, g) % element_order(group_H, h) == 0}
+        for g in group_G
+    }
 
-    # Reconstruct deduced phi
-    result_phi = {}
-    for g, p in poss.items():
-        if len(p) == 1:
-            result_phi[g] = list(p)[0]
-        elif len(p) == 0:
-            return None
-            
-    return result_phi
+    # Constraint propagation: tighten poss[ab] for every pair (a, b) until fixed point
+    while True:
+        for a, b in product(group_G, repeat=2):
+            ab = a * b
+            new_poss = poss[ab] & {ha * hb for ha in poss[a] for hb in poss[b]}
+
+            if not new_poss:
+                return None
+
+            if len(new_poss) < len(poss[ab]):
+                poss[ab] = new_poss
+                break
+        else:
+            return {g: next(iter(p)) for g, p in poss.items() if len(p) == 1}
 
 
 def is_homomorphism(group_G, phi):  #contains solution

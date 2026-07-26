@@ -241,11 +241,25 @@ compute\_conjugacy\_classes & \lstinline|group: Group| & \lstinline|list[set]| \
 \section*{Problem 7: Homomorphisms and Kernels (Level 7)}
 
 \subsubsection*{Mathematical part}
-\textbf{Recall:} A homomorphism $\phi: G \to H$ satisfies $\phi(ab) = \phi(a)\phi(b)$. The kernel is $\ker \phi = \{g \in G \mid \phi(g) = e_H\}$. The First Isomorphism Theorem states $G / \ker \phi \cong \text{im} \phi$.
+\textbf{Recall:} A group homomorphism $\phi: G \to H$ is a function satisfying $\phi(ab) = \phi(a)\phi(b)$ for all $a, b \in G$. Key consequences:
+\begin{itemize}
+    \item $\phi(e_G) = e_H$ (identity maps to identity).
+    \item $|\phi(g)|$ divides $|g|$ for every $g \in G$ (the \textbf{order divisibility theorem}).
+    \item $\ker \phi = \{g \in G \mid \phi(g) = e_H\}$ is always a normal subgroup of $G$.
+    \item The \textbf{First Isomorphism Theorem} states $G / \ker \phi \cong \operatorname{im} \phi$.
+\end{itemize}
 
 \subsubsection*{Implementation part}
-\textbf{Task:} Implement homomorphism validation, constraint deduction, and kernel/image computation.
-\textbf{Details:} \lstinline|deduce_homomorphism| is a constraint solver. Given a partial dictionary of mappings, infer the rest of the mapping if forced by the homomorphism property. If a contradiction occurs, return \lstinline|None|.
+\textbf{Task:} Implement a constraint-propagation engine that deduces a homomorphism from a partial mapping.
+
+\textbf{Algorithm outline for} \lstinline|deduce_homomorphism|:
+\begin{enumerate}
+    \item \textbf{Initialize candidates.} For each $g \in G$, build a set of candidate images $\text{poss}[g] \subseteq H$. If $g$ is already mapped by the user, $\text{poss}[g] = \{\phi(g)\}$. Otherwise, use the order divisibility theorem to pre-filter: $\text{poss}[g] = \{h \in H : |h| \mid |g| \}$.
+    \item \textbf{Propagate constraints.} Repeatedly scan all pairs $(a, b) \in G \times G$ and tighten $\text{poss}[a \cdot b]$ by intersecting it with the set of all achievable products:
+    $$\text{poss}[a \cdot b] \;\leftarrow\; \text{poss}[a \cdot b] \;\cap\; \{\phi_a \cdot \phi_b \;:\; \phi_a \in \text{poss}[a],\; \phi_b \in \text{poss}[b]\}$$
+    If this intersection is empty, a contradiction has been found --- return \lstinline|None|. If a set shrinks, restart the scan from the beginning (the change may trigger further reductions elsewhere). If a full scan completes with zero changes, the algorithm has reached a fixed point.
+    \item \textbf{Extract results.} Return all elements $g$ whose candidate set has been narrowed to a single value: $\{g : |\text{poss}[g]| = 1\}$.
+\end{enumerate}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
