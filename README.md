@@ -1,7 +1,7 @@
 
 # Math with Python
 
-Schedule: DBA
+Schedule: TBA
 
 ## Course Structure
 
@@ -22,10 +22,9 @@ Schedule: DBA
 
 ### Module 2: Abstract Algebra
 - Lecture: [Abstract Algebra](https://fbeilstein.github.io/math_python/02_abstract_algebra/lectures/abstract_algebra.html)
-- Warm-up:
-- Practice:
-- Optional:
-
+- Warm-up: [Group Theory](https://github.com/fbeilstein/math_python/releases/download/groups_v0/group_problem.zip)
+- Practice: [Generate QR-code](https://github.com/fbeilstein/math_python/releases/download/qr_v1/qr_problem.zip)
+- Optional: [RSA Encryption](https://github.com/fbeilstein/math_python/releases/download/rsa_v0/rsa_problem.zip)
 
 ---
 
@@ -65,22 +64,23 @@ The presentation engine is included as a git submodule:
 git clone --recurse-submodules <repo-url>
 ```
 
-## Download Problem Sets
-
+## Download Optional Problem Sets
 
 - [Esher-Droste Transformation](https://github.com/fbeilstein/math_python/releases/download/esher_v0/esher_droste_problem.zip)
-- [Generate QR-code](https://github.com/fbeilstein/math_python/releases/download/qr_v1/qr_problem.zip)
 - [Compute Homologies](https://github.com/fbeilstein/math_python/releases/download/homology_v0/homology_problem.zip)
 - [Compute Autodiff with Dual Numbers](https://github.com/fbeilstein/math_python/releases/download/autodiff_v0/autodiff_duals_problem.zip)
 - [Kinematics with Hypercomplex Numbers](https://github.com/fbeilstein/math_python/releases/download/kinematics_v0/kinematics_problem.zip)
 - [Drawing Fractals](https://github.com/fbeilstein/math_python/releases/download/fractals_v0/fractals_problem.zip)
-- [Elementary Group Theory](https://github.com/fbeilstein/math_python/releases/download/cayley_v0/cayley_problem.zip)
 - [Game Theory, Tournament](https://github.com/fbeilstein/math_python/releases/download/tournament_v0/evolutionary_game_problem.zip)
 - [Spectral Graph Theory, Segmentation](https://github.com/fbeilstein/math_python/releases/download/spectral_graph_v0/spectral_graph_problem.zip)
 - [Markov Chain Problem](https://github.com/fbeilstein/math_python/releases/download/markov_v0/markov_chain_problem.zip)
-- [RSA Encryption](https://github.com/fbeilstein/math_python/releases/download/rsa_v0/rsa_problem.zip)
 - [Explore Differential Equation Stability](https://github.com/fbeilstein/math_python/releases/download/stability_v0/stability_problem.zip)
 - [Quantum Tunneling](https://github.com/fbeilstein/math_python/releases/download/quanta_v0/quantum_problem.zip)
-- [Optics](https://github.com/fbeilstein/math_python/releases/download/optics_v0/optical_problem.zip)
 - [Topological Game](https://github.com/fbeilstein/math_python/releases/download/topo_v0/tron_problem.zip)
 - [Duplicate Documents Search](https://github.com/fbeilstein/math_python/releases/download/lsh_v0/lsh_problem.zip)
+
+---
+
+### Retired
+
+- [Elementary Group Theory](https://github.com/fbeilstein/math_python/releases/download/cayley_v0/cayley_problem.zip)
