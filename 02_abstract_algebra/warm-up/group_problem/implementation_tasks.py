@@ -336,7 +336,7 @@ def compute_conjugacy_classes(group):  #contains solution
 # Level 7: Homomorphisms & Kernels
 # ════════════════════════════════════════════════════════════
 
-def deduce_homomorphism(group_G, group_H, partial_phi):
+def deduce_homomorphism(group_G, group_H, partial_phi):  #contains solution
     """
     Deduce mappings using Constraint Satisfaction.
     Evaluates both local element orders and global algebraic structure.
@@ -347,6 +347,9 @@ def deduce_homomorphism(group_G, group_H, partial_phi):
            {h for h in group_H if element_order(group_G, g) % element_order(group_H, h) == 0}
         for g in group_G
     }
+    
+    for g in poss:
+        if not poss[g]: return {}
 
     # 2. Global Constraint: Iteratively enforce φ(a)·φ(b) = φ(ab)
     # We use full Arc-Consistency, propagating constraints both forward and backward.
@@ -361,14 +364,14 @@ def deduce_homomorphism(group_G, group_H, partial_phi):
                     # Forward: tighten c = a^2
                     valid_c = {ha * ha for ha in poss[a]}
                     new_poss_c = poss[c] & valid_c
-                    if not new_poss_c: return None
+                    if not new_poss_c: return {}
                     if len(new_poss_c) < len(poss[c]):
                         poss[c] = new_poss_c
                         changed = True
                         
                     # Backward: tighten a based on c
                     valid_a = {ha for ha in poss[a] if (ha * ha) in poss[c]}
-                    if not valid_a: return None
+                    if not valid_a: return {}
                     if len(valid_a) < len(poss[a]):
                         poss[a] = valid_a
                         changed = True
@@ -376,7 +379,7 @@ def deduce_homomorphism(group_G, group_H, partial_phi):
                     # Forward: tighten c = a * b
                     valid_c = {ha * hb for ha in poss[a] for hb in poss[b]}
                     new_poss_c = poss[c] & valid_c
-                    if not new_poss_c: return None
+                    if not new_poss_c: return {}
                     if len(new_poss_c) < len(poss[c]):
                         poss[c] = new_poss_c
                         changed = True
@@ -384,7 +387,7 @@ def deduce_homomorphism(group_G, group_H, partial_phi):
                     # Backward: tighten a = c * b^-1
                     valid_a = {hc * (~hb) for hc in poss[c] for hb in poss[b]}
                     new_poss_a = poss[a] & valid_a
-                    if not new_poss_a: return None
+                    if not new_poss_a: return {}
                     if len(new_poss_a) < len(poss[a]):
                         poss[a] = new_poss_a
                         changed = True
@@ -392,7 +395,7 @@ def deduce_homomorphism(group_G, group_H, partial_phi):
                     # Backward: tighten b = a^-1 * c
                     valid_b = {(~ha) * hc for hc in poss[c] for ha in poss[a]}
                     new_poss_b = poss[b] & valid_b
-                    if not new_poss_b: return None
+                    if not new_poss_b: return {}
                     if len(new_poss_b) < len(poss[b]):
                         poss[b] = new_poss_b
                         changed = True

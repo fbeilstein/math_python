@@ -73,6 +73,9 @@ class Level6Center(TabbedLevel):
             center = tasks.compute_center(self._group)
             commutator = tasks.compute_commutator_subgroup(self._group)
             conj_classes = tasks.compute_conjugacy_classes(self._group)
+            if center is None or commutator is None or conj_classes is None:
+                self.show_error("One or more structural invariants not implemented (center, commutator, conjugacy)")
+                return
         except Exception as e:
             self.show_error(str(e))
             return
@@ -212,7 +215,15 @@ class Level6Center(TabbedLevel):
         self.ax.clear()
         
         # Elements of G/[G,G] are cosets of the commutator subgroup
-        cosets = tasks.compute_left_cosets(self._group, commutator)
+        try:
+            cosets = tasks.compute_left_cosets(self._group, commutator)
+            if cosets is None:
+                self.show_error("compute_left_cosets not implemented (needed for quotient)")
+                return
+        except Exception as e:
+            self.show_error(str(e))
+            return
+            
         sorted_cosets = sorted(list(cosets), key=lambda s: (self._group.identity_element not in s, min(str(x) for x in s)))
         k = len(sorted_cosets)
         

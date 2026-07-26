@@ -77,8 +77,20 @@ class Level5Cosets(TabbedLevel):
                 gen_indices = [self._group.identity_element]
                 
             subgroup = tasks.generate_group(gen_indices)
+            if subgroup is None:
+                self.show_error("generate_group not implemented")
+                return
+                
             left = tasks.compute_left_cosets(self._group, subgroup)
+            if left is None:
+                self.show_error("compute_left_cosets not implemented")
+                return
+                
             right = tasks.compute_right_cosets(self._group, subgroup)
+            if right is None:
+                self.show_error("compute_right_cosets not implemented")
+                return
+                
             normal = tasks.is_normal(self._group, subgroup)
         except Exception as e:
             self.show_error(str(e))

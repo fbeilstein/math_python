@@ -289,7 +289,7 @@ compute\_conjugacy\_classes & \lstinline|group: Group| & \lstinline|list[set]| \
     \end{itemize}
     For every pair, apply these constraints to tighten the candidate sets $\text{poss}[a], \text{poss}[b], \text{poss}[c]$ using set intersections. \textbf{Important Rule:} You must handle the $a = b$ case distinctly! If $a = b$, then $c = a^2$. You must directly restrict $\text{poss}[c]$ to the squares of elements in $\text{poss}[a]$, and restrict $\text{poss}[a]$ to elements whose squares exist in $\text{poss}[c]$.
     
-    If any candidate set becomes empty, a contradiction has been found --- return \lstinline|None|. If any set shrinks, record that a change occurred and keep scanning. The algorithm reaches a fixed point when a full scan completes with zero changes.
+    If any candidate set becomes empty, a contradiction has been found --- return an empty dictionary \lstinline|\{\}|. If any set shrinks, record that a change occurred and keep scanning. The algorithm reaches a fixed point when a full scan completes with zero changes.
     \item \textbf{Extract results.} Return all elements $g$ whose candidate set has been narrowed to a single value: $\{g : |\text{poss}[g]| = 1\}$.
 \end{enumerate}
 
@@ -305,7 +305,7 @@ compute\_conjugacy\_classes & \lstinline|group: Group| & \lstinline|list[set]| \
 \begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
 \toprule
 Function & Arguments & Returns \\ \midrule
-deduce\_homomorphism & \lstinline|group_G, group_H, partial_phi| & \lstinline|dict | None| \\
+deduce\_homomorphism & \lstinline|group_G, group_H, partial_phi| & \lstinline|dict| \\
 is\_homomorphism & \lstinline|group_G: Group, phi: dict| & \lstinline|bool| \\
 compute\_kernel & \lstinline|group_G: Group, group_H: Group, phi: dict| & \lstinline|set[GroupElement]| \\
 compute\_image & \lstinline|group_G: Group, group_H: Group, phi: dict| & \lstinline|set[GroupElement]| \\

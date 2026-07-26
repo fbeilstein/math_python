@@ -44,7 +44,11 @@ class Level3Cayley(TabbedLevel):
             return
             
         try:
-            nodes, edges = tasks.generate_cayley_graph(self._group, self._active_gens)
+            res = tasks.generate_cayley_graph(self._group, self._active_gens)
+            if res is None:
+                self.show_error("generate_cayley_graph not implemented")
+                return
+            nodes, edges = res
         except Exception as e:
             self.show_error(str(e))
             return

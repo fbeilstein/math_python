@@ -262,26 +262,39 @@ class Level1Axioms(BaseLevel):
 
         try:
             ok_c = tasks.check_closure(elements)
+            if ok_c is None:
+                report_err("check_closure not implemented")
+                return
             if not ok_c:
                 msg_c = self._get_closure_error(table)
                 report_err(f"Closure Failed: {msg_c}")
                 return
-        except Exception:
-            pass
+        except Exception as e:
+            report_err(f"check_closure crashed: {e}")
+            return
 
         try:
             ok_a = tasks.check_associativity(elements)
+            if ok_a is None:
+                report_err("check_associativity not implemented")
+                return
             if not ok_a:
                 msg_a = self._get_assoc_error(table)
                 report_err(f"Associativity Failed: {msg_a}")
                 return
-        except Exception:
-            pass
+        except Exception as e:
+            report_err(f"check_associativity crashed: {e}")
+            return
 
         try:
             identity = tasks.find_identity(elements)
+            # find_identity could legitimately return None if not found, but if student put pass it also returns None
+            # We assume if all are missing, student hasn't implemented it. But if they just return None, the UI will say "No identity exists"
             if identity is not None:
                 ok_i = tasks.check_inverses(elements, identity)
+                if ok_i is None:
+                    report_err("check_inverses not implemented")
+                    return
                 if not ok_i:
                     msg_i = self._get_inverse_error(table, identity.idx)
                     report_err(f"Inverses Failed: {msg_i}")
@@ -294,6 +307,7 @@ class Level1Axioms(BaseLevel):
             else:
                 partial = any(isinstance(val, MissingValue) for row in table for val in row)
                 if not partial:
-                    report_err("No identity element exists!")
-        except Exception:
-            pass
+                    report_err("No identity element exists! (or find_identity not implemented)")
+        except Exception as e:
+            report_err(f"Identity/Inverse check crashed: {e}")
+            return

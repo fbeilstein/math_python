@@ -147,7 +147,18 @@ def draw_perm_stack(canvas, perms, n, x0, y0, w, h,
         return y0 + pad_y + row_idx * row_spacing
 
     # Track which original element (from top row) is at each position
-    # at the current row. Initially, position i holds element i.
+    # Check if mul works
+    mul_works = True
+    try:
+        id_list = list(range(n))
+        p1 = tasks.PermutationElement(id_list)
+        p2 = tasks.PermutationElement(id_list)
+        res = (p1 * p2).mapping
+        if res is None:
+            mul_works = False
+    except Exception:
+        mul_works = False
+
     current_elements = list(range(n))
 
     # Draw dots for top row
@@ -173,8 +184,7 @@ def draw_perm_stack(canvas, perms, n, x0, y0, w, h,
             if j is None or not (0 <= j < n):
                 continue
             
-            orig_element = current_elements[i]
-            next_elements[j] = orig_element
+            orig_element = current_elements[i] if mul_works else i
             c = colors[orig_element % len(colors)]
             
             canvas.create_line(dot_x(i), y_from + r + 2,
@@ -182,7 +192,22 @@ def draw_perm_stack(canvas, perms, n, x0, y0, w, h,
                                fill=c, width=lw, arrow=tk.LAST,
                                arrowshape=(8, 10, 4), tags=(tag,))
                                
-        current_elements = next_elements
+        if mul_works:
+            try:
+                state = list(range(n))
+                for p in perms[:layer+1]:
+                    state = (tasks.PermutationElement(p) * tasks.PermutationElement(state)).mapping
+                
+                next_elements = [None] * n
+                for orig in range(n):
+                    j = state[orig]
+                    next_elements[j] = orig
+                current_elements = next_elements
+            except Exception:
+                mul_works = False
+                current_elements = list(range(n))
+        else:
+            current_elements = list(range(n))
         
         # Draw dots for the next row
         ry = y_to

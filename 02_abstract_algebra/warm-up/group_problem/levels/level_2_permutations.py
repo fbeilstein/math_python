@@ -105,6 +105,13 @@ class Level2Permutations(BaseLevel):
         n = len(self.pool[0])
         generators = [tasks.PermutationElement(list(p)) for p in self.pool]
         result = tasks.generate_group(generators)
+        if result is None:
+            c = self.pool_canvas
+            c.delete("all")
+            c.create_text(c.winfo_width() // 2, c.winfo_height() // 2,
+                          text="generate_group not implemented",
+                          fill="#ff7b72", font=("Arial", 12))
+            return
         self.pool = [tuple(p.mapping) for p in result]
         self._redraw_pool()
 
@@ -203,26 +210,29 @@ class Level2Permutations(BaseLevel):
         highlight = {}
         if self.selected_idx is not None and self.selected_idx < len(self.pool):
             sel_perm = list(self.pool[self.selected_idx])
-            if mode == "inverse":
-                inv = tuple((~tasks.PermutationElement(sel_perm)).mapping)
-                for i, p in enumerate(self.pool):
-                    if p == inv:
-                        highlight[i] = "#ff7b72"
-                highlight[self.selected_idx] = "#58a6ff"
-            elif mode == "powers":
-                current = sel_perm
-                k = 0
-                while True:
+            try:
+                if mode == "inverse":
+                    inv = tuple((~tasks.PermutationElement(sel_perm)).mapping)
                     for i, p in enumerate(self.pool):
-                        if p == tuple(current):
-                            highlight[i] = PERM_COLORS[k % len(PERM_COLORS)]
-                    current = (tasks.PermutationElement(sel_perm) * tasks.PermutationElement(current)).mapping
-                    k += 1
-                    if tuple(current) == tuple(sel_perm):
-                        break
-            elif mode == "parity":
-                for i, p in enumerate(self.pool):
-                    highlight[i] = "#7ee787" if is_even_permutation(list(p)) else "#ff7b72"
+                        if p == inv:
+                            highlight[i] = "#ff7b72"
+                    highlight[self.selected_idx] = "#58a6ff"
+                elif mode == "powers":
+                    current = sel_perm
+                    k = 0
+                    while True:
+                        for i, p in enumerate(self.pool):
+                            if p == tuple(current):
+                                highlight[i] = PERM_COLORS[k % len(PERM_COLORS)]
+                        current = (tasks.PermutationElement(sel_perm) * tasks.PermutationElement(current)).mapping
+                        k += 1
+                        if tuple(current) == tuple(sel_perm):
+                            break
+                elif mode == "parity":
+                    for i, p in enumerate(self.pool):
+                        highlight[i] = "#7ee787" if is_even_permutation(list(p)) else "#ff7b72"
+            except Exception:
+                pass # Silently abort highlighting if methods not implemented
 
         for idx, (x, y) in enumerate(positions):
             perm = self.pool[idx]
@@ -271,6 +281,17 @@ class Level2Permutations(BaseLevel):
                       fill="#ff7b72", font=("Arial", 9, "bold"),
                       tags=("clear_btn",))
         c.tag_bind("clear_btn", '<Button-1>', lambda e: self._clear_comp_stack())
+
+        # Check if __mul__ is implemented before attempting to draw the braid
+        try:
+            id_el = tasks.PermutationElement(list(range(n)))
+            res = (id_el * id_el).mapping
+            if res is None:
+                raise NotImplementedError
+        except Exception:
+            c.create_text(cw // 2, ch // 2, text="Multiplication not implemented",
+                          fill="#ff7b72", font=("Arial", 12, "bold"))
+            return
 
         # Stacked braid taking up most of the vertical space
         stack_h = min(ch - 100, int(cw * 1.5))  # Adjust for more space if needed

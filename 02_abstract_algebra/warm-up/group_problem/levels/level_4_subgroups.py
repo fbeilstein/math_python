@@ -63,6 +63,9 @@ class Level4Subgroups(TabbedLevel):
             return
         try:
             subgroups = tasks.find_all_subgroups(self._group)
+            if subgroups is None:
+                self.show_error("find_all_subgroups not implemented")
+                return
         except Exception as e:
             self.show_error(str(e))
             return
@@ -71,7 +74,14 @@ class Level4Subgroups(TabbedLevel):
         sg_list = sorted(list(subgroups), key=lambda s: (len(s), tuple(sorted([str(x) for x in s]))))
         
         if self.selected_elements:
-            generated_sg = tasks.generate_group(list(self.selected_elements))
+            try:
+                generated_sg = tasks.generate_group(list(self.selected_elements))
+                if generated_sg is None:
+                    self.show_error("generate_group not implemented")
+                    return
+            except Exception as e:
+                self.show_error(str(e))
+                return
         else:
             generated_sg = {self._group.identity_element}
             

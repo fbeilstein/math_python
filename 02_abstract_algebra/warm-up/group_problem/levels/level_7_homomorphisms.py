@@ -93,13 +93,20 @@ class Level7Homomorphisms(TabbedLevel):
         self.update_view()
 
     def check_consistency(self, phi):
-        return tasks.deduce_homomorphism(self._group_G, self._group_H, phi) is None
+        return tasks.deduce_homomorphism(self._group_G, self._group_H, phi) == {}
 
     def deduce_rest(self):
         if not self._group_G or not self._group_H: return
+            
         result = tasks.deduce_homomorphism(self._group_G, self._group_H, self.partial_phi)
         self.mapping_start_node = None
+        
         if result is None:
+            self.show_error("deduce_homomorphism not implemented")
+            self.canvas.get_tk_widget().after(4000, self.update_view)
+            return
+            
+        if result == {}:
             self.show_error("Contradiction: no valid homomorphism extends these arrows.")
             self.canvas.get_tk_widget().after(4000, self.update_view)
         else:
@@ -188,11 +195,22 @@ class Level7Homomorphisms(TabbedLevel):
             f"Arrows drawn: {len(self.partial_phi)} / {len(self._group_G.elements)}",
         ]
         if is_complete:
-            lines.append(f"Homomorphism: {'✓' if is_homo else '✗'}")
-            k_str = ', '.join(str(e) for e in sorted(kernel, key=str))
-            i_str = ', '.join(str(e) for e in sorted(image, key=str))
-            lines.append(f"ker(φ) = {{{k_str}}}  |ker|={len(kernel)}")
-            lines.append(f"im(φ) = {{{i_str}}}  |im|={len(image)}")
+            if is_homo is None:
+                lines.append("Homomorphism: Not Implemented")
+            else:
+                lines.append(f"Homomorphism: {'✓' if is_homo else '✗'}")
+                
+            if kernel is None:
+                lines.append("ker(φ) = Not Implemented")
+            else:
+                k_str = ', '.join(str(e) for e in sorted(kernel, key=str))
+                lines.append(f"ker(φ) = {{{k_str}}}  |ker|={len(kernel)}")
+                
+            if image is None:
+                lines.append("im(φ) = Not Implemented")
+            else:
+                i_str = ', '.join(str(e) for e in sorted(image, key=str))
+                lines.append(f"im(φ) = {{{i_str}}}  |im|={len(image)}")
             
         self.info_label.config(text='\n'.join(lines))
 
@@ -260,7 +278,7 @@ class Level7Homomorphisms(TabbedLevel):
             target = self.partial_phi.get(g)
             c = h_colors[target] if target is not None else '#484f58'
             
-            is_kern = g in kernel
+            is_kern = kernel is not None and g in kernel
             marker = '●' if is_kern else '○'
             fontw = 'bold' if is_kern else 'normal'
             
@@ -282,7 +300,7 @@ class Level7Homomorphisms(TabbedLevel):
             y = h_y_start - i * h_spacing
             self._node_pos_H[h] = (x_h, y)
             c = h_colors[h]
-            in_img = h in image
+            in_img = image is not None and h in image
             marker = '■' if in_img else '□'
             self.ax.text(x_h, y, f"{str(h)} {marker}", ha='center', va='center',
                         fontsize=11, color=c, fontweight='bold')
