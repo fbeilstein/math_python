@@ -1,373 +1,112 @@
-\documentclass[11pt]{article}
-\usepackage[utf8]{inputenc}
-\usepackage{amsmath, amssymb}
-\usepackage{geometry}
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
 \usepackage{listings}
 \usepackage{xcolor}
-\usepackage{graphicx}
-\usepackage{tabularx}
+\usepackage{geometry}
 \usepackage{booktabs}
-\usepackage{hyperref}
+\usepackage{tabularx}
 
 \geometry{a4paper, margin=1in}
 
+\definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
-\lstset{
-    language=Python,
-    backgroundcolor=\color{backcolour},
-    commentstyle=\color{codegray},
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
     keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
-    basicstyle=\ttfamily\small,
-    breaklines=true,
-    showstringspaces=false
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
 }
+\lstset{style=mystyle}
 
-\title{Math Lab: Abstract Algebra and QR Codes \\ \large Problem Set \& Implementation Guide}
-\author{VB}
-\date{\today}
+\title{Laboratory: The Pure Polynomial Architecture for QR Codes}
+\author{Advanced Abstract Algebra}
+\date{}
 
 \begin{document}
-
 \maketitle
 
-\section*{Problem 0: Start the engine}
+\section*{Introduction}
+In this laboratory, we will explore the profound power of Python's **Duck Typing** to unify $GF(p)$ and $GF(p^n)$ arithmetic. We will build a single, universal \lstinline|Polynomial| class that performs algebra using standard operators (\lstinline|+|, \lstinline|-|, \lstinline|*|, \lstinline|/|). Because it doesn't care \textit{what} type of objects it is operating on, we can feed it integers modulo $p$ (for $GF(p)$ math) \textit{or} elements of our extension field (for $GF(p^n)$ math). 
 
-Consider the files given.
-\begin{center}
-\renewcommand{\arraystretch}{1.5}
-\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
-\toprule
-\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
-\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
-\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the core abstract algebra (Galois Fields) and Reed-Solomon coding logic intended for student implementation. You can add your own \lstinline|unittest.TestCase| classes at the bottom and run \lstinline|python implementation_tasks.py| to execute them. \\
-\lstinline|qr_lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging individual math levels through an interactive UI. \\
-\lstinline|qr_code_demo.py| & \textbf{May be run standalone after you solve levels 1-9.} The main engine that ties all your math together to generate a fully functioning, scannable physical QR code. \\
-\lstinline|levels/level_*.py| & Interactive graphical sandbox for each specific problem. \textbf{Can be run standalone} with \lstinline|python levels/level_*.py| for visual debugging. \\ \midrule
-\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
-\lstinline|levels/base_level.py| & Base class for graphical debuggers. \\
-\lstinline|qr_code.py| & Pre-baked ISO formatting logic (BCH codes, masking) that utilizes your math. \\
-\bottomrule
-\end{tabularx}
-\end{center}
+Most importantly, we will completely discard the "integer representation" trick and the "lookup table" trick used in hardware optimization. Mathematically, elements of an extension field \textit{are} polynomials modulo a primitive polynomial! 
 
-\textbf{Prerequisites:} You will need to install the dependencies for this lab. Run \lstinline|pip install -r requirements.txt| before starting.
-
-Run the file \lstinline|qr_lab_dashboard.py|. You should see the interactive dashboard.
-Now use any editor to open the file \lstinline|implementation_tasks.py|. You should see the API for the functions you must implement.
-
-\begin{lstlisting}
-# =============================================================
-#  STUDENT IMPLEMENTATION
-# =============================================================
-
-def extended_gcd(a, b):
-    pass
-
-def mod_inverse(a, m):
-    pass
-
-<<<< MORE CODE >>>>
-\end{lstlisting}
-
-First solve the math part so you understand the underlying finite fields. Then implement the code. After implementation, click "Run All Tests" in the dashboard. If a light turns green, your math is correct. Click the level buttons to see a visual derivation of your logic.
-
-
-\section*{Problem 1: Prime Fields GF(p)}
+\section*{Problem 1: Universal Field Elements (GaloisFieldElement)}
 
 \subsubsection*{Mathematical part}
-The field $GF(p)$ is obtained by performing arithmetic modulo a prime number. A fundamental theorem states that $\mathbb Z/p\mathbb Z$ is a field if and only if $p$ is prime. This guarantees that every nonzero element has a unique inverse, and polynomial long division works exactly as over the real numbers.
-
-\textbf{Worked Example: Polynomial Division in $GF(3)$} \\
-Let us divide $f(x) = 2x^2 + 1$ by $g(x) = x + 2$ over $GF(3)$.
-\begin{enumerate}
-    \item \textbf{Leading terms:} Divide $2x^2$ by $x$ to get $2x$.
-    \item \textbf{Multiply \& Subtract:} $2x \cdot (x + 2) = 2x^2 + 4x$. Modulo 3, this is $2x^2 + x$.
-    \item $(2x^2 + 1) - (2x^2 + x) = -x + 1$. Modulo 3, $-x$ becomes $2x$. The remainder is $2x + 1$.
-    \item \textbf{Repeat:} Divide $2x$ by $x$ to get $2$.
-    \item $2 \cdot (x + 2) = 2x + 4 \equiv 2x + 1 \pmod 3$.
-    \item $(2x + 1) - (2x + 1) = 0$.
-\end{enumerate}
-\textbf{Result:} $q(x) = 2x + 2$, $r(x) = 0$.
+The field $GF(p)$ is obtained by performing arithmetic modulo a prime number. A fundamental theorem states that $\mathbb Z/p\mathbb Z$ is a field if and only if $p$ is prime. This guarantees that every nonzero element has a unique inverse.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} a function \lstinline|gfp_poly_divide(dividend, divisor, p)| that performs polynomial long division over $GF(p)$. Both polynomials are represented as lists of integer coefficients from highest degree to lowest (e.g., $2x^2 + 1 \rightarrow$ \lstinline|[2, 0, 1]|). You will need to calculate the modular inverse of the divisor's leading coefficient.
+\textbf{Implement:} the \lstinline|__add__|, \lstinline|__sub__|, \lstinline|__mul__|, \lstinline|__truediv__|, and \lstinline|__pow__| methods in the \lstinline|GaloisFieldElement| class. It encapsulates modulo arithmetic over an arbitrary field. Because it dynamically accesses \lstinline|self.field.modulus|, it will effortlessly work for both prime integer fields \textit{and} polynomial extension fields!
 
-\begin{center}
-\renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c | c}
-\toprule
-\textbf{Math Symbol} & $f(x)$ & $g(x)$ & $p$ & $(q(x), r(x))$ \\ \midrule
-\textbf{Argument} & \lstinline|dividend| & \lstinline|divisor| & \lstinline|p| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list[int]| & \lstinline|list[int]| & \lstinline|int| & \lstinline|tuple(list[int], list[int])| \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\section*{Problem 2: Primitive Polynomials}
+\section*{Problem 2: The Universal Polynomial}
 
 \subsubsection*{Mathematical part}
-Reed--Solomon codes require a field whose nonzero elements can be generated by repeated powers of a single element $\alpha^k$. A primitive polynomial is precisely an irreducible polynomial whose root acts as such a generator for the multiplicative group of order $p^n - 1$.
-
-\textbf{Worked Example: Proving Primitivity} \\
-Is $P(x) = x^2 + x + 1$ primitive over $GF(2)$? Here, $p=2, n=2$. The group order is $2^2 - 1 = 3$. We must check if $x^3 \equiv 1 \pmod{P(x)}$.
-\begin{enumerate}
-    \item We know $x^2 + x + 1 \equiv 0 \implies x^2 \equiv x + 1 \pmod 2$.
-    \item Calculate $x^3 = x \cdot x^2 = x(x + 1) = x^2 + x$.
-    \item Substitute $x^2$ again: $(x + 1) + x = 2x + 1$.
-    \item Modulo 2, $2x = 0$, leaving just $1$.
-\end{enumerate}
-Since $x^3 \equiv 1 \pmod{x^2+x+1}$, it is primitive.
+Polynomial algebra operates identically regardless of the underlying field, as long as the coefficients support addition, subtraction, multiplication, and division.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} a function \lstinline|is_primitive(poly, p, n)| that returns \lstinline|True| if the given polynomial is primitive. You must verify that $x^{(p^n - 1)} \equiv 1 \pmod{\text{poly}}$, and $x^k \not\equiv 1 \pmod{\text{poly}}$ for all proper divisors $k$ of $p^n - 1$.
+\textbf{Implement:} \lstinline|__add__|, \lstinline|__sub__|, \lstinline|__mul__|, \lstinline|__divmod__| (using explicit Euclidean long division), and \lstinline|__call__| (Horner's Method) in the \lstinline|Polynomial| class. Because it delegates all math to the coefficients' magic methods, it works for \textit{any} field! 
 
-\begin{center}
-\renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c | c}
-\toprule
-\textbf{Math Symbol} & $P(x)$ & $p$ & $n$ & Primitive? \\ \midrule
-\textbf{Argument} & \lstinline|poly| & \lstinline|p| & \lstinline|n| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list[int]| & \lstinline|int| & \lstinline|int| & \lstinline|bool| \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-
-
-
-
-\section*{Problem 3: Extension Fields GF(p\textsuperscript{n}) Tables}
+\section*{Problem 3: Primitive Polynomial Search}
 
 \subsubsection*{Mathematical part}
-An extension field is created by adjoining a root of an irreducible polynomial. To multiply quickly in $GF(p^n)$, we map every polynomial combination of $\alpha$ to an integer, building Logarithm and Exponential lookup tables.
-
-\textbf{Integer Representation:} \
-A polynomial in $\alpha$ over $GF(2)$ is mapped to an integer by treating its coefficients as the bits of a binary number. For example, the polynomial $1\cdot\alpha^2 + 0\cdot\alpha^1 + 1\cdot\alpha^0$ translates to the binary sequence $101_2$, which equals the decimal integer $5$.
-
-\textbf{Worked Example: Generating Tables for $GF(2^3)$} \
-Using the primitive polynomial $m(x)=x^3+x+1$, we introduce a symbol $\alpha$ which is defined as a root of this polynomial. Therefore:
-
-
-$$\alpha^3 + \alpha + 1 = 0$$
-
-
-Because we are working in $GF(2)$, addition and subtraction are the exact same operation (since $1 + 1 = 0$, meaning $1 = -1$). We can move terms across the equals sign without changing their signs:
-
-
-$$\alpha^3 = \alpha + 1$$
-
-
-Now we can generate the entire field by multiplying by $\alpha$ and reducing any $\alpha^3$ terms we encounter:
-\begin{itemize}
-\item $\alpha^0 = 1$ \hfill (Binary: $001_2 \implies$ Integer: 1)
-\item $\alpha^1 = \alpha$ \hfill (Binary: $010_2 \implies$ Integer: 2)
-\item $\alpha^2 = \alpha^2$ \hfill (Binary: $100_2 \implies$ Integer: 4)
-\item $\alpha^3 = \alpha + 1$ \hfill (Binary: $011_2 \implies$ Integer: 3)
-\item $\alpha^4 = \alpha(\alpha + 1) = \alpha^2 + \alpha$ \hfill (Binary: $110_2 \implies$ Integer: 6)
-\end{itemize}
-From this iterative sequence, your code will populate the tables (e.g., \lstinline|exp_table[4] = 6| and \lstinline|log_table[6] = 4|).
+Reed--Solomon codes require a field whose nonzero elements can be generated by repeated powers of a single element $\alpha^k$. A primitive polynomial is an irreducible polynomial whose root acts as such a generator for the multiplicative group of order $p^n - 1$.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} a function \lstinline|generate_gfpn_tables(p, n, primitive_poly)| that constructs the Exponential and Logarithmic lookup tables iteratively by multiplying by $x$ and finding the remainder modulo the primitive polynomial.
+\textbf{Implement:} the \lstinline|is_primitive| function. Because you built the Universal Polynomial, this is a beautifully simple function. You will wrap the coefficients in \lstinline|GaloisFieldElement|, pass them to \lstinline|Polynomial|, and use \lstinline|Polynomial.__mul__| and \lstinline|Polynomial.__divmod__| to compute the exponentiations!
 
-\begin{center}
-\renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c | c}
-\toprule
-\textbf{Math Symbol} & $p$ & $n$ & $P(x)$ & (Exp Table, Log Table)\\ \midrule
-\textbf{Argument} & \lstinline|p| & \lstinline|n| & \lstinline|primitive_poly| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|int| & \lstinline|int| & \lstinline|list[int]| & \lstinline|tuple(list[int], list[int])| \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-
-
-
-
-\section*{Problem 4: Polynomial Arithmetic in GF(p\textsuperscript{n})}
+\section*{Problem 4: Extension Fields (ExtensionField)}
 
 \subsubsection*{Mathematical part}
-The ring $GF(p^n)[x]$ behaves similarly to ordinary polynomial algebra, but the coefficients themselves are elements of the extension field. You must use your Log/Exp tables to multiply or divide coefficients.
+An extension field is created by adjoining a root of an irreducible polynomial. In hardware, this is optimized using Exponential and Logarithm lookup tables. **We will not do this.** 
 
-\textbf{Worked Example: Polynomial Multiplication in $GF(2^3)$} \\
-Let us multiply $A(x) = \alpha x + 1$ and $B(x) = x + \alpha^2$.
-\begin{enumerate}
-    \item Expand: $(\alpha x)(x) + (\alpha x)(\alpha^2) + (1)(x) + (1)(\alpha^2)$.
-    \item Simplify coefficients: $\alpha x^2 + \alpha^3 x + 1 x + \alpha^2$.
-    \item Group terms: $\alpha x^2 + (\alpha^3 + 1)x + \alpha^2$.
-    \item Since $\alpha^3 = \alpha + 1$ (from Problem 3), we know $\alpha^3 + 1 = \alpha$.
-\end{enumerate}
-\textbf{Result:} $\alpha x^2 + \alpha x + \alpha^2$.
+Instead, an element of $GF(p^n)$ is \textit{literally} just a polynomial! To multiply two elements, you simply multiply their polynomials, and take the remainder modulo the primitive polynomial.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} functions \lstinline|gfpn_poly_multiply| and \lstinline|gfpn_poly_remainder| utilizing the lookup tables you generated in Problem 3.
+\textbf{Implement:} Nothing! Because you correctly implemented \lstinline|GaloisFieldElement| to rely purely on \lstinline|field.modulus| in Problem 1, and the \lstinline|Polynomial| in Problem 2 supports the modulo operator, \lstinline|GaloisFieldElement| natively computes extension field arithmetic without any additional code. 
 
-\begin{center}
-\renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c}
-\toprule
-\textbf{Math Symbol} & $f(x)$ & $g(x)$ & $f(x) \pmod{g(x)}$ \\ \midrule
-\textbf{Argument} & \lstinline|dividend| & \lstinline|divisor| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list[int]| & \lstinline|list[int]| & \lstinline|list[int]| \\
-\bottomrule
-\end{tabular}
-\end{center}
+Marvel at how Python's duck typing just solved an entire laboratory level for you!
 
 \section*{Problem 5: Reed-Solomon Encoding}
 
 \subsubsection*{Mathematical part}
-Reed--Solomon codes are evaluation codes. The generator polynomial $g(x)=\prod_{i=0}^{2t-1}(x-\alpha^i)$ forces every valid codeword to vanish at predetermined field elements. If a code has $2t$ parity symbols, then it can correct up to $t$ symbol errors.
-
-\textbf{Worked Example: Building the Generator} \\
-To correct 1 error ($t=1$), we need $2t = 2$ roots: $\alpha^0$ and $\alpha^1$.
-$g(x) = (x - \alpha^0)(x - \alpha^1) = (x - 1)(x - \alpha)$. \\
-Expanding over $GF(2^3)$: $x^2 - \alpha x - 1x + \alpha$. \\
-In $GF(2)$, subtraction is addition, and $1 + \alpha = \alpha^3$. \\
-\textbf{Result:} $g(x) = x^2 + \alpha^3 x + \alpha$.
+Reed--Solomon codes are evaluation codes. The generator polynomial $g(x)=\prod_{i=0}^{2t-1}(x-\alpha^i)$ forces every valid codeword to vanish at predetermined field elements. 
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} a function \lstinline|get_generator_poly(num_ec_bytes, log_table, exp_table, p, n)| that calculates the roots and expands the polynomial.
-
-\begin{center}
-\renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c }
-\toprule
-\textbf{Math Symbol} & $2t$ & $g(x)$ \\ \midrule
-\textbf{Argument} & \lstinline|num_ec_bytes| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|int| & \lstinline|list[int]| \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-
-
+\textbf{Implement:} \lstinline|get_generator_poly(num_ec_bytes, field)|. Notice that you just feed \lstinline|GaloisFieldElement| objects into the \textit{exact same} universal \lstinline|Polynomial| class!
 
 \section*{Problem 6: Decoding I -- Syndromes}
 
-\subsubsection*{Mathematical part}
-When a message is received, it may contain errors. We represent the received message as a polynomial $r(x) = c(x) + e(x)$, where $c(x)$ is the original valid codeword and $e(x)$ represents the errors. Because a valid codeword evaluates to zero at the roots of the generator polynomial ($\alpha^0, \alpha^1, \dots, \alpha^{2t-1}$), any non-zero result when evaluating $r(x)$ at these roots must be caused purely by the errors. These results are called \textbf{syndromes}.
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|calculate_syndromes(message_poly, num_ec, field)|. Syndrome calculation uses \lstinline|Polynomial.__call__|!
 
-\textbf{Worked Example: Calculating Syndromes} \\
-Assume we are working in $GF(2^3)$ and received $r(x) = x^2 + \alpha x + 1$. We need to correct 1 error ($t=1$), so we calculate $2t=2$ syndromes at roots $\alpha^0$ and $\alpha^1$.
-\begin{enumerate}
-    \item \textbf{Evaluate at $\alpha^0 = 1$:} \\
-    $S_1 = r(1) = (1)^2 + \alpha(1) + 1 = 1 + \alpha + 1 = \alpha$.
-    \item \textbf{Evaluate at $\alpha^1 = \alpha$:} \\
-    $S_2 = r(\alpha) = (\alpha)^2 + \alpha(\alpha) + 1 = \alpha^2 + \alpha^2 + 1 = 1$.
-\end{enumerate}
-\textbf{Result:} The syndrome sequence is $[\alpha, 1]$. Because they are not zero, an error exists.
+\section*{Problem 7: Decoding II -- Linear System (PGZ)}
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|calculate_syndromes(message, num_ec, log_table, exp_table, p, n)|. You must evaluate the received message polynomial at each root $\alpha^0, \dots, \alpha^{\text{num\_ec}-1}$.
-
-\begin{center}
-\renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c }
-\toprule
-\textbf{Math Symbol} & $r(x)$ & $2t$ & $[S_1, S_2, \dots, S_{2t}]$ \\ \midrule
-\textbf{Argument} & \lstinline|message| & \lstinline|num_ec| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list[int]| & \lstinline|int| & \lstinline|list[int]| \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-
-
-\section*{Problem 7: Decoding II -- Linear System (PGZ / Berlekamp-Welch)}
-
-\subsubsection*{Mathematical part}
-While industry uses the Berlekamp-Massey algorithm (an iterative state machine) for hardware efficiency, we can use an elegant Linear Algebra approach (often referred to as Peterson-Gorenstein-Zierler or the Berlekamp-Welch Key Equation method) that is far more intuitive.
-
-We define an \textbf{Error Locator Polynomial} $\Lambda(x)$ of degree $t$, where $\Lambda(x) = 1 + \Lambda_1 x + \Lambda_2 x^2 + \dots + \Lambda_t x^t$. Its roots will tell us where the errors are.
-We also define an \textbf{Error Evaluator Polynomial} $\Omega(x)$ of degree $< t$.
-The fundamental Key Equation of Reed-Solomon decoding relates these to the syndromes $S(x) = S_0 + S_1 x + \dots + S_{2t-1} x^{2t-1}$:
-$$\Lambda(x) S(x) \equiv \Omega(x) \pmod{x^{2t}}$$
-
-\textbf{Proof of the Linear System:}
-If we expand the product $\Lambda(x) S(x)$, the coefficient of $x^k$ for $k \ge t$ must be exactly $0$, because $\Omega(x)$ has degree at most $t-1$.
-Therefore, for $k = t, t+1, \dots, 2t-1$, we have:
-$$\sum_{j=0}^{t} \Lambda_j S_{k-j} = 0$$
-Since $\Lambda_0 = 1$, we can move it to the right side:
-$$\sum_{j=1}^{t} \Lambda_j S_{k-j} = -S_k$$
-This gives us exactly $t$ linear equations for $t$ unknowns ($\Lambda_1, \dots, \Lambda_t$)! We can solve this using standard Gaussian Elimination over $GF(p^n)$.
-
-\textbf{Worked Example: Setting up the Matrix} \\
-Let $S = [S_0, S_1, S_2, S_3]$ (meaning $2t = 4$, so $t = 2$ errors).
-The equations for $k = 2, 3$ are:
-\begin{align*}
-\Lambda_1 S_1 + \Lambda_2 S_0 &= -S_2 \\
-\Lambda_1 S_2 + \Lambda_2 S_1 &= -S_3
-\end{align*}
-In matrix form:
-$$ \begin{pmatrix} S_0 & S_1 \\ S_1 & S_2 \end{pmatrix} \begin{pmatrix} \Lambda_2 \\ \Lambda_1 \end{pmatrix} = \begin{pmatrix} -S_2 \\ -S_3 \end{pmatrix} $$
-\textit{(Note how the columns naturally align with the decreasing coefficients of $\Lambda$ if we write the matrix row as $[S_i, S_{i+1}, \dots]$).}
-
-\subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|gfpn_solve_linear(A, b, log_table, exp_table, p, n)| to perform Gaussian Elimination over $GF(p^n)$. Then, implement \lstinline|pgz_error_locator(syndromes, log_table, exp_table, p, n)|.
-
-\begin{center}
-\renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c }
-\toprule
-\textbf{Math Symbol} & $[S_0, S_1, \dots, S_{2t-1}]$ & $\Lambda(x)$ \\ \midrule
-\textbf{Argument} & \lstinline|syndromes| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list[int]| & \lstinline|list[int]| \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-
+\textbf{Implement:} \lstinline|pgz_error_locator(syndromes, field)| to construct the syndrome matrix and solve for the error locator polynomial. We have provided a fully generic \lstinline|solve_linear| utility that performs Gaussian Elimination. Because you implemented \lstinline|__bool__| on your elements, this utility doesn't even need to know what field it's operating on! It effortlessly solves the system over $GF(p^n)$ by purely relying on your object's mathematical overloads.
 
 \section*{Problem 8: Decoding III -- Chien Search \& Linear Error Magnitudes}
 
-\subsubsection*{Mathematical part}
-Now that we have the Error Locator Polynomial $\Lambda(x)$, we must find its roots to locate the errors (Chien Search) and calculate how severely the bits were corrupted (Linear Error Magnitudes).
-
-\textbf{Step 1: Chien Search} \\
-This is a brute-force evaluation. We plug every possible inverse field element $\alpha^{-i}$ into $\Lambda(x)$. If the result is $0$, there is an error at index $i$ in the message.
-\textit{Example:} If $\Lambda(x) = 1 + \alpha^3 x$, testing $x = \alpha^{-3}$ gives $1 + \alpha^3(\alpha^{-3}) = 1 + 1 = 0$. The root is $\alpha^{-3}$, meaning an error exists at position $3$.
-
-\textbf{Step 2: Linear Error Magnitudes} \\
-Traditionally, the Forney algorithm is used here, involving the formal derivative of polynomials. However, we can use Linear Algebra again!
-Once we know the error positions $p_1, \dots, p_t$, we know their corresponding roots $X_i = \alpha^{msg\_len - 1 - p_i}$.
-The syndromes were defined as $S_k = \sum_{i=1}^t Y_i X_i^k$, where $Y_i$ is the unknown magnitude of the error at position $p_i$.
-This forms another linear system (a Vandermonde matrix):
-$$ \begin{pmatrix} X_1^0 & X_2^0 & \dots & X_t^0 \\ X_1^1 & X_2^1 & \dots & X_t^1 \\ \vdots & \vdots & \ddots & \vdots \\ X_1^{t-1} & X_2^{t-1} & \dots & X_t^{t-1} \end{pmatrix} \begin{pmatrix} Y_1 \\ Y_2 \\ \vdots \\ Y_t \end{pmatrix} = \begin{pmatrix} S_0 \\ S_1 \\ \vdots \\ S_{t-1} \end{pmatrix} $$
-We can construct this matrix and solve it using our trusty `gfpn_solve_linear` function to find the exact values of $Y_1, \dots, Y_t$!
-
 \subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|chien_search| to find the integer indices of the errors, and \lstinline|linear_error_magnitudes| to construct the Vandermonde matrix and calculate a dictionary mapping those indices to their exact error magnitudes.
+\textbf{Implement:} \lstinline|chien_search| to find the integer indices of the errors, and \lstinline|linear_error_magnitudes| to construct the Vandermonde matrix and calculate exact error magnitudes using \lstinline|solve_linear|.
 
-\begin{center}
-\renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c | c}
-\toprule
-\textbf{Math Symbol} & $\Lambda(x)$ & message length & Error Positions \\ \midrule
-\textbf{Argument} & \lstinline|err_loc| & \lstinline|msg_len| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list[int]| & \lstinline|int| & \lstinline|list[int]| \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\vspace{0.5cm}
-
-\begin{center}
-\renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c | c}
-\toprule
-\textbf{Math Symbol} & $[S_0, \dots]$ & Error Positions & Magnitudes \\ \midrule
-\textbf{Argument} & \lstinline|syndromes| & \lstinline|err_pos| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list[int]| & \lstinline|list[int]| & \lstinline|dict{pos: mag}| \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-
-\textbf{Test:} Run \lstinline|qr_code_demo.py| to test your final mathematics by generating a real QR code matrix using your Reed-Solomon implementations!
+\textbf{Test:} Run \lstinline|qr_code_demo.py| to test your unified OOP paradigm by generating a real QR code matrix!
 
 \end{document}

@@ -8,6 +8,7 @@ if base_dir not in sys.path:
     sys.path.insert(0, base_dir)
 
 import implementation_tasks as tasks
+import algebra_utils as utils
 from levels.base_level import BaseLevelUI, poly_to_latex
 import itertools
 
@@ -89,13 +90,14 @@ class LevelUI(BaseLevelUI):
                 
             poly = self.primitives_list[idx]
             
-            exp_table, _ = tasks.generate_gfpn_tables(p, n, poly)
+            poly_obj = utils.make_poly(poly, p)
+            gf = tasks.ExtensionField(poly_obj)
             
             text = f"GF(${p}^{{{n}}}$) Exponential Cycle\n"
             text += f"Modulo Primitive: {poly_to_latex(poly)}\n\n"
             
             for i in range(min(15, (p**n) - 1)):
-                val = exp_table[i]
+                val = utils.ext_to_int(gf.exp(i))
                 c = []
                 if val == 0: c = [0]
                 else:

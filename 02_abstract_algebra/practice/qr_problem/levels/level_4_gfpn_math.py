@@ -7,6 +7,7 @@ if base_dir not in sys.path:
     sys.path.insert(0, base_dir)
 
 import implementation_tasks as tasks
+import algebra_utils as utils
 from levels.base_level import BaseLevelUI, poly_to_latex
 
 class LevelUI(BaseLevelUI):
@@ -57,33 +58,37 @@ class LevelUI(BaseLevelUI):
             p = int(self.ent_p.get())
             n = int(self.ent_n.get())
             poly = [int(x.strip()) for x in self.ent_poly.get().replace(",", " ").split()]
-            exp_table, log_table = tasks.generate_gfpn_tables(p, n, poly)
+            poly_obj = utils.make_poly(poly, p)
+            gf = tasks.ExtensionField(poly_obj)
             
-            a = [int(x.strip()) for x in self.ent_a.get().replace(",", " ").split()]
-            b = [int(x.strip()) for x in self.ent_b.get().replace(",", " ").split()]
+            a_vals = [int(x.strip()) for x in self.ent_a.get().replace(",", " ").split()]
+            b_vals = [int(x.strip()) for x in self.ent_b.get().replace(",", " ").split()]
             
-            a_tex = poly_to_latex(a).strip('$')
-            b_tex = poly_to_latex(b).strip('$')
+            a = tasks.Polynomial([utils.int_to_ext(v, gf) for v in a_vals])
+            b = tasks.Polynomial([utils.int_to_ext(v, gf) for v in b_vals])
             
-            mul_res = tasks.gfpn_poly_multiply(a, b, log_table, exp_table, p, n)
-            mul_tex = poly_to_latex(mul_res).strip('$')
+            a_tex = poly_to_latex(a_vals).strip('$')
+            b_tex = poly_to_latex(b_vals).strip('$')
+            
+            mul_res = a * b
+            mul_tex = poly_to_latex([utils.ext_to_int(c) for c in mul_res.coeffs]).strip('$')
             
             try:
-                rem_res = tasks.gfpn_poly_remainder(a, b, log_table, exp_table, p, n)
-                rem_tex = poly_to_latex(rem_res).strip('$')
+                q, rem_res = divmod(a, b)
+                rem_tex = poly_to_latex([utils.ext_to_int(c) for c in rem_res.coeffs]).strip('$')
             except ZeroDivisionError:
-                rem_tex = "\\text{undefined}"
+                rem_tex = "\text{undefined}"
             
             def wrap(t):
-                if '+' in t or '-' in t or '\\dots' in t: return f"({t})"
+                if '+' in t or '-' in t or '\dots' in t: return f"({t})"
                 return t
                 
             a_str = wrap(a_tex)
             b_str = wrap(b_tex)
             
             text = f"GF(${p}^{{{n}}}$) Polynomial Arithmetic\n\n"
-            text += f"${a_str} \\cdot {b_str} = {mul_tex}$\n\n"
-            text += f"${a_str} \\text{{ mod }} {b_str} = {rem_tex}$\n"
+            text += f"${a_str} \cdot {b_str} = {mul_tex}$\n\n"
+            text += f"${a_str} \text{{ mod }} {b_str} = {rem_tex}$\n"
             
             self.ax.text(0.5, 0.5, text, fontsize=18, ha='center', va='center', color='white')
         except Exception as e:
@@ -91,4 +96,3 @@ class LevelUI(BaseLevelUI):
             if "invalid literal" in msg: msg = "Please enter valid numbers in all fields!"
             if "list index out of range" in msg: msg = "Polynomial cannot be empty!"
             self.ax.text(0.5, 0.5, f"Error: {msg}", color="red", fontsize=14, ha='center', va='center')
-

@@ -124,7 +124,7 @@ $$\Lambda(x) \cdot S(x) \equiv \Omega(x) \pmod{x^{2t}}$$
 
 Expanding: the coefficient of $x^k$ for $k \geq t$ must be zero, giving a linear system:
 
-$$\begin{pmatrix} S_0 & S_1 & \cdots & S_{t-1} \\ S_1 & S_2 & \cdots & S_t \\\\ \vdots & & \ddots & \vdots \\\\ S_{t-1} & S_t & \cdots & S_{2t-2} \end{pmatrix} \begin{pmatrix} \Lambda_t \\\\ \Lambda_{t-1} \\\\ \vdots \\\\ \Lambda_1 \end{pmatrix} = - \begin{pmatrix} S_t \\\\ S_{t+1} \\\\ \vdots \\\\ S_{2t-1} \end{pmatrix}$$
+$$\begin{pmatrix} S_0 & S_1 & \cdots & S_{t-1} \\\\ S_1 & S_2 & \cdots & S_t \\\\ \vdots & & \ddots & \vdots \\\\ S_{t-1} & S_t & \cdots & S_{2t-2} \end{pmatrix} \begin{pmatrix} \Lambda_t \\\\ \Lambda_{t-1} \\\\ \vdots \\\\ \Lambda_1 \end{pmatrix} = - \begin{pmatrix} S_t \\\\ S_{t+1} \\\\ \vdots \\\\ S_{2t-1} \end{pmatrix}$$
 
 Solve via **Gaussian Elimination over $GF(p^n)$** — the *exact same algorithm* as over $\mathbb{R}$, but using log/exp tables for arithmetic.
 
@@ -179,7 +179,7 @@ The algorithm is **identical** to what you know from linear algebra over $\mathb
 
 The *only* difference from real-valued Gaussian elimination is replacing floating-point operations with finite field operations. No new algorithm to learn.
 
-You will implement this once and reuse it twice:
+Because this algorithm is mathematically identical across all fields, our laboratory provides a fully generic `solve_linear(A, b)` utility. You will use it twice:
 - **PGZ:** solve for the error locator polynomial coefficients
 - **Magnitudes:** solve the Vandermonde system for error values
 

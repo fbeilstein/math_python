@@ -1,0 +1,59 @@
+import implementation_tasks as tasks
+
+def make_poly(coeffs, p):
+    """Convert a list of integers into a Polynomial of GaloisFieldElements."""
+    return tasks.Polynomial([tasks.PrimeField(p)(c) for c in coeffs])
+
+def int_to_ext(val, field):
+    """Convert an integer to an ExtFieldElement."""
+    cs = []
+    temp = val
+    for _ in range(field.n):
+        cs.append(tasks.GaloisFieldElement(temp % field.p, tasks.PrimeField(field.p)))
+        temp //= field.p
+    return tasks.GaloisFieldElement(tasks.Polynomial(cs[::-1]), field)
+
+def ext_to_int(element):
+    """Convert an ExtFieldElement to an integer."""
+    v = 0
+    p = element.field.p
+    for c in element.val.coeffs:
+        v = v * p + c.val
+    return v
+
+
+def solve_linear(A, b):
+    """L7.1: Solve a linear system Ax = b using Gaussian Elimination."""
+    A = [list(row) for row in A]
+    b = list(b)
+    size = len(b)
+
+    for i in range(size):
+        pivot_row = i
+        while pivot_row < size and not A[pivot_row][i]:
+            pivot_row += 1
+        if pivot_row == size:
+            raise Exception("Singular matrix")
+
+        A[i], A[pivot_row] = A[pivot_row], A[i]
+        b[i], b[pivot_row] = b[pivot_row], b[i]
+
+        pivot_val = A[i][i]
+        for j in range(i, size):
+            A[i][j] = A[i][j] / pivot_val
+        b[i] = b[i] / pivot_val
+
+        for k in range(i + 1, size):
+            factor = A[k][i]
+            if factor:
+                for j in range(i, size):
+                    A[k][j] = A[k][j] - factor * A[i][j]
+                b[k] = b[k] - factor * b[i]
+
+    x = [None] * size
+    for i in range(size - 1, -1, -1):
+        x[i] = b[i]
+        for j in range(i + 1, size):
+            x[i] = x[i] - A[i][j] * x[j]
+
+    return x

@@ -7,47 +7,56 @@ if base_dir not in sys.path:
     sys.path.insert(0, base_dir)
 
 import implementation_tasks as tasks
+import algebra_utils as utils
 from levels.base_level import BaseLevelUI, poly_to_latex
 
 class LevelUI(BaseLevelUI):
     def setup_inputs(self):
-        tk.Label(self.top_frame, text="Input Text:", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
-        self.ent_txt = tk.Entry(self.top_frame, width=20)
-        self.ent_txt.insert(0, "Math!")
-        self.ent_txt.pack(side=tk.LEFT, padx=5)
+        f1 = tk.Frame(self.top_frame, bg="#1e1e1e")
+        f1.pack(fill=tk.X, pady=2)
         
-        tk.Label(self.top_frame, text="EC Bytes:", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
-        self.ent_ec = tk.Entry(self.top_frame, width=5)
+        tk.Label(f1, text="Message (Hex):", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
+        self.ent_msg = tk.Entry(f1, width=30)
+        self.ent_msg.insert(0, "48 65 6c 6c 6f")
+        self.ent_msg.pack(side=tk.LEFT, padx=5)
+        
+        tk.Label(f1, text="EC Bytes:", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
+        self.ent_ec = tk.Entry(f1, width=5)
         self.ent_ec.insert(0, "4")
         self.ent_ec.pack(side=tk.LEFT, padx=5)
         
-        tk.Button(self.top_frame, text="Encode String", command=self.update_canvas).pack(side=tk.LEFT, padx=10)
+        tk.Button(f1, text="Encode", command=self.update_canvas).pack(side=tk.LEFT, padx=10)
         self.update_canvas()
         
-    def draw_math(self):
+    def update_canvas(self):
+        self.ax.clear()
+        self.ax.axis('off')
+        
         try:
-            text = self.ent_txt.get()
-            num_ec = int(self.ent_ec.get())
-            bytes_arr = [ord(c) for c in text]
+            msg_hex = self.ent_msg.get().replace(",", " ").split()
+            msg = [int(x, 16) for x in msg_hex]
+            ec = int(self.ent_ec.get())
             
-            p, n = 2, 8
-            poly = [1, 0, 0, 0, 1, 1, 1, 0, 1]
-            exp_table, log_table = tasks.generate_gfpn_tables(p, n, poly)
-            gen = tasks.get_generator_poly(num_ec, log_table, exp_table, p, n)
+            poly_obj = utils.make_poly([1, 0, 0, 0, 1, 1, 1, 0, 1], 2)
+            gf = tasks.ExtensionField(poly_obj)
+            gen = tasks.get_generator_poly(ec, gf)
             
-            msg_padded = bytes_arr + [0]*num_ec
-            rem = tasks.gfpn_poly_remainder(msg_padded, gen, log_table, exp_table, p, n)
-            while len(rem) < num_ec: rem.insert(0, 0)
+            msg_poly = tasks.Polynomial([utils.int_to_ext(c, gf) for c in msg] + [gf.zero]*ec)
+            q, rem = divmod(msg_poly, gen)
             
-            out = f"Reed-Solomon Text Encoding\n\n"
-            out += f"Input Text: '{text}'\n"
-            out += f"Message Polynomial $M(x)$: {poly_to_latex(bytes_arr)}\n\n"
-            out += f"Generator $G(x)$: {poly_to_latex(gen)}\n\n"
-            out += f"Modulo Arithmetic: $R(x) = (M(x) \\cdot x^{{{num_ec}}}) \\text{{ mod }} G(x)$\n"
-            out += f"EC Remainder $R(x)$: {poly_to_latex(rem)}\n\n"
-            out += f"Transmit Array: {bytes_arr + rem}\n"
+            diff = ec - len(rem.coeffs)
+            rem_padded = [gf.zero]*diff + rem.coeffs
+            encoded = msg + [utils.ext_to_int(c) for c in rem_padded]
             
-            self.ax.text(0.5, 0.5, out, fontsize=16, ha='center', va='center', color='white')
+            text = "Reed-Solomon Encoding\n\n"
+            text += f"Generator $g(x) = {poly_to_latex([utils.ext_to_int(c) for c in gen.coeffs]).strip('$')}$\n\n"
+            text += f"Message: {msg}\n"
+            text += f"Parity: {[utils.ext_to_int(c) for c in rem_padded]}\n"
+            text += f"Encoded: {encoded}"
+            
+            self.ax.text(0.5, 0.5, text, fontsize=14, ha='center', va='center', color='white', wrap=True)
+            
         except Exception as e:
             self.ax.text(0.5, 0.5, f"Error: {e}", color="red", fontsize=14, ha='center', va='center')
-
+        
+        self.canvas.draw()

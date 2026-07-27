@@ -11,13 +11,24 @@ class TestLevel1(unittest.TestCase):
     def test_division_gf2(self):
         dividend = [1, 0, 0, 0, 0, 0, 0, 0, 0]
         divisor = [1, 0, 0, 0, 1, 1, 1, 0, 1]
-        q, r = tasks.gfp_poly_divide(dividend, divisor, 2)
-        self.assertEqual(r, [1, 1, 1, 0, 1])
+        p = 2
+        
+        zero = tasks.PrimeField(p).zero
+        dividend_poly = tasks.Polynomial([tasks.PrimeField(p)(c) for c in dividend])
+        divisor_poly = tasks.Polynomial([tasks.PrimeField(p)(c) for c in divisor])
+        
+        q, r = divmod(dividend_poly, divisor_poly)
+        self.assertEqual([c.val for c in r.coeffs], [1, 1, 1, 0, 1])
 
     def test_division_gf3(self):
-        q, r = tasks.gfp_poly_divide([2, 0, 1], [1, 2], 3)
-        self.assertEqual(q, [2, 2])
-        self.assertEqual(r, [0])
+        p = 3
+        zero = tasks.PrimeField(p).zero
+        dividend = tasks.Polynomial([tasks.PrimeField(p)(c) for c in [2, 0, 1]])
+        divisor = tasks.Polynomial([tasks.PrimeField(p)(c) for c in [1, 2]])
+        
+        q, r = divmod(dividend, divisor)
+        self.assertEqual([c.val for c in q.coeffs], [2, 2])
+        self.assertEqual([c.val for c in r.coeffs], [0])
 
 if __name__ == '__main__':
     unittest.main()

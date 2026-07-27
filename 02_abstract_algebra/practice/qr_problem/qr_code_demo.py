@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import qr_code as qr
 import implementation_tasks as tasks
+import algebra_utils as utils
 
 # =====================================================================
 # 1. SPECIFICATIONS
@@ -43,39 +44,33 @@ def encode_data(text, capacity_bytes):
         
     return [int(bitstream[i:i+8], 2) for i in range(0, len(bitstream), 8)]
 
-def get_format_string():
-    data = 0 
-    generator = 1335 
-    val = data << 10
-    for i in range(4, -1, -1):
-        if val & (1 << (i + 10)): val ^= (generator << i)
-    format_info = ((data << 10) | val) ^ 21522 
-    return f"{format_info:015b}"
-
 # =====================================================================
 # 3. INTERLEAVING & REED-SOLOMON
 # =====================================================================
 
-def interleave_blocks(data_bytes, version_specs, log_table, exp_table, p, n):
+def interleave_blocks(data_bytes, version_specs, gf):
     total_data, num_blocks, data_per_block, ec_per_block = version_specs
     
     data_blocks = []
     ec_blocks = []
     
-    gen_poly = tasks.get_generator_poly(ec_per_block, log_table, exp_table, p, n)
+    gen_poly = tasks.get_generator_poly(ec_per_block, gf)
     
     for i in range(num_blocks):
         start = i * data_per_block
         end = start + data_per_block
         block_data = data_bytes[start:end]
         
-        # Calculate EC Remainder using Generalized GF(p^n)
-        msg_padded = block_data + [0] * ec_per_block
-        rem = tasks.gfpn_poly_remainder(msg_padded, gen_poly, log_table, exp_table, p, n)
-        while len(rem) < ec_per_block: rem.insert(0, 0)
+        # Calculate EC Remainder using Unified OOP
+        msg_padded = [utils.int_to_ext(c, gf) for c in block_data] + [gf.zero] * ec_per_block
+        msg_poly = tasks.Polynomial(msg_padded)
+        
+        q, rem = divmod(msg_poly, gen_poly)
+        diff = ec_per_block - len(rem.coeffs)
+        rem_padded = [0]*diff + [utils.ext_to_int(c) for c in rem.coeffs]
             
         data_blocks.append(block_data)
-        ec_blocks.append(rem)
+        ec_blocks.append(rem_padded)
         
     interleaved_data = []
     for i in range(data_per_block):
@@ -94,13 +89,14 @@ def interleave_blocks(data_bytes, version_specs, log_table, exp_table, p, n):
 # =====================================================================
 
 def main():
-    print("--- Generalized Abstract Algebra QR Generator ---")
+    print("--- Unified OOP Abstract Algebra QR Generator ---")
     
     # 1. Abstract Algebra Setup: GF(2^8) with QR standard polynomial
     p, n = 2, 8
     qr_prim_poly = [1, 0, 0, 0, 1, 1, 1, 0, 1] # x^8 + x^4 + x^3 + x^2 + 1
-    print(f"Generating GF({p}^{n}) tables using primitive poly {qr_prim_poly}...")
-    exp_table, log_table = tasks.generate_gfpn_tables(p, n, qr_prim_poly)
+    print(f"Constructing GF({p}^{n}) with primitive poly {qr_prim_poly}...")
+    qr_prim_poly_obj = utils.make_poly(qr_prim_poly, p)
+    gf = tasks.ExtensionField(qr_prim_poly_obj)
     
     message = "hello world from Python math! This uses GF(p^n) generalized math."
     print(f"\nEncoding Message: '{message}'")
@@ -112,7 +108,7 @@ def main():
     raw_data_bytes = encode_data(message, specs[0])
     
     # 3. RS Encoding over Generalized GF(p^n)
-    interleaved_data, interleaved_ec = interleave_blocks(raw_data_bytes, specs, log_table, exp_table, p, n)
+    interleaved_data, interleaved_ec = interleave_blocks(raw_data_bytes, specs, gf)
     
     # 4. Routing via generalized module
     data_bits = [int(b) for byte in interleaved_data for b in f"{byte:08b}"]

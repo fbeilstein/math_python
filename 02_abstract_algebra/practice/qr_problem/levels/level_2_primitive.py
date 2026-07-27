@@ -61,9 +61,11 @@ class LevelUI(BaseLevelUI):
             
             primitives = []
             import itertools
+            import algebra_utils as utils
             for coefs in itertools.product(range(p_val), repeat=n_val):
                 poly = [1] + list(coefs)
-                if tasks.is_primitive(poly, p_val, n_val):
+                poly_obj = utils.make_poly(poly, p_val)
+                if tasks.is_primitive(poly_obj):
                     primitives.append(poly)
             
             for w in self.scrollable_frame.winfo_children(): w.destroy()
