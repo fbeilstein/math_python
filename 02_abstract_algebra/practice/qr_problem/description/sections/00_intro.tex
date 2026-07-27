@@ -1,0 +1,24 @@
+\section*{Problem 0: Start the Engine}
+
+Welcome to the Abstract Algebra Laboratory on Reed--Solomon Codes. In this laboratory, we will explore the profound power of Python's \textbf{Duck Typing} and polymorphic objects to build a fully functional QR code error-correction system from first principles.
+
+We will build a single, universal \lstinline|Polynomial| class that performs algebra using standard operators (\lstinline|+|, \lstinline|-|, \lstinline|*|, \lstinline|/|). Because it does not care \textit{what} type of objects it is operating on, we can feed it integers modulo $p$ (for $GF(p)$ math) \textit{or} elements of our extension field (for $GF(p^n)$ math). 
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains class definitions and function stubs for field arithmetic, polynomial algorithms, and the Reed--Solomon codec. \\
+\lstinline|qr_lab_dashboard.py| & \textcolor{red}{This file you run.} The interactive visual sandbox. Run this using \lstinline|python qr_lab_dashboard.py| to launch a graphical interface for debugging your code. \\
+\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
+\lstinline|algebra_utils.py| & Contains universal mathematical utilities, like a field-agnostic Gaussian elimination algorithm (\lstinline|solve_linear|). \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\vspace{0.5cm}
+\noindent Now proceed with the following problems. For each problem, first recall the mathematical definitions, then carefully implement the algorithm using the designated Object-Oriented design. Finally, use the dashboard to verify your logic.
+
+\newpage

@@ -1,0 +1,72 @@
+\section*{Problem 7: Decoding II --- Linear Algebra (Level 7)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} Assume exactly $v$ errors occurred. Each error happened at some unknown field element $X_i$. Instead of searching directly for these positions, we construct another polynomial, the \textbf{Error Locator Polynomial} $\Lambda(x)$, whose roots are precisely $X_1^{-1}, X_2^{-1}, \ldots, X_v^{-1}$.
+
+How do we determine $\Lambda(x)$? The syndromes satisfy a remarkable system of linear equations involving only the unknown coefficients $\Lambda_1, \dots, \Lambda_v$ of the locator polynomial:
+\[
+\begin{bmatrix}
+S_0 & S_1 & \cdots & S_{v-1} \\
+S_1 & S_2 & \cdots & S_{v} \\
+\vdots & \vdots & \ddots & \vdots \\
+S_{v-1} & S_{v} & \cdots & S_{2v-2}
+\end{bmatrix}
+\begin{bmatrix}
+\Lambda_v \\ \Lambda_{v-1} \\ \vdots \\ \Lambda_1
+\end{bmatrix}
+=
+\begin{bmatrix}
+-S_v \\ -S_{v+1} \\ \vdots \\ -S_{2v-1}
+\end{bmatrix}
+\]
+Finding $\Lambda(x)$ reduces to solving this Toeplitz linear system $Ax = b$. 
+
+We do not know $v$ (the number of errors) in advance. The Peterson--Gorenstein--Zierler (PGZ) algorithm assumes the maximum possible errors $t$, builds the matrix, and attempts to solve it. If the matrix is singular (determinant zero), it assumes fewer errors occurred, decrements $t$, and tries again.
+
+\paragraph{Worked Example}
+If we hypothesize that $v=2$ errors occurred, the code constructs a $2 \times 2$ Toeplitz matrix from the sequence of syndromes $S_0, S_1, S_2, S_3$. The system of equations is exactly:
+\[
+\begin{bmatrix}
+S_0 & S_1 \\
+S_1 & S_2
+\end{bmatrix}
+\begin{bmatrix}
+\Lambda_2 \\
+\Lambda_1
+\end{bmatrix}
+=
+\begin{bmatrix}
+-S_2 \\
+-S_3
+\end{bmatrix}
+\]
+By solving this linear system, we find the coefficients $\Lambda_1$ and $\Lambda_2$. The Error Locator Polynomial is then formed as $\Lambda(x) = \Lambda_2 x^2 + \Lambda_1 x + 1$. 
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement \lstinline|pgz_error_locator|.
+
+\textbf{Details:} 
+You must build the matrix $A$ and vector $b$ using the syndromes, then pass them to the provided \lstinline|solve_linear(A, b)| utility located in \lstinline|algebra_utils.py|. 
+\begin{itemize}
+    \item Start with $t = \text{len(syndromes)} // 2$. Loop downwards to $1$.
+    \item Build $A$ (a list of lists) and $b$ (a list) for the current $t$.
+    \item Use \lstinline|try/except| around \lstinline|solve_linear(A, b)|. If it raises an exception (singular matrix), \lstinline|continue| to the next smaller $t$.
+    \item If successful, construct and return the polynomial $\Lambda(x) = \Lambda_v x^v + \dots + \Lambda_1 x + 1$. Remember that \lstinline|solve_linear| returns $[\Lambda_v, \dots, \Lambda_1]$. You must append $1$ (\lstinline|field.one|) to the end of this list before passing it to the \lstinline|Polynomial| constructor.
+\end{itemize}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Function & Arguments & Returns \\ \midrule
+pgz\_error\_locator & \lstinline|syndromes: list, field: ExtensionField| & \lstinline|Polynomial| \\
+solve\_linear & \lstinline|A: list[list], b: list| & \lstinline|list| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{Task:} Ensure the PGZ algorithm correctly handles any number of errors up to the theoretical limit $t$.
+\textbf{UI Guide:} In the dashboard, introduce up to $t$ errors. The UI will display the Toeplitz matrix dynamically. If you introduce more than $t$ errors, you will see the system catastrophically fail, a fundamental limit of information theory.
+
+\vspace{1cm}

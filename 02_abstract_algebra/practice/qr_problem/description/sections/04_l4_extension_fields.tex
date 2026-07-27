@@ -1,0 +1,33 @@
+\section*{Problem 4: Extension Fields (Level 4)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} In this laboratory we make a remarkable change of perspective: Polynomials themselves become numbers.
+
+Instead of reducing integers modulo an integer, we reduce polynomials modulo a primitive polynomial $f(x)$ of degree $n$. For example, in $GF(2^3) \cong GF(2)[x]/(x^3+x+1)$, every polynomial is divided by $x^3+x+1$, and only the remainder is kept. Two polynomials therefore represent the same field element whenever they differ by a multiple of the primitive polynomial.
+
+Notice that the multiplication routine conceptually performs $(a \cdot b) \pmod m$. In a prime field, $a, b, m$ are integers. In an extension field, they are polynomials. Because of Python's dynamic typing (Duck Typing), the arithmetic operations implemented in \lstinline|GaloisFieldElement| do not need to change by a single line to support polynomials!
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Complete the \lstinline|ExtensionField| constructor and the \lstinline|exp| method.
+
+\textbf{Details:} 
+\begin{itemize}
+    \item We define $\alpha$ as the polynomial $x$, which is simply \lstinline|Polynomial([field.one, field.zero])|.
+    \item \lstinline|exp(i)| computes $\alpha^i$. Because our \lstinline|GaloisFieldElement.__pow__| uses binary exponentiation and delegates to the underlying value type (which is a \lstinline|Polynomial| supporting \lstinline|__mod__|), this works seamlessly without generating giant precomputed $\log$/$\exp$ lookup tables!
+\end{itemize}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Method & Arguments & Returns \\ \midrule
+\_\_new\_\_ & \lstinline|cls, mod_poly: Polynomial| & \lstinline|ExtensionField| \\
+exp & \lstinline|self, i: int| & \lstinline|GaloisFieldElement| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{UI Guide:} Open \lstinline|qr_lab_dashboard.py|. Verify that the elements are now polynomials modulo the primitive polynomial you selected.
+
+\vspace{1cm}

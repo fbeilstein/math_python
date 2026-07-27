@@ -1,0 +1,47 @@
+\section*{Problem 3: Searching for Primitive Polynomials (Level 3)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} To construct an extension field $GF(p^n)$ with $p^n$ elements, we must define arithmetic modulo a polynomial of degree $n$. However, not just any polynomial will do. We need a \emph{primitive} polynomial $f(x)$.
+
+If $f(x)$ is primitive, then the powers of $x$ modulo $f(x)$:
+\[
+1, x, x^2, x^3, \ldots
+\]
+will visit every non-zero element of the field exactly once before returning to 1. Since there are exactly $m = p^n - 1$ non-zero elements, we require:
+\[
+x^m \equiv 1 \pmod{f(x)}
+\]
+and absolutely no smaller positive power should equal one. 
+
+Number theory provides a shortcut to test this:
+\begin{enumerate}
+    \item Verify that $x^m \equiv 1 \pmod{f(x)}$.
+    \item Find all prime factors $q$ of $m$.
+    \item Verify that $x^{m/q} \not\equiv 1 \pmod{f(x)}$ for all prime factors $q$.
+\end{enumerate}
+If both conditions hold, the polynomial is primitive.
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement \lstinline|is_primitive| using the polynomial arithmetic you built in Level 2.
+
+\textbf{Details:} You are translating the mathematical test above directly into code. 
+\begin{itemize}
+    \item Use integer factorization to find all unique prime factors of $p^n - 1$.
+    \item Construct $x$ as \lstinline|Polynomial([field.one, field.zero])| and $1$ as \lstinline|Polynomial([field.one])|.
+    \item Use Python's built-in \lstinline|pow(base, exponent, modulus)|. Your \lstinline|Polynomial.__pow__| method from Level 2 should natively support the optional third \lstinline|modulus| argument, enabling rapid modular binary exponentiation!
+\end{itemize}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Function & Arguments & Returns \\ \midrule
+is\_primitive & \lstinline|poly: Polynomial| & \lstinline|bool| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{UI Guide:} In \lstinline|qr_lab_dashboard.py|, you can inspect how different choices of polynomial affect the generated multiplication tables, and how a primitive polynomial perfectly cycles through all non-zero elements.
+
+\vspace{1cm}

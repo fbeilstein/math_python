@@ -1,0 +1,72 @@
+\section*{Problem 8: Decoding III --- Chien Search \& Magnitudes (Level 8)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} Once the locator polynomial $\Lambda(x)$ has been constructed, the remaining task is to find its roots. Instead of employing complex root-finding algorithms, we leverage the finite nature of our field.
+
+\textbf{Chien Search:} Simply evaluate $\Lambda(x)$ at every non-zero element of the field. Whenever $\Lambda(a) = 0$, we have discovered an error location! Because the roots are $X_i^{-1}$, if $a$ is a root, the error position is given by the corresponding inverse power.
+
+\textbf{Error Magnitudes:} Knowing \emph{where} an error occurred is only half the problem. We must also determine \emph{how much} the received value should be changed. Let $Y_i$ be the magnitude of the error at position $X_i$. The syndromes were defined as $S_k = r(\alpha^k)$. Because the transmitted codeword vanishes at these roots, the syndromes depend entirely on the errors:
+\[
+S_k = Y_1 X_1^k + Y_2 X_2^k + \dots + Y_v X_v^k
+\]
+Since we now know the error locations $X_i$, this is simply another system of linear equations (a Vandermonde matrix) where the only unknowns are the magnitudes $Y_i$. We can solve this using the exact same Gaussian elimination utility!
+
+\paragraph{Worked Example}
+Suppose Chien Search found $v=2$ errors at locations $X_1$ and $X_2$. The syndromes $S_0, S_1$ give us the following linear system for the unknown magnitudes $Y_1, Y_2$:
+\[
+\begin{bmatrix}
+X_1^0 & X_2^0 \\
+X_1^1 & X_2^1
+\end{bmatrix}
+\begin{bmatrix}
+Y_1 \\
+Y_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+S_0 \\
+S_1
+\end{bmatrix}
+\]
+Which simplifies to:
+\[
+\begin{bmatrix}
+1 & 1 \\
+X_1 & X_2
+\end{bmatrix}
+\begin{bmatrix}
+Y_1 \\
+Y_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+S_0 \\
+S_1
+\end{bmatrix}
+\]
+Notice that the matrix is purely built from powers of the roots $X_i$.
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement \lstinline|chien_search| and \lstinline|linear_error_magnitudes|.
+
+\textbf{Details:} 
+\begin{itemize}
+    \item \lstinline|chien_search|: Loop over every position $i$ in the message (from $0$ to $msg\_len - 1$). The root candidate is $\alpha^{-i}$, which in our code corresponds to \lstinline|field.exp((field.size - 1 - i) % (field.size - 1))|. Evaluate the locator polynomial at this root. If it evaluates to zero (\lstinline|not err_loc(root)| using our duck-typed \lstinline|__bool__|), append $msg\_len - 1 - i$ to the list of error positions.
+    \item \lstinline|linear_error_magnitudes|: Build the Vandermonde matrix $A$ where $A_{k, i} = X_i^k$. The values $X_i$ are the roots $\alpha^{pos}$ corresponding to the positions found by Chien Search. Since we enforced $0^0 = 1$ and $0^k = 0$ in \lstinline|GaloisFieldElement.__pow__| during Level 1, you can simply write \lstinline|X[i] ** k| when building the matrix, and duck-typing will handle edge cases flawlessly!
+\end{itemize}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Function & Arguments & Returns \\ \midrule
+chien\_search & \lstinline|err_loc: Polynomial, msg_len: int, field: ExtField| & \lstinline|list[int]| \\
+linear\_error\_magnitudes & \lstinline|syndromes: list, err_pos: list, msg_len, field| & \lstinline|dict| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{UI Guide:} Open the dashboard and watch the final magic. By solving the second linear system, the UI will correctly report exactly how much to subtract from your corrupted bytes to perfectly restore the original text message.
+
+\vspace{1cm}

@@ -1,0 +1,41 @@
+\section*{Problem 2: A Universal Polynomial Class (Level 2)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} Polynomial arithmetic (addition, subtraction, multiplication, and long division) follows exactly the same mathematical rules regardless of the underlying field. Whether the coefficients are integers, elements of $GF(5)$, or elements of an extension field $GF(p^n)$, the algorithm does not change.
+For example, multiplication is simply a double loop where every coefficient of the first polynomial contributes to every coefficient of the second polynomial:
+\[
+(x+2)(x+3) = x^2 + 5x + 6
+\]
+Over $GF(5)$, $5x=0$ and $6=1$, giving $x^2+1$. 
+
+Division is analogous to long division of integers: repeatedly divide the highest degree term of the dividend by the highest degree term of the divisor, multiply the divisor by this quotient, and subtract from the dividend until the remainder's degree is strictly smaller than the divisor's.
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Build a single, universal \lstinline|Polynomial| class utilizing Python Duck-Typing.
+
+\textbf{Details:} 
+The Polynomial class must not contain any field-specific code. It simply holds a list of coefficients (highest power first, with leading zeroes strictly stripped) and relies entirely on the operators (\lstinline|+|, \lstinline|-|, \lstinline|*|, \lstinline|/|) provided by whatever objects it holds.
+\begin{itemize}
+    \item \lstinline|__mul__|: Implement the double loop for cross-multiplication.
+    \item \lstinline|__divmod__|: Implement polynomial long division. Return a tuple \lstinline|(quotient, remainder)|.
+    \item \lstinline|__call__|: Evaluate the polynomial at $x$. Use Horner's rule to evaluate in $O(n)$ time: $3x^3+2x^2+x+4 = ((3x+2)x+1)x+4$.
+\end{itemize}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Method & Arguments & Returns \\ \midrule
+\_\_add\_\_ & \lstinline|self, other| & \lstinline|Polynomial| \\
+\_\_sub\_\_ & \lstinline|self, other| & \lstinline|Polynomial| \\
+\_\_mul\_\_ & \lstinline|self, other| & \lstinline|Polynomial| \\
+\_\_divmod\_\_ & \lstinline|self, other| & \lstinline|tuple[Polynomial, Polynomial]| \\
+\_\_call\_\_ & \lstinline|self, x| & \lstinline|Any (Evaluated Field Element)| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{UI Guide:} Launch \lstinline|qr_lab_dashboard.py|. This universal polynomial abstraction is the foundation that powers the entire interactive dashboard.
+
+\vspace{1cm}

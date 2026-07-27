@@ -285,7 +285,7 @@ def linear_error_magnitudes(syndromes, err_pos, msg_len, field): #contains solut
     for k in range(t):
         row = []
         for i in range(t):
-            row.append(X[i] ** k if X[i] != field.zero else (field.one if k == 0 else field.zero))
+            row.append(X[i] ** k)
         A.append(row)
         b.append(syndromes[k])
 

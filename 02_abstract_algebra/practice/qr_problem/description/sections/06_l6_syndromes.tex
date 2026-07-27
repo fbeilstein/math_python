@@ -1,0 +1,50 @@
+\section*{Problem 6: Decoding I --- Syndromes (Level 6)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} Encoding was surprisingly simple. We constructed a polynomial $c(x)$ that vanished at a collection of predetermined points $\alpha^0, \alpha^1, \dots$. Decoding begins with a very natural question: \emph{Does the received polynomial $r(x)$ still vanish at those points?}
+
+If no transmission errors occurred, $r(x) = c(x)$, and $r(\alpha^i) = 0$. If errors were introduced, evaluating the received polynomial at these roots produces non-zero values called \textbf{syndromes}.
+
+The first step in decoding is to evaluate:
+\[
+S_0 = r(\alpha^0), \quad S_1 = r(\alpha^1), \quad \ldots, \quad S_{2t-1} = r(\alpha^{2t-1})
+\]
+If every syndrome equals zero, the received polynomial is already a valid codeword and no correction is necessary. Otherwise, the syndromes contain all the algebraic information needed to reconstruct the exact positions and magnitudes of the errors.
+
+\paragraph{Worked Example}
+Suppose we transmitted a perfect codeword $c(x)$, but interference corrupted it with an error sequence $e(x)$, such that the received polynomial is $r(x) = c(x) + e(x)$. 
+
+Let's assume a single byte was corrupted at position 2 with magnitude $Y$, meaning $e(x) = Y \cdot x^2$. 
+When we evaluate $r(x)$ at root $\alpha^k$:
+\begin{align*}
+S_k = r(\alpha^k) &= c(\alpha^k) + e(\alpha^k) \\
+S_k &= 0 + Y (\alpha^k)^2 \\
+S_k &= Y (\alpha^2)^k
+\end{align*}
+The original message $c(x)$ completely vanishes because $\alpha^k$ are roots of the generator polynomial used to encode $c(x)$. What remains (the syndromes) is a pure algebraic signature of the errors themselves!
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement \lstinline|calculate_syndromes|.
+
+\textbf{Details:} 
+You must evaluate the received polynomial $r(x)$ at each of the roots of the generator polynomial.
+\begin{itemize}
+    \item Loop through $i$ from $0$ to \lstinline|num_ec - 1|.
+    \item Call your generic polynomial evaluation method (\lstinline|__call__| with Horner's rule) on \lstinline|message_poly|, passing in \lstinline|field.exp(i)|.
+    \item Return the list of resulting field elements.
+\end{itemize}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Function & Arguments & Returns \\ \midrule
+calculate\_syndromes & \lstinline|message_poly: Polynomial, num_ec: int, field: ExtensionField| & \lstinline|list[GaloisFieldElement]| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{UI Guide:} Use the dashboard's error introduction tools to corrupt a codeword. The UI will instantly compute the syndromes. If you flip one byte, notice how all syndromes instantly become non-zero.
+
+\vspace{1cm}

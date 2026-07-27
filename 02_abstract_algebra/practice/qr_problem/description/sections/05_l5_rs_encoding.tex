@@ -1,0 +1,54 @@
+\section*{Problem 5: Reed--Solomon Encoding (Level 5)}
+
+\subsubsection*{Mathematical part}
+\textbf{Recall:} We now possess everything required to construct a practical error-correcting code. How can we encode a message so that transmission errors become detectable and correctable?
+
+Instead of storing the message polynomial directly, we force the encoded codeword $c(x)$ to vanish at a predetermined set of points:
+\[
+c(\alpha)=0, \quad c(\alpha^2)=0, \quad \ldots, \quad c(\alpha^{2t})=0
+\]
+where $t$ is the number of errors we wish to correct, requiring $2t$ parity symbols.
+
+To guarantee that $c(x)$ has these roots, we construct a generator polynomial $g(x)$ that inherently contains them as linear factors:
+\[
+g(x) = (x-\alpha^1)(x-\alpha^2)\cdots(x-\alpha^{2t})
+\]
+Systematic encoding then shifts the message up by $2t$ positions and subtracts the remainder of the message modulo $g(x)$, ensuring the codeword is divisible by $g(x)$.
+
+\paragraph{Worked Example}
+Suppose we wish to correct $t=2$ errors, requiring $2t = 4$ parity symbols. The generator polynomial is:
+\[
+g(x) = (x-\alpha^0)(x-\alpha^1)(x-\alpha^2)(x-\alpha^3)
+\]
+If our original message is $m(x)$, systematic encoding first multiplies it by $x^{4}$ to make room for the parity symbols. Then, we find the remainder $r(x) = m(x)x^4 \pmod{g(x)}$. The final codeword transmitted is:
+\[
+c(x) = m(x)x^4 - r(x)
+\]
+By polynomial arithmetic, $c(x)$ is perfectly divisible by $g(x)$, guaranteeing that evaluating $c(x)$ at $\alpha^0, \dots, \alpha^3$ will yield zero.
+
+\subsubsection*{Implementation part}
+\textbf{Task:} Implement \lstinline|get_generator_poly|.
+
+\textbf{Details:} 
+You must construct the generator polynomial by iterative multiplication.
+\begin{itemize}
+    \item Start with the identity polynomial $g(x) = 1$.
+    \item Loop through $i$ from $0$ to $2t-1$ (where $2t$ is \lstinline|num_ec_bytes|). Note that the roots traditionally start at $\alpha^0$ or $\alpha^1$; we use $\alpha^i$ based on the loop index.
+    \item Multiply $g(x)$ by the linear factor $(x - \alpha^i)$, which translates to \lstinline|Polynomial([field.one, -field.exp(i)])|.
+\end{itemize}
+The systematic encoding logic itself is already provided in the \lstinline|RSEncoder| wrapper class, relying on your polymorphic polynomial long division (\lstinline|__divmod__|).
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
+\toprule
+Function & Arguments & Returns \\ \midrule
+get\_generator\_poly & \lstinline|num_ec_bytes: int, field: ExtensionField| & \lstinline|Polynomial| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Experimentation part}
+\textbf{UI Guide:} In the interactive dashboard, explore the RS Encoding tab. You can input text, watch it convert to a polynomial message, and see your \lstinline|get_generator_poly| construct the exact parity symbols needed to form the codeword.
+
+\vspace{1cm}

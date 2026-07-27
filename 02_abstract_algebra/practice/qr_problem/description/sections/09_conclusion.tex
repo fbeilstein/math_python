@@ -1,0 +1,35 @@
+\section*{Conclusion --- Looking Back}
+
+Congratulations!
+
+Starting from ordinary modular arithmetic, you have constructed a complete Reed--Solomon codec almost entirely from first principles. Although the final decoder may appear mathematically sophisticated, notice how little of it was genuinely new code. Almost every algorithm reused abstractions developed in earlier laboratories.
+
+The development followed a natural sequence. Each layer depended only on the previous one. Prime fields supplied arithmetic. Polynomial arithmetic reused field operations without modification. Extension fields reused polynomial arithmetic seamlessly. Finally, the Reed--Solomon encoder and decoder reused every abstraction that had already been implemented.
+
+\subsection*{A lesson in software design}
+
+This laboratory illustrates a profound principle of Object-Oriented software engineering and Python Duck-Typing. Whenever possible, algorithms should be written in terms of abstract operations rather than concrete data types.
+
+Our implementation of the \lstinline|Polynomial| multiplication is a perfect example. Initially, the coefficients were integers. Later, they became extension field elements. The polynomial implementation itself never changed. Python automatically invoked the correct underlying \lstinline|__mul__| and \lstinline|__add__| operators. 
+
+Similarly, our linear algebra utility \lstinline|solve_linear| was completely oblivious to the mathematical domain. Because we implemented \lstinline|__bool__| on our field elements to accurately report truth values, \lstinline|solve_linear| could natively perform Gaussian elimination over finite fields exactly as if it were operating over floating-point numbers.
+
+This is the power of abstraction.
+
+\subsection*{A lesson in mathematics}
+
+The mathematical ideas follow exactly the same philosophy. We began with ordinary arithmetic. Then we generalized arithmetic to finite fields. Next, polynomials became first-class mathematical objects. Finally, polynomials themselves became numbers by taking remainders modulo a primitive polynomial.
+
+Each new abstraction extended the previous one instead of replacing it.
+
+\begin{center}
+\Large
+\emph{Everything complicated in this laboratory was built from only two ideas:}
+
+\vspace{0.5cm}
+\boxed{
+\text{Multiply} \quad \longrightarrow \quad \text{Reduce modulo something}
+}
+\end{center}
+
+First, we reduced integers modulo a prime. Then, we reduced polynomials modulo a primitive polynomial. Everything else followed naturally.
