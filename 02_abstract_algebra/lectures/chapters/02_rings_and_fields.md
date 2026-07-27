@@ -212,13 +212,11 @@ This is exactly the same as testing whether an integer is a primitive root of $U
 
 # Log/Exp Tables: Fast Arithmetic in $GF(p^n)$
 
-Since $GF(p^n)^*$ is cyclic, every nonzero element is $\alpha^k$ for some $k$.
+Since $GF(p^n)^*$ is cyclic, every nonzero element is $\alpha^k$ for some $k$ and $a \cdot b = \text{exp}[(\text{log}[a] + \text{log}[b]) \bmod (p^n - 1)]$
 
 We precompute two lookup tables:
 - $\text{exp}[k] = \alpha^k$ (as integer encoding)
 - $\text{log}[v] = k$ such that $\alpha^k = v$
-
-Then: $a \cdot b = \text{exp}[(\text{log}[a] + \text{log}[b]) \bmod (p^n - 1)]$ — **one addition and two table lookups!**
 
 <div class="gf-table-wrapper">
 <div class="gf-table-title">Elements of $GF(2^3)$ with primitive polynomial $x^3 + x + 1$</div>

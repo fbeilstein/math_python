@@ -193,6 +193,23 @@ Because this algorithm is mathematically identical across all fields, our labora
 
 # QR Code Anatomy
 
+:::matrix { cols="50/50"}
+
+[[0, 0]]
+![](./assets/QR_Format_Information.svg){height=90% center}
+[[1, 0]] { text-align: center; }
+Format Information & Masking
+
+[[0, 1]]
+![](./assets/QR_Ver3_Codeword_Ordering.svg){height=90% center}
+[[1, 1]] { text-align: center; }
+Codeword Interleaving
+
+:::
+
+
+
+---
 
 <style>
   .shrink-qr-slide p, 
@@ -204,8 +221,6 @@ Because this algorithm is mathematically identical across all fields, our labora
   }
 </style>
 <div class="shrink-qr-slide">
-
-
 A QR code is a $21 \times 21$ (or larger) matrix that uses Reed-Solomon over $GF(2^8)$.
 
 | Component | Purpose |
@@ -213,7 +228,7 @@ A QR code is a $21 \times 21$ (or larger) matrix that uses Reed-Solomon over $GF
 | **Finder patterns** (3 corners) | Orientation & alignment for scanners |
 | **Timing patterns** | Grid calibration (alternating B/W) |
 | **Format info** | EC level + mask pattern (BCH-encoded) |
-| **Data region** | Interleaved data + RS parity symbols |
+| **Data region** | Interleaved data + RS parity symbols read in a zig-zag |
 
 The standard defines four error correction levels:
 
