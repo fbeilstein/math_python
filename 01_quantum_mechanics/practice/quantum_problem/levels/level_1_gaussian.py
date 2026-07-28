@@ -54,14 +54,14 @@ class Level1Gaussian(BaseLevel):
 
         try:
             psi = tasks.gaussian_packet(x, self.sl_x0.val, self.sl_sigma.val, self.sl_k0.val)
+            if psi is None: raise NotImplementedError("gaussian_packet returned None")
+            dx = x[1] - x[0]
+            prob = np.abs(psi)**2
+            norm = np.sum(prob) * dx
         except Exception as e:
             self.ax.text(0.5, 0.5, f'Error:\n{e}', transform=self.ax.transAxes,
                          ha='center', va='center', color='#ff6e6e', fontsize=10)
             return
-
-        dx = x[1] - x[0]
-        prob = np.abs(psi)**2
-        norm = np.sum(prob) * dx
 
         self.ax.plot(x, prob,      color='#4fc3f7', lw=2,   label='|ψ|²')
         self.ax.plot(x, psi.real,  color='#81c784', lw=1,   alpha=0.6, label='Re[ψ]')

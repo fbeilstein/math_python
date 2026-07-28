@@ -75,12 +75,13 @@ class Level3FreeParticle:
     def _animate(self, frame):
         try:
             for _ in range(8):
-                self.psi = tasks.evolve_free_particle(self.psi, self.k, self.dt)
+                res = tasks.evolve_free_particle(self.psi, self.k, self.dt)
+                if res is None: raise NotImplementedError("evolve_free_particle returned None")
+                self.psi = res
             self.t += 8 * self.dt
+            prob = np.abs(self.psi)**2
         except Exception:
             return
-
-        prob = np.abs(self.psi)**2
         self.prob_line.set_ydata(prob)
         self.real_line.set_ydata(self.psi.real)
         norm = np.sum(prob) * self.dx

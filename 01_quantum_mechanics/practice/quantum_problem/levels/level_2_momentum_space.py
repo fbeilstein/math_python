@@ -73,7 +73,9 @@ class Level2MomentumSpace:
             return
 
         try:
-            k, phi = tasks.momentum_wavefunction(psi, dx)
+            result = tasks.momentum_wavefunction(psi, dx)
+            if result is None: raise NotImplementedError("momentum_wavefunction returned None")
+            k, phi = result
         except Exception as e:
             self.ax_k.text(0.5, 0.5, f'Error:\n{e}', transform=self.ax_k.transAxes,
                            ha='center', va='center', color='#ff6e6e', fontsize=9)
