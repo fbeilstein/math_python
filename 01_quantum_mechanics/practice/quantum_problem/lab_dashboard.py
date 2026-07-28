@@ -47,17 +47,11 @@ class QuantumDebugger(tk.Tk):
             7: ("Absorbing Mask", "level_7_absorber", "Level7Absorber", "levels/level_7_absorber.py")
         }
         
-        self.status_indicators = {}
         for num, (name, mod, cls, path) in self.tasks.items():
             frame = tk.Frame(self.sidebar, bg="#252526")
             frame.pack(fill="x", pady=4, padx=10)
             
-            ind = tk.Canvas(frame, width=15, height=15, highlightthickness=0, bg="#252526")
-            ind.pack(side="left", padx=5)
-            light = ind.create_oval(2, 2, 13, 13, fill="gray")
-            self.status_indicators[num] = (ind, light)
-            
-            tk.Button(frame, text=f"L{num} {name}", width=20, font=("Arial", 9),
+            tk.Button(frame, text=f"L{num} {name}", width=25, font=("Arial", 9),
                        command=lambda n=num: self.switch_sandbox(n)).pack(side="left")
 
         # Utility Buttons
@@ -142,8 +136,7 @@ class QuantumDebugger(tk.Tk):
             
             self.current_handler = level_class()
             self.canvas.draw()
-            self.current_lvl_num = level_num
-            self.refresh_tests([(level_num, self.tasks[level_num])]) 
+            self.current_lvl_num = level_num 
             
         except Exception as e:
             messagebox.showerror("Module Error", f"Failed to load Level {level_num}:\n{e}")
