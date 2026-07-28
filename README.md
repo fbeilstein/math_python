@@ -23,7 +23,7 @@ Schedule: TBA
 ### Module 2: Abstract Algebra
 - Lecture: [Abstract Algebra](https://fbeilstein.github.io/math_python/02_abstract_algebra/lectures/abstract_algebra.html)
 - Warm-up: [Group Theory](https://github.com/fbeilstein/math_python/releases/download/groups_v0/group_problem.zip)
-- Practice: [Generate QR-code](https://github.com/fbeilstein/math_python/releases/download/qr_v1/qr_problem.zip)
+- Practice: [Generate QR-code](https://github.com/fbeilstein/math_python/releases/download/qr_v2/qr_problem.zip)
 - Optional: [RSA Encryption](https://github.com/fbeilstein/math_python/releases/download/rsa_v0/rsa_problem.zip)
 
 ---
