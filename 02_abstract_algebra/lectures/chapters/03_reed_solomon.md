@@ -12,176 +12,204 @@ Digital data gets corrupted — scratched CDs, noisy channels, damaged QR codes.
 
 ---
 
-# Reed-Solomon Codes
+# When Polynomials Become Numbers
 
-**Idea:** Represent data as a polynomial $m(x)$ over $GF(p^n)$. Append redundancy by evaluating at known field elements. Any corruption changes the polynomial, and we can algebraically locate and fix the errors.
+How do we represent bytes algebraically? We define an **extension field** $GF(p^n)$. 
 
-A code with $2t$ parity symbols can correct up to $t$ symbol errors.
+Instead of reducing integers modulo a prime $p$, we reduce **polynomials** modulo a primitive polynomial $f(x)$ of degree $n$. 
 
+1. **Multiply** two elements: Perform standard polynomial multiplication.
+2. **Reduce**: Take the remainder modulo $f(x)$.
 
-<div style="text-align: center; margin-top: 30px;">
-<div style="color: #58a6ff; font-size: 0.85em; margin-bottom: 8px;">Reed-Solomon Codeword ($n = k + 2t$ symbols)</div>
-<div style="display: inline-flex; align-items: center; gap: 4px;">
-  <div style="background: #58a6ff; color: white; padding: 20px 60px; border-radius: 6px; font-weight: bold; font-size: 1.1em;">Data<br><span style="font-size: 0.8em; font-weight: normal;">($k$ symbols)</span></div>
-  <div style="background: #ff7b72; color: white; padding: 20px 40px; border-radius: 6px; font-weight: bold; font-size: 1.1em;">Parity<br><span style="font-size: 0.8em; font-weight: normal;">($2t$ symbols)</span></div>
-  <div style="font-size: 1.6em; color: #484f58; margin: 0 8px;">→</div>
-  <div style="color: #ffd700; font-size: 1.1em;">$m(x) \cdot x^{2t} \bmod g(x)$</div>
-</div>
-<div style="color: #7ee787; margin-top: 12px; font-size: 0.9em;">Can correct up to $t$ errors</div>
-</div>
-
+**The Duck-Typing Philosophy:**
+Because the rules of arithmetic (distributivity, associativity) apply universally, a `Polynomial` class implemented purely using Python's `__add__` and `__mul__` operators works flawlessly whether the coefficients are integers in $\mathbb{R}$ or polynomials themselves evaluated modulo $f(x)$!
 
 ---
 
-# The Generator Polynomial
+# The Matrix Setup
 
-We define $2t$ roots $\alpha^0, \alpha^1, \ldots, \alpha^{2t-1}$ and build:
+**Concept:** We engineer our codeword $\vec{c}$ to live in the null-space of a Vandermonde parity-check matrix $H$, meaning $H\vec{c} = \vec{0}$.
 
-$$g(x) = \prod_{i=0}^{2t-1} (x - \alpha^i)$$
+**Definition:** Define a primitive field element $\alpha$. Define every element in the matrix by its row $i$ and column $j$:
+$$h_{i,j} = \alpha^{i \cdot j}$$
 
-Every valid codeword $c(x)$ is divisible by $g(x)$. Encoding computes:
-
-$$c(x) = m(x) \cdot x^{2t} - \big[m(x) \cdot x^{2t} \bmod g(x)\big]$$
-
-The remainder becomes the parity symbols appended to the message.
-
-**Example:** For $t=1$ (correct 1 error) in $GF(2^3)$:
-
-$g(x) = (x - 1)(x - \alpha) = x^2 + \alpha^3 x + \alpha$
-
-(Remember: in $GF(2)$, subtraction = addition, and $1 + \alpha = \alpha^3$.)
+**The Columns:** Because of this definition, the $j$-th column, $\vec{h}_j$, is exactly the geometric sequence of the base $\alpha^j$:
+$$
+\vec{h}_j = \begin{bmatrix} (\alpha^j)^0 \\\\ (\alpha^j)^1 \\\\ (\alpha^j)^2 \\\\ \vdots \end{bmatrix}
+$$
 
 ---
 
-# Worked Example: Encoding
+# Example: Matrix Setup in GF(5)
 
-In $GF(2^3)$ with primitive polynomial $x^3 + x + 1$, let's encode message $[5, 3]$ with $t = 1$ ($2t = 2$ parity symbols).
-
-**Step 1:** Generator polynomial: $g(x) = x^2 + 3x + 2$ (using integer representation: $\alpha^3 = 3$, $\alpha = 2$).
-
-**Step 2:** Shift message: $m(x) \cdot x^2 = 5x^3 + 3x^2$.
-
-**Step 3:** Divide $5x^3 + 3x^2$ by $g(x) = x^2 + 3x + 2$ over $GF(2^3)$:
-
-| Step | Quotient term | Operation |
-|------|--------------|-----------|
-| Lead: $5x^3 \div x^2$ | $5x$ | $5x \cdot g(x) = 5x^3 + 5 \cdot 3 \cdot x^2 + 5 \cdot 2 \cdot x$ |
-| | | Use tables: $5 \cdot 3 = \text{exp}[\text{log}[5] + \text{log}[3]] = \text{exp}[6+1] = \text{exp}[7] = \text{exp}[0] = 1$ |
-| Subtract | | New remainder: $(3 \oplus 1)x^2 + (0 \oplus 10)x = 2x^2 + \ldots$ |
-
-**Result:** Codeword = $[5, 3, r_1, r_0]$ — message + parity.
+Let's build a $t=1$ error-correcting code in $GF(5)$ using primitive root $\alpha=2$. 
+Since $t=1$, our parity-check matrix $H$ needs $2t=2$ rows ($i=0, 1$). Let's use 4 columns ($j=0, 1, 2, 3$).
+Because $h_{i,j} = (\alpha^j)^i = (2^j)^i$, our matrix evaluates to:
+$$
+H = \begin{bmatrix} (2^0)^0 & (2^1)^0 & (2^2)^0 & (2^3)^0 \\\\ (2^0)^1 & (2^1)^1 & (2^2)^1 & (2^3)^1 \end{bmatrix} = \begin{bmatrix} 1^0 & 2^0 & 4^0 & 3^0 \\\\ 1^1 & 2^1 & 4^1 & 3^1 \end{bmatrix} = \begin{bmatrix} 1 & 1 & 1 & 1 \\\\ 1 & 2 & 4 & 3 \end{bmatrix} \pmod 5
+$$
+We find a valid codeword in the null-space ($H\vec{c} = \vec{0}$): $\vec{c} = [2, 2, 1, 0]^T$.
 
 ---
 
-# Syndromes: Detecting Errors
+# The Syndrome (Extracting the Columns)
 
-A received message $r(x) = c(x) + e(x)$ may contain errors $e(x)$.
+**Concept:** Interference adds an unknown sparse error vector $\vec{e}$. We receive $\vec{r} = \vec{c} + \vec{e}$.
 
-Since $c(\alpha^i) = 0$ for all roots, the **syndromes** $S_i = r(\alpha^i) = e(\alpha^i)$ depend only on the errors.
+**The Math:** Multiplying by $H$ annihilates the codeword ($H\vec{c} = \vec{0}$) and leaves the syndrome vector: $\vec{s} = H\vec{r} = H\vec{e}$.
 
-$$S_i = r(\alpha^i) = \sum_{\text{error positions } j} Y_j \cdot X_j^i$$
+**The Mechanism:** By the fundamental definition of matrix multiplication, $H\vec{e}$ is a linear combination of the columns of $H$. The non-zero elements of $\vec{e}$ literally extract and scale specific columns from $H$.
 
-where $X_j = \alpha^{n-1-j}$ are error locators and $Y_j$ are error magnitudes.
-
-- All syndromes zero → no errors
-- Some non-zero → errors exist, and syndromes encode their positions and values
-
-**Computing syndromes** is polynomial evaluation — Horner's method:
-
-$$r(\alpha^i) = (\cdots((r_0 \cdot \alpha^i + r_1) \cdot \alpha^i + r_2) \cdots )$$
+**Formula:** Let $E$ be the set of corrupted column indices.
+$$
+\vec{s} = \sum_{j \in E} e_j \vec{h}_j
+$$
 
 ---
 
-# Worked Example: Decoding (Part 1 — Syndromes)
+# Example: The Syndrome in GF(5)
 
-Take our codeword $c = [5, 3, r_1, r_0]$ and introduce one error at position 0:
+We transmit $\vec{c} = [2, 2, 1, 0]^T$. An error strikes at index $j=2$ with magnitude 3: $\vec{e} = [0, 0, 3, 0]^T$.
+We receive $\vec{r} = [2, 2, 4, 0]^T$.
 
-$$r = [5 \oplus e, 3, r_1, r_0]$$
-
-**Compute syndromes** at roots $\alpha^0 = 1$ and $\alpha^1 = \alpha$:
-
-$S_0 = r(1) = r_0 + r_1 + 3 + (5 \oplus e)$
-
-$S_1 = r(\alpha) = r_0 + r_1 \cdot \alpha + 3 \cdot \alpha^2 + (5 \oplus e) \cdot \alpha^3$
-
-Since $c$ was valid ($c(\alpha^i) = 0$), only the error contributes:
-
-$S_0 = e \cdot X_1^0 = e$
-
-$S_1 = e \cdot X_1^1 = e \cdot \alpha^3$ (since error is at position 0, $X_1 = \alpha^{n-1-0} = \alpha^3$)
-
-The syndromes *are* the error — we just need to decode them.
+The receiver computes the syndrome vector $\vec{s} = H\vec{r}$:
+$$
+\vec{s} = \begin{bmatrix} 1 & 1 & 1 & 1 \\\\ 1 & 2 & 4 & 3 \end{bmatrix} \begin{bmatrix} 2 \\\\ 2 \\\\ 4 \\\\ 0 \end{bmatrix} = \begin{bmatrix} 8 \\\\ 22 \end{bmatrix} = \begin{bmatrix} 3 \\\\ 2 \end{bmatrix} \pmod 5
+$$
+Notice this is exactly $e_2$ scaling the column $\vec{h}_2$:
+$$
+\vec{s} = 3 \cdot \begin{bmatrix} 1 \\\\ 4 \end{bmatrix} = \begin{bmatrix} 3 \\\\ 12 \end{bmatrix} = \begin{bmatrix} 3 \\\\ 2 \end{bmatrix}
+$$
+So our known syndromes are $s_0 = 3, s_1 = 2$.
 
 ---
 
-# Error Locator Polynomial (PGZ)
+# The Parallel Geometric Progressions
 
-Define the **Error Locator Polynomial**: $\Lambda(x) = \prod_{j} (1 - X_j x)$
+**Concept:** Expand the vector equation to look at a single row $i$ of the syndrome vector.
 
-The **Key Equation** relates $\Lambda$ to the syndromes:
+**The Math:**
+$$
+s_i = \sum_{j \in E} e_j h_{i,j}
+$$
 
-$$\Lambda(x) \cdot S(x) \equiv \Omega(x) \pmod{x^{2t}}$$
+Substitute the hardcoded matrix definition $h_{i,j} = \alpha^{i \cdot j} = (\alpha^j)^i$:
+$$
+s_i = \sum_{j \in E} e_j (\alpha^j)^i
+$$
 
-Expanding: the coefficient of $x^k$ for $k \geq t$ must be zero, giving a linear system:
-
-$$\begin{pmatrix} S_0 & S_1 & \cdots & S_{t-1} \\\\ S_1 & S_2 & \cdots & S_t \\\\ \vdots & & \ddots & \vdots \\\\ S_{t-1} & S_t & \cdots & S_{2t-2} \end{pmatrix} \begin{pmatrix} \Lambda_t \\\\ \Lambda_{t-1} \\\\ \vdots \\\\ \Lambda_1 \end{pmatrix} = - \begin{pmatrix} S_t \\\\ S_{t+1} \\\\ \vdots \\\\ S_{2t-1} \end{pmatrix}$$
-
-Solve via **Gaussian Elimination over $GF(p^n)$** — the *exact same algorithm* as over $\mathbb{R}$, but using log/exp tables for arithmetic.
-
----
-
-# Worked Example: Decoding (Part 2 — Error Location)
-
-For $t = 1$, the "matrix" is $1 \times 1$: $S_0 \cdot \Lambda_1 = -S_1$.
-
-$$\Lambda_1 = -S_1 / S_0 = S_1 / S_0 \quad (\text{in } GF(2),\ -1 = 1)$$
-
-The error locator polynomial: $\Lambda(x) = \Lambda_1 x + 1$.
-
-**Chien Search:** Evaluate $\Lambda(\alpha^{-i})$ for $i = 0, 1, \ldots, n-1$:
-
-If $\Lambda(\alpha^{-i}) = 0$, then position $i$ has an error.
-
-From our example: $\Lambda_1 = S_1/S_0 = (e \cdot \alpha^3) / e = \alpha^3$.
-
-$\Lambda(\alpha^{-0}) = \alpha^3 \cdot 1 + 1 = \alpha^3 + 1 = \alpha + 1 + 1 = \alpha \neq 0$ — not here.
-
-$\Lambda(\alpha^{-3}) = \alpha^3 \cdot \alpha^{-3} + 1 = 1 + 1 = 0$ ✓ — error at position 0!
+**The Reveal:** The sequence of syndromes ($s_0, s_1, s_2 \dots$) moving down the rows $i$ is exactly a sum of parallel geometric progressions. The initial scalar is the error magnitude ($e_j$), and the base of the progression is strictly defined by the physical matrix column index ($\alpha^j$).
 
 ---
 
-# Worked Example: Decoding (Part 3 — Correction)
+# The Linear Combination & The Substitution
 
-**Error magnitude:** For $t = 1$, it's simply $Y_1 = S_0 = e$.
+**Concept:** We have a sequence of known syndromes, and we want to find the unknown locations ($j \in E$). We start by taking $v+1$ consecutive syndromes (where $v$ is the number of errors) and combining them using undetermined coefficients $\Lambda_0, \Lambda_1, \dots, \Lambda_v$.
 
-**Correct:** $r_{\text{corrected}}[0] = r[0] - Y_1 = r[0] \oplus e = (5 \oplus e) \oplus e = 5$ ✓
+**The Combination:**
+$$
+\text{Sum} = \sum_{k=0}^v \Lambda_k s_{i+k}
+$$
 
-The full decoding pipeline:
+**The Substitution:** Substitute our geometric formula for the syndromes into this combination:
+$$
+\text{Sum} = \sum_{k=0}^v \Lambda_k \left( \sum_{j \in E} e_j (\alpha^j)^{i+k} \right)
+$$
 
-| Step | Math | What you implement |
-|------|------|--------------------|
-| 1. Syndromes | Evaluate $r(\alpha^i)$ | `calculate_syndromes` |
-| 2. Error Locator | Solve linear system | `pgz_error_locator` |
-| 3. Error Positions | Find roots of $\Lambda$ | `chien_search` |
-| 4. Error Magnitudes | Solve Vandermonde system | `linear_error_magnitudes` |
-| 5. Correct | Subtract errors | Trivial |
+---
+
+# The Algebraic Regrouping (The Polynomial Emerges)
+
+**Concept:** We can rearrange the sums. Instead of grouping by the syndrome index $k$, we group by the physical error location $j$.
+
+**The Regrouping:** Pull the $e_j$ and the base $(\alpha^j)^i$ to the outside:
+$$
+\text{Sum} = \sum_{j \in E} e_j (\alpha^j)^i \left[ \sum_{k=0}^v \Lambda_k (\alpha^j)^k \right]
+$$
+
+**The Reveal:** Look exactly at the inner bracket. It is the definition of a polynomial! If we define $\Lambda(x) = \sum_{k=0}^v \Lambda_k x^k$, then the bracket is simply $\Lambda(\alpha^j)$. The massive sum collapses into:
+$$
+\text{Sum} = \sum_{j \in E} e_j (\alpha^j)^i \Lambda(\alpha^j)
+$$
+
+---
+
+# The Wipeout (The PGZ Matrix)
+
+**Concept:** We have total control over the coefficients $\Lambda_k$, meaning we control the shape and roots of the polynomial $\Lambda(x)$.
+
+**The Logic:** If we intentionally design $\Lambda(x)$ so that its roots are *exactly* the extracted column bases (i.e., $\Lambda(\alpha^j) = 0$ for all $j \in E$), then every single term in our sum gets wiped out.
+
+**The Equation:** The entire right side collapses to 0.
+$$
+\sum_{k=0}^v \Lambda_k s_{i+k} = 0
+$$
+
+**The Conclusion:** Because the syndromes $s$ are known values, this forces a linear system of equations (The PGZ Toeplitz matrix). By solving this matrix for $\Lambda_k$, we build the polynomial, find its roots, and mathematically expose the hidden column bases $\alpha^j$.
+
+---
+
+# Example: The Wipeout in GF(5)
+
+We know $v=1$, so our combination uses $\Lambda_0$ and $\Lambda_1$. The equation $\sum_{k=0}^1 \Lambda_k s_{i+k} = 0$ for $i=0$ gives:
+$$
+\Lambda_0 s_0 + \Lambda_1 s_1 = 0 \pmod 5
+$$
+Substitute our known syndromes $s_0=3, s_1=2$. To avoid the trivial solution (all zeros), we set the leading coefficient $\Lambda_1 = 1$:
+$$
+\Lambda_0 (3) + 1 (2) = 0 \implies 3\Lambda_0 = -2 \equiv 3 \pmod 5
+$$
+Dividing by 3 gives $\Lambda_0 = 1$. Our polynomial is $\Lambda(x) = \Lambda_1 x^1 + \Lambda_0 x^0 = x + 1$.
+
+**Finding the Root:** We evaluate $\Lambda(x) = x+1$ and find its root is $x = 4 \pmod 5$. 
+Because the roots of $\Lambda(x)$ are exactly the extracted column bases $\alpha^j$, we know $\alpha^j = 4$.
+Since $\alpha=2$, we solve $2^j = 4 \implies j=2$.
+**We mathematically exposed the hidden column base! The error is at index 2!**
+
+---
+
+# Example: Recovering the Magnitude (Vandermonde)
+
+Now that we know $E = \{2\}$ and the base is $\alpha^2 = 4$, we return to our syndrome equation:
+$$s_i = \sum_{j \in E} e_j (\alpha^j)^i$$
+For $i=0$:
+$$s_0 = e_2 (4)^0$$
+$$3 = e_2 (1) \implies e_2 = 3$$
+
+We have perfectly recovered the exact error vector $\vec{e} = [0, 0, 3, 0]^T$ using pure matrix algebra!
+
+---
+
+# The Engineering Reality: Decoder Algorithms
+
+The mathematical derivations we just performed form the foundation of all Reed-Solomon decoders. However, in industrial applications, engineers optimize these steps for silicon (ASICs):
+
+1. **Solving the Linear Combination ($\Lambda_k$):**
+   - **PGZ (Peterson-Gorenstein-Zierler):** Direct matrix inversion. $O(v^3)$. Simple but slow.
+   - **Berlekamp-Massey:** An iterative shift-register algorithm. $O(v^2)$. The industry standard for hardware.
+   - **Euclidean Algorithm:** Uses polynomial greatest common divisors. $O(v^2)$. Standard in software.
+
+2. **Finding the Roots (The Column Bases):**
+   - **Chien Search:** A highly optimized hardware algorithm that brute-force evaluates $\Lambda(x)$ for all field elements simultaneously using parallel multipliers.
+
+3. **Finding the Magnitudes ($e_j$):**
+   - **Forney Algorithm:** Computes the Vandermonde matrix inversion implicitly using a formal derivative of $\Lambda(x)$, avoiding full matrix division.
 
 ---
 
 # Gaussian Elimination over $GF(p^n)$
 
-The algorithm is **identical** to what you know from linear algebra over $\mathbb{R}$:
+To solve both the PGZ Toeplitz system and the Magnitudes Vandermonde system, we need to solve $Ax = b$.
 
-1. **Find pivot** — first nonzero entry in the column
-2. **Swap rows** — same as usual
-3. **Normalize** — divide by pivot (using $\text{exp}[-\text{log}[\text{pivot}]]$)
-4. **Eliminate** — subtract multiples (using log/exp for multiply, XOR for add)
+The algorithm is **mathematically identical** to what you know from linear algebra over $\mathbb{R}$:
+1. Find pivot (first non-zero entry)
+2. Swap rows
+3. Normalize (divide by pivot)
+4. Eliminate (subtract multiples)
 
-The *only* difference from real-valued Gaussian elimination is replacing floating-point operations with finite field operations. No new algorithm to learn.
+**Duck-Typing Magic:** Because our `GaloisFieldElement` objects override Python's `__add__`, `__mul__`, `__truediv__`, and `__bool__` operators, a completely generic `solve_linear(A, b)` function works flawlessly without knowing what field it's in!
 
-Because this algorithm is mathematically identical across all fields, our laboratory provides a fully generic `solve_linear(A, b)` utility. You will use it twice:
-- **PGZ:** solve for the error locator polynomial coefficients
-- **Magnitudes:** solve the Vandermonde system for error values
+**Industrial Reality Check:** While our code dynamically multiplies polynomials modulo $f(x)$ for pedagogy, industrial ASICs (like hardware QR scanners) heavily rely on precomputed `log` / `exp` lookup tables to achieve $O(1)$ multiplication speeds over $GF(2^8)$.
 
 ---
 
@@ -196,18 +224,16 @@ Because this algorithm is mathematically identical across all fields, our labora
 :::matrix { cols="50/50"}
 
 [[0, 0]]
-![](./assets/QR_Format_Information.svg){height=90% center}
+![](./assets/QR_Format_Information.svg){height=90% center style="background-color: white;"}
 [[1, 0]] { text-align: center; }
 Format Information & Masking
 
 [[0, 1]]
-![](./assets/QR_Ver3_Codeword_Ordering.svg){height=90% center}
+![](./assets/QR_Ver3_Codeword_Ordering.svg){height=90% center style="background-color: white;"}
 [[1, 1]] { text-align: center; }
 Codeword Interleaving
 
 :::
-
-
 
 ---
 
