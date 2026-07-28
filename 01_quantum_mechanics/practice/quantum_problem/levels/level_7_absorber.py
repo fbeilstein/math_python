@@ -74,6 +74,7 @@ class Level7Absorber:
         # -- left panel: mask --
         try:
             mask = tasks.absorbing_mask(N, gf)
+            if mask is None: raise NotImplementedError()
         except Exception as e:
             self.ax_mask.text(0.5, 0.5, f'Error:\n{e}', transform=self.ax_mask.transAxes,
                               ha='center', va='center', color='#ff6e6e', fontsize=9)
@@ -93,6 +94,7 @@ class Level7Absorber:
         try:
             for _ in range(200):
                 psi = tasks.split_operator_step(psi, k, V, dt)
+                if psi is None: psi = np.zeros_like(x, dtype=complex)
                 psi *= mask
         except Exception:
             pass

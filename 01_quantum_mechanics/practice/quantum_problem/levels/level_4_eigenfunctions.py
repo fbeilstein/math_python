@@ -77,6 +77,7 @@ class Level4Eigenfunctions:
 
         try:
             psi = tasks.well_eigenfunction(x, n, L)
+            if psi is None: psi = np.zeros_like(x, dtype=complex)
         except Exception as e:
             self.ax.text(0.5, 0.5, f'Error:\n{e}', transform=self.ax.transAxes,
                          ha='center', va='center', color='#ff6e6e', fontsize=10)

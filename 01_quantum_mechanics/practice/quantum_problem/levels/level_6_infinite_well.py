@@ -51,6 +51,7 @@ class Level6InfiniteWell:
             self.E_k = None
 
         self.psi   = tasks.gaussian_packet(self.x, L * 0.3, L * 0.05, 15.0)
+        if self.psi is None: self.psi = np.zeros_like(self.x, dtype=complex)
         self.norms = []
         self.t     = 0.0
 

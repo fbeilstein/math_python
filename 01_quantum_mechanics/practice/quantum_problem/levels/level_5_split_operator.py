@@ -72,6 +72,7 @@ class Level5SplitOperator:
         self.V0   = self.sl_v0.val
         self.V    = np.where(np.abs(self.x) < self.a / 2, self.V0, 0.0)
         self.psi  = tasks.gaussian_packet(self.x, -self.L * 0.25, 1.0, 10.0)
+        if self.psi is None: self.psi = np.zeros_like(self.x, dtype=complex)
         self.norms = []
         self.t     = 0.0
 
@@ -121,7 +122,9 @@ class Level5SplitOperator:
     def _animate(self, frame):
         try:
             for _ in range(12):
-                self.psi = tasks.split_operator_step(self.psi, self.k_grid, self.V, self.dt)
+                res = tasks.split_operator_step(self.psi, self.k_grid, self.V, self.dt)
+                if res is None: raise NotImplementedError()
+                self.psi = res
             self.t += 12 * self.dt
         except Exception:
             return
