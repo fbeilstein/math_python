@@ -13,7 +13,7 @@ Schedule: TBA
 
 ### Module 1: Quantum Mechanics
 - Lecture: [Quantum Mechanics](https://fbeilstein.github.io/math_python/01_quantum_mechanics/lectures/quantum_mechanics.html)
-- Practice: [Quantum Tunneling](https://github.com/fbeilstein/math_python/releases/download/quanta_v1/quantum_problem.zip)
+- Practice: [Quantum Tunneling](https://github.com/fbeilstein/math_python/releases/download/quanta_v2/quantum_problem.zip)
 - Optional:
     - [Fourier Neural Operator](https://github.com/fbeilstein/math_python/releases/download/fno_v0/fno_problem.zip)
     - [Quantum Tomography](https://github.com/fbeilstein/math_python/releases/download/qtomography_v0/tomography_problem.zip)
