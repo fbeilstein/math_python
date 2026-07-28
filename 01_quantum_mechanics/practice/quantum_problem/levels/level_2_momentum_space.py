@@ -34,7 +34,11 @@ class Level2MomentumSpace:
         ax_sigma = plt.axes([0.15, 0.12, 0.70, 0.03])
         ax_k0    = plt.axes([0.15, 0.05, 0.70, 0.03])
         self.sl_sigma = widgets.Slider(ax_sigma, 'Width $\\sigma$', 0.1, 3.0, valinit=0.8, color='#81c784')
+        self.sl_sigma.label.set_color('white')
+        self.sl_sigma.valtext.set_color('white')
         self.sl_k0    = widgets.Slider(ax_k0,    'Momentum $k_0$', 0.0, 20.0, valinit=8.0, color='#ffb74d')
+        self.sl_k0.label.set_color('white')
+        self.sl_k0.valtext.set_color('white')
         self.sl_sigma.on_changed(self._redraw)
         self.sl_k0.on_changed(self._redraw)
 

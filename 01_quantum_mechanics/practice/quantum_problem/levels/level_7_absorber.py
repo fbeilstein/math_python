@@ -34,6 +34,8 @@ class Level7Absorber:
         ax_frac = plt.axes([0.15, 0.07, 0.70, 0.04])
         self.sl_frac = widgets.Slider(ax_frac, 'Absorber fraction', 0.02, 0.3,
                                       valinit=0.10, color='#ce93d8')
+        self.sl_frac.label.set_color('white')
+        self.sl_frac.valtext.set_color('white')
         self.sl_frac.on_changed(self._redraw)
 
         for ax, title in zip((self.ax_mask, self.ax_wave),

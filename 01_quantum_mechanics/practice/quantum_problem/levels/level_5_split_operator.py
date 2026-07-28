@@ -51,6 +51,8 @@ class Level5SplitOperator:
         # Slider
         ax_v0 = plt.axes([0.15, 0.08, 0.70, 0.03])
         self.sl_v0 = widgets.Slider(ax_v0, 'Barrier height $V_0$', 0, 60, valinit=self.V0, color='#ff7043')
+        self.sl_v0.label.set_color('white')
+        self.sl_v0.valtext.set_color('white')
         self.sl_v0.on_changed(self._reset)
 
         btn_ax = plt.axes([0.82, 0.10, 0.10, 0.06])

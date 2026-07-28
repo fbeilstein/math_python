@@ -42,6 +42,7 @@ class Level3FreeParticle:
         self.dt = 0.005
 
         self.psi = tasks.gaussian_packet(self.x, L * 0.3, 0.6, 8.0)
+        if self.psi is None: self.psi = np.zeros_like(self.x, dtype=complex)
         self.norms = []
 
         for ax in (self.ax, self.ax_norm):

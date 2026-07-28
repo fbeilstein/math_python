@@ -35,8 +35,14 @@ class Level1Gaussian(BaseLevel):
         ax_k0    = plt.axes([0.15, 0.08, 0.70, 0.03])
 
         self.sl_x0    = widgets.Slider(ax_x0,    'Center $x_0$',  1.0, 9.0, valinit=5.0, color='#4fc3f7')
+        self.sl_x0.label.set_color('white')
+        self.sl_x0.valtext.set_color('white')
         self.sl_sigma = widgets.Slider(ax_sigma,  'Width $\\sigma$', 0.2, 2.0, valinit=0.8, color='#81c784')
+        self.sl_sigma.label.set_color('white')
+        self.sl_sigma.valtext.set_color('white')
         self.sl_k0    = widgets.Slider(ax_k0,    'Momentum $k_0$', 1.0, 20.0, valinit=8.0, color='#ffb74d')
+        self.sl_k0.label.set_color('white')
+        self.sl_k0.valtext.set_color('white')
 
         for sl in (self.sl_x0, self.sl_sigma, self.sl_k0):
             sl.on_changed(self._on_slider_change)

@@ -35,6 +35,8 @@ class Level4Eigenfunctions:
         ax_n = plt.axes([0.15, 0.10, 0.70, 0.04])
         self.sl_n = widgets.Slider(ax_n, 'Quantum number $n$', 0.5, 7.0,
                                    valinit=1.0, valstep=0.05, color='#4fc3f7')
+        self.sl_n.label.set_color('white')
+        self.sl_n.valtext.set_color('white')
         self.sl_n.on_changed(self._redraw)
 
         self.ax.set_facecolor('#16213e')
