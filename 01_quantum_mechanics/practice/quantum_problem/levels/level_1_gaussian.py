@@ -91,9 +91,5 @@ class Level1Gaussian(BaseLevel):
 # STANDALONE EXECUTION
 # ============================================================
 if __name__ == '__main__':
-    if '--no-graphics' in sys.argv:
-        sys.argv.remove('--no-graphics')
-        unittest.main()
-    else:
-        lvl = Level1Gaussian()
-        plt.show()
+    lvl = Level1Gaussian()
+    plt.show()

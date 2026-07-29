@@ -95,9 +95,5 @@ class Level3FreeParticle:
 
 
 if __name__ == '__main__':
-    if '--no-graphics' in sys.argv:
-        sys.argv.remove('--no-graphics')
-        unittest.main()
-    else:
-        lvl = Level3FreeParticle()
-        plt.show()
+    lvl = Level3FreeParticle()
+    plt.show()

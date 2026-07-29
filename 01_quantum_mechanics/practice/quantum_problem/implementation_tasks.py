@@ -11,11 +11,7 @@ m    = 1.0
 
 def gaussian_packet(N, dx, x_start, x0, sigma, k0): #contains solution
     """
-    Create a normalized Gaussian wave packet on a uniform spatial grid.
-
-        psi(x) = A * exp(-(x - x0)^2 / (4*sigma^2)) * exp(i*k0*x)
-
-    where A is chosen so that the integral of |psi|^2 dx over the grid = 1.
+    Initializes a Gaussian wave packet.
     """
     x = x_start + np.arange(N) * dx
     psi = (1 / (2 * np.pi * sigma**2))**0.25 * \
@@ -28,7 +24,6 @@ def gaussian_packet(N, dx, x_start, x0, sigma, k0): #contains solution
 def to_momentum_space(psi, dx): #contains solution
     """
     Compute the momentum-space wavefunction phi(k) using FFT.
-    Uses the symmetric physicist convention (1/sqrt(2pi) scaling).
     """
     N = len(psi)
     k = 2 * np.pi * fftfreq(N, d=dx)
@@ -38,8 +33,7 @@ def to_momentum_space(psi, dx): #contains solution
 
 def to_position_space(phi, dx): #contains solution
     """
-    Compute the position-space wavefunction psi(x) from phi(k).
-    Uses the symmetric physicist convention (1/sqrt(2pi) scaling).
+    Compute the position-space wavefunction psi(x) from phi(k) using IFFT.
     """
     psi = ifft(phi) / dx * np.sqrt(2 * np.pi)
     return psi
@@ -60,19 +54,6 @@ def evolve_free_particle(psi, dx, dt): #contains solution
 #  STUDENT IMPLEMENTATION (ASSIGNMENT 4)
 # =============================================================================
 
-def well_eigenfunction(x, n, L): #contains solution
-    """
-    n-th eigenfunction of the infinite square well [0, L].
-    Normalized for integer n; boundary conditions break for non-integer n.
-    """
-    psi = np.sqrt(2 / L) * np.sin(n * np.pi * x / L)
-    return psi
-
-
-# =============================================================================
-#  STUDENT IMPLEMENTATION (ASSIGNMENTS 5-6)
-# =============================================================================
-
 def split_operator_step(psi, V, dx, dt): #contains solution
     """
     One Trotter split-operator step:
@@ -84,6 +65,10 @@ def split_operator_step(psi, V, dx, dt): #contains solution
     return psi
 
 
+# =============================================================================
+#  STUDENT IMPLEMENTATION (ASSIGNMENT 5)
+# =============================================================================
+
 def dst_energy_levels(N, L): #contains solution
     """
     DST energy eigenvalues for infinite well: E_n = (n*pi/L)^2 / 2.
@@ -94,7 +79,7 @@ def dst_energy_levels(N, L): #contains solution
 
 
 # =============================================================================
-#  STUDENT IMPLEMENTATION (ASSIGNMENT 7)
+#  STUDENT IMPLEMENTATION (ASSIGNMENT 6)
 # =============================================================================
 
 def absorbing_mask(N, gobble_frac=0.1): #contains solution
@@ -110,19 +95,70 @@ def absorbing_mask(N, gobble_frac=0.1): #contains solution
 
 
 # =============================================================================
-#  BONUS (EXTRA CREDIT)
+#  STUDENT IMPLEMENTATION (ASSIGNMENT 7)
 # =============================================================================
 
-def compute_tunneling_probability(V0, k0, a): #contains solution
+def calculate_energy(psi, V, dx): #contains solution
     """
-    Analytic tunneling transmission for a rectangular barrier.
+    Calculates <E> = <psi | H | psi>.
     """
-    E = hbar**2 * k0**2 / (2 * m)
-    if E >= V0:
-        return 1.0
-    kappa = np.sqrt(2 * m * (V0 - E)) / hbar
-    T = 1.0 / (1.0 + (V0**2 * np.sinh(kappa * a)**2) / (4 * E * (V0 - E)))
-    return T
+    k, phi = to_momentum_space(psi, dx)
+    kinetic_phi = (hbar**2 * k**2 / (2 * m)) * phi
+    kinetic_psi = to_position_space(kinetic_phi, dx)
+    
+    K = np.sum(np.conj(psi) * kinetic_psi) * dx
+    U = np.sum(np.conj(psi) * V * psi) * dx
+    return np.real(K + U)
+
+
+def kick_to_energy(psi, E_target, V, dx): #contains solution
+    """
+    Calculates the exact momentum kick required to reach E_target,
+    and returns the phase-shifted wavefunction.
+    """
+    E_current = calculate_energy(psi, V, dx)
+    
+    # Calculate <p>
+    k, phi = to_momentum_space(psi, dx)
+    p_phi = hbar * k * phi
+    p_psi = to_position_space(p_phi, dx)
+    p_expected = np.real(np.sum(np.conj(psi) * p_psi) * dx)
+    
+    # Quadratic equation: p^2/2m + p*<p>/m + (E_current - E_target) = 0
+    # Assuming m=1 for the discriminant:
+    discriminant = p_expected**2 - 2 * m * (E_current - E_target)
+    if discriminant < 0:
+        return psi # Cannot reach this energy via real momentum kick!
+        
+    # We preserve the current direction of motion!
+    if p_expected >= 0:
+        p_kick = -p_expected + np.sqrt(discriminant)
+    else:
+        p_kick = -p_expected - np.sqrt(discriminant)
+        
+    x = np.arange(len(psi)) * dx
+    return psi * np.exp(1j * p_kick * x / hbar)
+
+
+def imaginary_time_step(psi, V, dx, dt_imag): #contains solution
+    """
+    One imaginary time step using the split-operator method, followed by re-normalization.
+    """
+    psi_decay = split_operator_step(psi, V, dx, -1j * dt_imag)
+    norm = np.sqrt(np.sum(np.abs(psi_decay)**2) * dx)
+    return psi_decay / norm
+
+
+def project_out(psi, state, dx): #contains solution
+    """
+    Gram-Schmidt orthogonalization: psi_new = psi - <state | psi> * state
+    """
+    overlap = np.sum(np.conj(state) * psi) * dx
+    psi_new = psi - overlap * state
+    norm = np.sqrt(np.sum(np.abs(psi_new)**2) * dx)
+    if norm > 1e-10:
+        return psi_new / norm
+    return psi_new
 
 
 # =============================================================================

@@ -8,7 +8,7 @@ if base_dir not in sys.path:
 
 import implementation_tasks as tasks
 
-class TestLevel6InfiniteWell(unittest.TestCase):
+class TestLevel5InfiniteWell(unittest.TestCase):
 
     def setUp(self):
         self.N = 512

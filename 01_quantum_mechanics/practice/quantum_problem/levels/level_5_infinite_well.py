@@ -1,5 +1,5 @@
 """
-Level 6 — Infinite Well via DST
+Level 5 — Infinite Well via DST
 ==================================
 Student implements: dst_energy_levels(N, L)
 
@@ -23,7 +23,7 @@ from scipy.fft import dst, idst
 # ============================================================
 # GRAPHICS
 # ============================================================
-class Level6InfiniteWell:
+class Level5InfiniteWell:
 
     def _dst_step(self, psi, E_k, dt):
         psi_k = dst(psi, type=1, norm='ortho')
@@ -34,7 +34,7 @@ class Level6InfiniteWell:
         self.fig, (self.ax, self.ax_norm) = plt.subplots(2, 1, figsize=(10, 6),
                                                           gridspec_kw={'height_ratios': [3, 1]})
         self.fig.patch.set_facecolor('#1a1a2e')
-        self.fig.suptitle('Level 6 — Infinite Well (DST — Exact Propagator)',
+        self.fig.suptitle('Level 5 — Infinite Well (DST — Exact Propagator)',
                           color='white', fontsize=12, fontweight='bold')
         self.fig.subplots_adjust(hspace=0.4)
 
@@ -112,9 +112,5 @@ class Level6InfiniteWell:
 
 
 if __name__ == '__main__':
-    if '--no-graphics' in sys.argv:
-        sys.argv.remove('--no-graphics')
-        unittest.main()
-    else:
-        lvl = Level6InfiniteWell()
-        plt.show()
+    lvl = Level5InfiniteWell()
+    plt.show()

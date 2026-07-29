@@ -1,5 +1,5 @@
 """
-Level 7 — Absorbing Boundary Conditions
+Level 6 — Absorbing Boundary Conditions
 ==========================================
 Student implements: absorbing_mask(N, gobble_frac)
 
@@ -22,12 +22,12 @@ import implementation_tasks as tasks
 # ============================================================
 # GRAPHICS
 # ============================================================
-class Level7Absorber:
+class Level6Absorber:
 
     def __init__(self):
         self.fig, (self.ax_mask, self.ax_wave) = plt.subplots(1, 2, figsize=(13, 5))
         self.fig.patch.set_facecolor('#1a1a2e')
-        self.fig.suptitle('Level 7 — Absorbing Boundary Mask (Gobbler)',
+        self.fig.suptitle('Level 6 — Absorbing Boundary Mask (Gobbler)',
                           color='white', fontsize=12, fontweight='bold')
         self.fig.subplots_adjust(bottom=0.22)
 
@@ -109,9 +109,5 @@ class Level7Absorber:
 
 
 if __name__ == '__main__':
-    if '--no-graphics' in sys.argv:
-        sys.argv.remove('--no-graphics')
-        unittest.main()
-    else:
-        lvl = Level7Absorber()
-        plt.show()
+    lvl = Level6Absorber()
+    plt.show()

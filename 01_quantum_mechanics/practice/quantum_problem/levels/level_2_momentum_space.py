@@ -88,9 +88,18 @@ class Level2MomentumSpace:
             return
 
         # Position space
-        self.ax_x.plot(x, np.abs(psi)**2, color='#4fc3f7', lw=2)
+        self.ax_x.plot(x, np.abs(psi)**2, color='#4fc3f7', lw=2, label='Original $|\\psi|^2$')
+        
+        try:
+            psi_inv = tasks.to_position_space(phi, dx)
+            if psi_inv is not None:
+                self.ax_x.plot(x, np.abs(psi_inv)**2, color='#ffb74d', lw=2, ls='--', label='IFFT Inverse $|\\psi|^2$')
+        except Exception:
+            pass
+            
         self.ax_x.set_xlim(x[0], x[-1])
         self.ax_x.axhline(0, color='#555577', lw=0.8)
+        self.ax_x.legend(loc='upper right', fontsize=9, facecolor='#1a1a2e', labelcolor='white')
 
         # Momentum space (sort so plot is contiguous)
         idx = np.argsort(k)
@@ -115,9 +124,5 @@ class Level2MomentumSpace:
 
 
 if __name__ == '__main__':
-    if '--no-graphics' in sys.argv:
-        sys.argv.remove('--no-graphics')
-        unittest.main()
-    else:
-        lvl = Level2MomentumSpace()
-        plt.show()
+    lvl = Level2MomentumSpace()
+    plt.show()

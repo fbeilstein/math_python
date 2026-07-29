@@ -151,31 +151,7 @@ $$ \phi(k, t+\Delta t) = \phi(k, t) \exp\left(-i \frac{k^2 \Delta t}{2}\right) $
 \textbf{Test:} The wave packet should move to the right and spread.
 
 
-\section*{Problem 4: Why Quantization?}
-
-\subsubsection*{Mathematical part}
-\textbf{Given:} An infinite square well from $x=0$ to $x=L$. The continuous eigenfunction is given by:
-$$ \psi_n(x) = \sqrt{\frac{2}{L}}\sin\left(\frac{n\pi x}{L}\right) $$
-\textbf{Derive:} The discretized array for $\psi_n(x)$. Notice that while $\sqrt{2/L}$ normalizes the continuous integral $\int_0^L \psi^2 dx = 1$, your discrete array must also be normalized. \textit{Hint:} Does the continuous formula accurately normalize the discrete array out of the box, or do you need a discrete normalization pass?
-
-\subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|well_eigenfunction(x, n, L)|. It returns the purely real function array.
-\begin{center}
-\renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c | c}
-\toprule
-\textbf{Math Symbol} & $x$ & $n$ & $L$ & $\psi_n(x)$ \\
-\midrule
-\textbf{Argument} & \lstinline|x| & \lstinline|n| & \lstinline|L| & \lstinline|return| \\
-\midrule
-\textbf{Type} & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|float| & \lstinline|np.ndarray| \\
-\bottomrule
-\end{tabular}
-\end{center}
-\textbf{Test:} Move the $n$ slider to a non-integer. Notice how $\psi(L) \neq 0$. This explicitly shows why only integers are allowed — particles cannot exist inside infinite walls.
-
-
-\section*{Problem 5: Split-Operator}
+\section*{Problem 4: Split-Operator}
 
 \subsubsection*{Mathematical part}
 \textbf{Given:} The full potential $V(x)$. The Trotter formula splits the propagator:
@@ -222,7 +198,7 @@ $$ e^{-i \hat{H} \Delta t } \approx e^{-i \hat{V} \Delta t/2 } \, e^{-i \hat{T} 
 \textbf{Test:} Watch the packet scatter against the barrier... and then wrap around the edges!
 
 
-\section*{Problems 6 \& 7: The Final Fixes}
+\section*{Problems 5 \& 6: The Final Fixes}
 
 You have two distinct problems to solve numerical artifacts:
 \begin{itemize}
@@ -260,17 +236,98 @@ You have two distinct problems to solve numerical artifacts:
 \end{itemize}
 
 
-\section*{Problem 8: The Tunneling Explorer}
+\section*{The Wave Explorer}
 
-Once everything is complete, run:
+You can launch the sandbox by clicking "Run Wave Explorer" in the lab dashboard, or running:
 \begin{lstlisting}[language=bash]
-python wave_explorer.py --mode barrier
-python wave_explorer.py --mode finite_well
+python wave_explorer.py
 \end{lstlisting}
 
-\textbf{Task:} Experiment with the tunneling modes. Find the barrier height $V_0$ that cuts transmission down to exactly 1\%. Try the finite well and see resonant bound states reflecting back and forth.
+\textbf{Task:} Experiment with the unified physics sandbox. Use the "Edit Potential" button to draw your own custom potentials, stamp down barriers or finite wells, and see how the wave packet scatters, tunnels, or binds to your drawn geometry.
+
+
+\section*{Problem 7: The State Searcher Engine}
+
+A stationary state is an energy eigenstate; its probability density does not change in time. We will build an engine that provides full thermodynamic control over an evolving wave, allowing us to interactively hunt for stationary states!
+
+\subsubsection*{Mathematical part}
+\textbf{Derive 1 (Expected Energy):} The continuous integral formula for the total expected energy $\langle E \rangle = \int \psi^* \hat{H} \psi dx$.
+
+\textbf{Derive 2 (Heating / Kicking):} If we instantly multiply a wavefunction by a spatial phase gradient $\psi' = \psi e^{i p x}$, we inject momentum. Prove that the new expected energy is a quadratic equation:
+$$E' = E + p \langle \hat{p} \rangle + \frac{1}{2} p^2$$
+Solve this equation for $p$ to find the exact momentum kick required to reach a target energy $E_{target}$.
+
+\textbf{Derive 3 (Cooling / Imaginary Time):} If we replace real time $t$ with imaginary time $\tau = -it$, the unitary operator $e^{-i\hat{H}t}$ becomes the decay operator $e^{-\hat{H}\tau}$. If the initial state is a superposition of eigenstates $\psi(0) = \sum c_n \phi_n$, prove that as $\tau \to \infty$, the state becomes entirely dominated by the fundamental ground state $\phi_0$ (assuming we continually re-normalize it to prevent it from vanishing).
+
+\textbf{Derive 4 (State Searcher / Gram-Schmidt):} Prove that if we force the ground state coefficient to zero via orthogonal projection, $\psi \to \psi - \langle \phi_0 | \psi \rangle \phi_0$, the imaginary time evolution will instead cool perfectly into the first excited state $E_1$.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|calculate_energy|, \lstinline|kick_to_energy|, \lstinline|imaginary_time_step|, and \lstinline|project_out|.
+
+\vspace{0.3cm}
+\textbf{1. Calculate Energy} (\lstinline|calculate_energy|): Computes the expected value $\langle E \rangle = \langle \psi | \hat{H} | \psi \rangle$. \textit{Hint: Transform $\psi$ to momentum space to apply the kinetic operator $p^2/2m$, transform back to position space, and then integrate.}
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c | c}
+\toprule
+\textbf{Math Symbol} & $\psi(x)$ & $V(x)$ & $\Delta x$ & $\langle E \rangle$ \\
+\midrule
+\textbf{Argument} & \lstinline|psi| & \lstinline|V| & \lstinline|dx| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|np.ndarray| & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|float| \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+\textbf{2. Heat / Kick} (\lstinline|kick_to_energy|): Instantly injects momentum into the wave to reach exactly $E_{target}$. \textit{Hint: Calculate $\langle p \rangle$ and $\langle E \rangle$, construct the quadratic discriminant from Derive 2, and apply the phase gradient $e^{ip_{kick}x / \hbar}$. If the discriminant is negative, do nothing.}
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c | c | c}
+\toprule
+\textbf{Math Symbol} & $\psi(x)$ & $E_{target}$ & $V(x)$ & $\Delta x$ & $\psi'$ \\
+\midrule
+\textbf{Argument} & \lstinline|psi| & \lstinline|E_target| & \lstinline|V| & \lstinline|dx| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|np.ndarray| \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+\textbf{3. Cool / Imaginary Time} (\lstinline|imaginary_time_step|): Uses the Split-Operator method to propagate $\psi$ by an imaginary time step $\Delta \tau$. \textit{Hint: Pass $-i \Delta \tau$ as the time step to your existing split-operator function, then re-normalize $\psi$.}
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c | c | c}
+\toprule
+\textbf{Math Symbol} & $\psi(x, \tau)$ & $V(x)$ & $\Delta x$ & $\Delta \tau$ & $\psi(x, \tau+\Delta \tau)$ \\
+\midrule
+\textbf{Argument} & \lstinline|psi| & \lstinline|V| & \lstinline|dx| & \lstinline|dt_imag| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|np.ndarray| & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|float| & \lstinline|np.ndarray| \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+\textbf{4. Gram-Schmidt Projection} (\lstinline|project_out|): Removes any component of \lstinline|state| ($\phi$) from $\psi$. \textit{Hint: Compute the complex overlap integral $\langle \phi | \psi \rangle$, subtract that component, and re-normalize $\psi$.}
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c | c}
+\toprule
+\textbf{Math Symbol} & $\psi(x)$ & $\phi(x)$ & $\Delta x$ & $\psi - \langle \phi | \psi \rangle \phi$ \\
+\midrule
+\textbf{Argument} & \lstinline|psi| & \lstinline|state| & \lstinline|dx| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|np.ndarray| & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|np.ndarray| \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Test:} Use the interactive State Searcher! Drag the energy slider UP to kick the wave and add kinetic energy. Click ``Find Ground State'' to watch the slider autonomously drag itself DOWN via Imaginary Time Evolution!
+
 
 \section*{\textcolor{red}{Submission}}
-Submit \texttt{implementation\_tasks.py} and two screenshots proving your \lstinline|wave_explorer.py| achieved scattering and bound states.
+Submit \texttt{implementation\_tasks.py}.
 
 \end{document}

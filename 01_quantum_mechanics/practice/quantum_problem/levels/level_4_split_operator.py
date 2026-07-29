@@ -1,5 +1,5 @@
 """
-Level 5 — Split-Operator Method
+Level 4 — Split-Operator Method
 ==================================
 Student implements: split_operator_step(psi, k, V, dt)
 
@@ -23,7 +23,7 @@ import implementation_tasks as tasks
 # ============================================================
 # GRAPHICS
 # ============================================================
-class Level5SplitOperator:
+class Level4SplitOperator:
 
     def __init__(self):
         self.fig = plt.figure(figsize=(11, 6))
@@ -32,7 +32,7 @@ class Level5SplitOperator:
         self.ax_pot  = self.fig.add_subplot(gs[1])   # potential strip
         self.ax_norm = self.fig.add_subplot(gs[2])
         self.fig.patch.set_facecolor('#1a1a2e')
-        self.fig.suptitle('Level 5 — Split-Operator: Barrier Scattering (no absorber)',
+        self.fig.suptitle('Level 4 — Split-Operator: Barrier Scattering (no absorber)',
                           color='white', fontsize=12, fontweight='bold')
         self.fig.subplots_adjust(bottom=0.22)
 
@@ -140,9 +140,5 @@ class Level5SplitOperator:
 
 
 if __name__ == '__main__':
-    if '--no-graphics' in sys.argv:
-        sys.argv.remove('--no-graphics')
-        unittest.main()
-    else:
-        lvl = Level5SplitOperator()
-        plt.show()
+    lvl = Level4SplitOperator()
+    plt.show()

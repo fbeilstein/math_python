@@ -41,13 +41,17 @@ class QuantumDebugger(tk.Tk):
             1: ("Gaussian Packet", "level_1_gaussian", "Level1Gaussian", "levels/level_1_gaussian.py"),
             2: ("Momentum Space", "level_2_momentum_space", "Level2MomentumSpace", "levels/level_2_momentum_space.py"),
             3: ("Free Particle", "level_3_free_particle", "Level3FreeParticle", "levels/level_3_free_particle.py"),
-            4: ("Eigenfunctions", "level_4_eigenfunctions", "Level4Eigenfunctions", "levels/level_4_eigenfunctions.py"),
-            5: ("Split-Operator", "level_5_split_operator", "Level5SplitOperator", "levels/level_5_split_operator.py"),
-            6: ("Infinite Well", "level_6_infinite_well", "Level6InfiniteWell", "levels/level_6_infinite_well.py"),
-            7: ("Absorbing Mask", "level_7_absorber", "Level7Absorber", "levels/level_7_absorber.py")
+            4: ("Split-Operator", "level_4_split_operator", "Level4SplitOperator", "levels/level_4_split_operator.py"),
+            5: ("Infinite Well", "level_5_infinite_well", "Level5InfiniteWell", "levels/level_5_infinite_well.py"),
+            6: ("Absorbing Mask", "level_6_absorber", "Level6Absorber", "levels/level_6_absorber.py"),
+            7: ("State Searcher", "level_7_state_searcher", "Level7StateSearcher", "levels/level_7_state_searcher.py")
         }
         
         for num, (name, mod, cls, path) in self.tasks.items():
+            if num == 7:
+                tk.Button(self.sidebar, text="🚀 Run Wave Explorer", bg="#007acc", fg="white", 
+                          font=("Arial", 10, "bold"), command=self.run_main_simulation).pack(pady=(15, 15), padx=20, fill="x")
+                          
             frame = tk.Frame(self.sidebar, bg="#252526")
             frame.pack(fill="x", pady=4, padx=10)
             
@@ -57,9 +61,6 @@ class QuantumDebugger(tk.Tk):
         # Utility Buttons
         tk.Button(self.sidebar, text="🔄 Reload Code", bg="#3e3e42", fg="white",
                   command=self.reload_code).pack(pady=(30, 10), padx=20, fill="x")
-                  
-        tk.Button(self.sidebar, text="🚀 Run Wave Explorer", bg="#007acc", fg="white", 
-                  font=("Arial", 10, "bold"), command=self.run_main_simulation).pack(pady=(0, 20), padx=20, fill="x")
 
         # Test output area appended inside the sidebar
         self.log_area = tk.Text(self.sidebar, bg="#2d2d30", fg="#d4d4d4", font=("Consolas", 9),
@@ -145,7 +146,7 @@ class QuantumDebugger(tk.Tk):
     def run_main_simulation(self):
         """Launches the main wave_explorer.py script."""
         try:
-            subprocess.Popen([sys.executable, "wave_explorer.py", "--mode", "scattering"], cwd=base_dir)
+            subprocess.Popen([sys.executable, "wave_explorer.py", ], cwd=base_dir)
         except Exception as e:
             messagebox.showerror("Execution Error", f"Failed to launch wave_explorer.py:\n{e}")
 

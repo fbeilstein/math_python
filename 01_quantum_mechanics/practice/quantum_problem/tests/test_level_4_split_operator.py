@@ -8,7 +8,7 @@ if base_dir not in sys.path:
 
 import implementation_tasks as tasks
 
-class TestLevel5SplitOperator(unittest.TestCase):
+class TestLevel4SplitOperator(unittest.TestCase):
 
     def setUp(self):
         from numpy.fft import fftfreq

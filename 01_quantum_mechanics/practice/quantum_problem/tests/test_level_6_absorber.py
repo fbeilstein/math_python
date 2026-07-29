@@ -8,7 +8,7 @@ if base_dir not in sys.path:
 
 import implementation_tasks as tasks
 
-class TestLevel7Absorber(unittest.TestCase):
+class TestLevel6Absorber(unittest.TestCase):
 
     def setUp(self):
         self.N  = 512

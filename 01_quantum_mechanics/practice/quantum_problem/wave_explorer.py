@@ -13,7 +13,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.widgets as widgets
-import argparse
 import sys
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter1d
@@ -147,14 +146,14 @@ def open_potential_editor(x_grid, current_V, callback, title="Potential Editor")
 
     plt.show(block=False)
 
-def run_explorer(mode='barrier'):
+def run_explorer():
     N = 1024
     sim_time = 0.0
     norms = []
     R_accumulated = 0.0
     T_accumulated = 0.0
 
-    if mode == 'well':
+    if False:
         L = 20.0
         x = np.linspace(0, L, N, endpoint=False)
         dx = x[1] - x[0]
@@ -169,7 +168,7 @@ def run_explorer(mode='barrier'):
         n_steps_per_frame = 10
         title = "True Infinite Well ($V=\\infty$)"
 
-    elif mode in ('barrier', 'finite_well', 'scattering'):
+    elif True:
         L = 40.0
         x = np.linspace(-L/2, L/2, N, endpoint=False)
         dx = x[1] - x[0]
@@ -188,7 +187,7 @@ def run_explorer(mode='barrier'):
         dt = 0.002
         n_steps_per_frame = 15
         
-        if mode == 'scattering':
+        if True:
             title = "Quantum Scattering (Custom Potential)"
             V_custom = np.where(np.abs(x) < 0.5, 25.0, 0.0)
         else:
@@ -232,29 +231,16 @@ def run_explorer(mode='barrier'):
 
     V_display_span = None
     V_display_fill = None
-    if mode in ('barrier', 'finite_well', 'scattering'):
-        if mode == 'scattering':
-            V = V_custom
-            # Scale V for display: map max(V) to y_max
-            v_max = max(np.max(V), 1e-5)
-            V_display = V * (y_max * 0.8) / v_max
-            V_display_fill = ax1.fill_between(x, 0, V_display, color='#ff7043', alpha=0.3)
-        else:
-            V = np.where(np.abs(x) < barrier_width / 2, v0_init, 0.0)
-            v_color = '#ff7043' if v0_init > 0 else '#4fc3f7'
-            V_display_span = ax1.axvspan(-barrier_width/2, barrier_width/2, color=v_color, alpha=0.2)
-        
-        # Absorbing zones visual cue on main plot
-        gw = int(0.1 * N)
-        ax1.axvspan(x[0], x[gw], color='#e91e63', alpha=0.1)
-        ax1.axvspan(x[-gw], x[-1], color='#e91e63', alpha=0.1)
-    elif mode == 'well':
-        # Infinite walls
-        ax1.axvline(x[0], color='white', lw=4)
-        ax1.axvline(x[-1], color='white', lw=4)
-        ax1.axvspan(x[0]-L*0.1, x[0], color='#37474f', alpha=0.5)
-        ax1.axvspan(x[-1], x[-1]+L*0.1, color='#37474f', alpha=0.5)
-        ax1.set_xlim(x[0]-L*0.1, x[-1]+L*0.1)
+    V = V_custom
+    # Scale V for display: map max(V) to y_max
+    v_max = max(np.max(V), 1e-5)
+    V_display = V * (y_max * 0.8) / v_max
+    V_display_fill = ax1.fill_between(x, 0, V_display, color='#ff7043', alpha=0.3)
+    
+    # Absorbing zones visual cue on main plot
+    gw = int(0.1 * N)
+    ax1.axvspan(x[0], x[gw], color='#e91e63', alpha=0.1)
+    ax1.axvspan(x[-gw], x[-1], color='#e91e63', alpha=0.1)
 
     # Norm Plot
     norm_line, = ax2.plot([], [], color='#ce93d8', lw=1.5)
@@ -271,15 +257,8 @@ def run_explorer(mode='barrier'):
     slider_k0    = widgets.Slider(ax_k0, 'Momentum $k_0$', 2.0, 20.0, valinit=k0_init, color='#ffb74d')
     slider_sigma = widgets.Slider(ax_sigma, 'Width $\\sigma$', 0.5, 2.0, valinit=sigma_init, color='#81c784')
 
-    slider_v0 = slider_a = None
-    if mode in ('barrier', 'finite_well'):
-        ax_v0 = plt.axes([0.15, 0.06, 0.65, 0.03])
-        ax_a  = plt.axes([0.15, 0.01, 0.65, 0.03])
-        slider_v0 = widgets.Slider(ax_v0, 'Potential $V_0$', -50.0, 50.0, valinit=v0_init, color='#ff7043')
-        slider_a  = widgets.Slider(ax_a, 'Width $a$', 0.1, 5.0, valinit=barrier_width, color='#ba68c8')
-
     # Colorize slider text
-    for s in [slider_k0, slider_sigma, slider_v0, slider_a]:
+    for s in [slider_k0, slider_sigma]:
         if s:
             s.label.set_color('white')
             s.valtext.set_color('white')
@@ -287,10 +266,8 @@ def run_explorer(mode='barrier'):
     ax_btn = plt.axes([0.85, 0.06, 0.1, 0.05])
     btn_fire = widgets.Button(ax_btn, 'Fire Packet', color='#81c784', hovercolor='#66bb6a')
     
-    btn_pot = None
-    if mode == 'scattering':
-        ax_btn_pot = plt.axes([0.72, 0.06, 0.12, 0.05])
-        btn_pot = widgets.Button(ax_btn_pot, 'Edit Potential', color='#ffb74d', hovercolor='#ffa726')
+    ax_btn_pot = plt.axes([0.72, 0.06, 0.12, 0.05])
+    btn_pot = widgets.Button(ax_btn_pot, 'Edit Potential', color='#ffb74d', hovercolor='#ffa726')
 
     def reset_sim(event=None):
         nonlocal psi, sim_time, norms, V, V_display_span, V_display_fill, barrier_width, R_accumulated, T_accumulated
@@ -304,60 +281,42 @@ def run_explorer(mode='barrier'):
         except Exception:
             psi = np.zeros(len(x), dtype=complex)
         
-        if mode in ('barrier', 'finite_well') and slider_v0 and slider_a:
-            barrier_width = slider_a.val
-            V = np.where(np.abs(x) < barrier_width / 2, slider_v0.val, 0.0)
-            if V_display_span:
-                V_display_span.remove()
-            v_color = '#ff7043' if slider_v0.val > 0 else '#4fc3f7'
-            V_display_span = ax1.axvspan(-barrier_width / 2, barrier_width / 2, color=v_color, alpha=0.2)
-        elif mode == 'scattering':
-            V = V_custom.copy()
-            if V_display_fill:
-                V_display_fill.remove()
-            v_max = max(np.max(np.abs(V)), 1e-5)
-            V_display = V * (y_max * 0.8) / v_max
-            V_display_fill = ax1.fill_between(x, 0, V_display, color='#ff7043', alpha=0.3)
+        V = V_custom.copy()
+        if V_display_fill:
+            V_display_fill.remove()
+        v_max = max(np.max(np.abs(V)), 1e-5)
+        V_display = V * (y_max * 0.8) / v_max
+        V_display_fill = ax1.fill_between(x, 0, V_display, color='#ff7043', alpha=0.3)
 
     slider_k0.on_changed(reset_sim)
     slider_sigma.on_changed(reset_sim)
     btn_fire.on_clicked(reset_sim)
-    if slider_v0:
-        slider_v0.on_changed(reset_sim)
-        slider_a.on_changed(reset_sim)
-        
-    if btn_pot:
-        def apply_new_potential(new_V):
-            nonlocal V_custom
-            V_custom = new_V
-            reset_sim()
+    
+    def apply_new_potential(new_V):
+        nonlocal V_custom
+        V_custom = new_V
+        reset_sim()
 
-        def open_editor_wrapper(event):
-            open_potential_editor(x, V_custom, apply_new_potential)
+    def open_editor_wrapper(event):
+        open_potential_editor(x, V_custom, apply_new_potential)
 
-        btn_pot.on_clicked(open_editor_wrapper)
+    btn_pot.on_clicked(open_editor_wrapper)
 
     def animate(frame):
         nonlocal psi, sim_time, R_accumulated, T_accumulated
         try:
             for _ in range(n_steps_per_frame):
-                if mode == 'well':
-                    from scipy.fft import dst, idst
-                    psi_k = dst(psi, type=1, norm='ortho')
-                    psi_k = psi_k * np.exp(-1j * E_k * dt)
-                    psi = idst(psi_k, type=1, norm='ortho')
-                else:
-                    new_psi = tasks.split_operator_step(psi, V, dx, dt)
-                    if new_psi is None: raise NotImplementedError
-                    
-                    prob_before = np.abs(new_psi)**2
-                    psi = new_psi * mask
-                    prob_after = np.abs(psi)**2
-                    
-                    loss = prob_before - prob_after
-                    gw = int(0.1 * N)
-                    R_accumulated += np.sum(loss[:gw]) * dx
-                    T_accumulated += np.sum(loss[-gw:]) * dx
+                new_psi = tasks.split_operator_step(psi, V, dx, dt)
+                if new_psi is None: raise NotImplementedError
+                
+                prob_before = np.abs(new_psi)**2
+                psi = new_psi * mask
+                prob_after = np.abs(psi)**2
+                
+                loss = prob_before - prob_after
+                gw = int(0.1 * N)
+                R_accumulated += np.sum(loss[:gw]) * dx
+                T_accumulated += np.sum(loss[-gw:]) * dx
                     
             sim_time += n_steps_per_frame * dt
         except Exception:
@@ -376,22 +335,9 @@ def run_explorer(mode='barrier'):
             ax2.set_xlim(0, len(norms) + 100)
         norm_line.set_data(range(len(norms)), norms)
 
-        if mode in ('barrier', 'finite_well', 'scattering'):
-            R = R_accumulated
-            T = T_accumulated
-            
-            # bonus overlay analytical T if barrier
-            bonus_T = ""
-            if mode == 'barrier' and hasattr(tasks, 'compute_tunneling_probability'):
-                try:
-                    t_an = tasks.compute_tunneling_probability(slider_v0.val, slider_k0.val, slider_a.val)
-                    bonus_T = f" | T_exact: {t_an*100:04.1f}%"
-                except Exception:
-                    pass
-
-            status = f't={sim_time:.2f} | R:{R*100:04.1f}% | T:{T*100:04.1f}%{bonus_T}'
-        else:
-            status = f't={sim_time:.3f} | norm={norm:.6f}'
+        R = R_accumulated
+        T = T_accumulated
+        status = f't={sim_time:.2f} | R:{R*100:04.1f}% | T:{T*100:04.1f}%'
 
         time_text.set_text(status)
         return prob_line, real_line, norm_line, time_text
@@ -401,8 +347,5 @@ def run_explorer(mode='barrier'):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', choices=['well', 'barrier', 'finite_well', 'scattering'], default='barrier')
-    args = parser.parse_args()
-    print(f"Launching Wave Explorer in {args.mode} mode...")
-    run_explorer(args.mode)
+    print("Launching Wave Explorer in Custom Scattering mode...")
+    run_explorer()
