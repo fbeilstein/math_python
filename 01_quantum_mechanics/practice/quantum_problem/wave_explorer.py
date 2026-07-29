@@ -50,7 +50,7 @@ def open_potential_editor(x_grid, current_V, callback, title="Potential Editor")
     V_state = current_V.copy()
     is_drawing = [False]
     drawing_mode = [False]
-    drawn_x, drawn_y = [], []
+    last_point = [None]
     
     def update_plot():
         line.set_data(x_grid, V_state)
@@ -114,35 +114,31 @@ def open_potential_editor(x_grid, current_V, callback, title="Potential Editor")
     def on_press(event):
         if not drawing_mode[0] or event.inaxes != ax: return
         is_drawing[0] = True
-        drawn_x.clear()
-        drawn_y.clear()
+        last_point[0] = (event.xdata, event.ydata)
 
     def on_motion(event):
         if not is_drawing[0] or event.inaxes != ax: return
-        drawn_x.append(event.xdata)
-        drawn_y.append(event.ydata)
-        line.set_data(drawn_x, drawn_y)
+        x1, y1 = last_point[0]
+        x2, y2 = event.xdata, event.ydata
+        
+        if x1 == x2:
+            idx = np.argmin(np.abs(x_grid - x1))
+            V_state[idx] = y2
+        else:
+            xa, xb = (x1, x2) if x1 < x2 else (x2, x1)
+            ya, yb = (y1, y2) if x1 < x2 else (y2, y1)
+            
+            mask = (x_grid >= xa) & (x_grid <= xb)
+            if np.any(mask):
+                V_state[mask] = ya + (yb - ya) * (x_grid[mask] - xa) / (xb - xa)
+                
+        last_point[0] = (event.xdata, event.ydata)
+        line.set_data(x_grid, V_state)
         fig.canvas.draw_idle()
 
     def on_release(event):
         if not is_drawing[0]: return
         is_drawing[0] = False
-        if len(drawn_x) < 2:
-            update_plot()
-            return
-            
-        order = np.argsort(drawn_x)
-        dx_arr = np.array(drawn_x)[order]
-        dy_arr = np.array(drawn_y)[order]
-        _, unique_idx = np.unique(dx_arr, return_index=True)
-        dx_arr = dx_arr[unique_idx]
-        dy_arr = dy_arr[unique_idx]
-        
-        interp_func = interp1d(dx_arr, dy_arr, kind='linear', bounds_error=False, fill_value=np.nan)
-        V_new = interp_func(x_grid)
-        mask = ~np.isnan(V_new)
-        V_state[mask] = V_new[mask]
-        V_state[:] = gaussian_filter1d(V_state, sigma=1)
         update_plot()
 
     fig.canvas.mpl_connect('button_press_event', on_press)
@@ -201,7 +197,7 @@ def run_explorer(mode='barrier'):
 
     # Build the initial wave packet
     try:
-        psi = tasks.gaussian_packet(x, x0, sigma_init, k0_init)
+        psi = tasks.gaussian_packet(N, dx, x[0], x0, sigma_init, k0_init)
         if psi is None: raise NotImplementedError
     except Exception:
         psi = np.zeros(N, dtype=complex)
@@ -303,7 +299,7 @@ def run_explorer(mode='barrier'):
         R_accumulated = 0.0
         T_accumulated = 0.0
         try:
-            psi = tasks.gaussian_packet(x, x0, slider_sigma.val, slider_k0.val)
+            psi = tasks.gaussian_packet(N, dx, x[0], x0, slider_sigma.val, slider_k0.val)
             if psi is None: raise NotImplementedError
         except Exception:
             psi = np.zeros(len(x), dtype=complex)
@@ -351,7 +347,7 @@ def run_explorer(mode='barrier'):
                     psi_k = psi_k * np.exp(-1j * E_k * dt)
                     psi = idst(psi_k, type=1, norm='ortho')
                 else:
-                    new_psi = tasks.split_operator_step(psi, k_grid, V, dt)
+                    new_psi = tasks.split_operator_step(psi, V, dx, dt)
                     if new_psi is None: raise NotImplementedError
                     
                     prob_before = np.abs(new_psi)**2
@@ -381,8 +377,8 @@ def run_explorer(mode='barrier'):
         norm_line.set_data(range(len(norms)), norms)
 
         if mode in ('barrier', 'finite_well', 'scattering'):
-            R = np.sum(prob[x < -barrier_width/2]) * dx + R_accumulated
-            T = np.sum(prob[x > barrier_width/2]) * dx + T_accumulated
+            R = R_accumulated
+            T = T_accumulated
             
             # bonus overlay analytical T if barrier
             bonus_T = ""

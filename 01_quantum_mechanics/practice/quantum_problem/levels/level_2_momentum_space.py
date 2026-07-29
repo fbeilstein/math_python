@@ -68,17 +68,19 @@ class Level2MomentumSpace:
 
     def draw(self):
         L  = 10.0
-        x  = np.linspace(0, L, 1024, endpoint=False)
-        dx = x[1] - x[0]
+        N  = 1024
+        dx = L / N
+        x_start = 0.0
+        x  = x_start + np.arange(N) * dx
 
         try:
-            psi = tasks.gaussian_packet(x, L / 2, self.sl_sigma.val, self.sl_k0.val)
+            psi = tasks.gaussian_packet(N, dx, x_start, L / 2, self.sl_sigma.val, self.sl_k0.val)
         except Exception:
             return
 
         try:
-            result = tasks.momentum_wavefunction(psi, dx)
-            if result is None: raise NotImplementedError("momentum_wavefunction returned None")
+            result = tasks.to_momentum_space(psi, dx)
+            if result is None: raise NotImplementedError("to_momentum_space returned None")
             k, phi = result
         except Exception as e:
             self.ax_k.text(0.5, 0.5, f'Error:\n{e}', transform=self.ax_k.transAxes,

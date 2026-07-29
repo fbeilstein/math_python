@@ -56,12 +56,14 @@ class Level1Gaussian(BaseLevel):
     def draw(self):
         self.style_axes(xlabel='x', ylabel='')
         L = 10.0
-        x = np.linspace(0, L, 1024, endpoint=False)
+        N = 1024
+        x = np.linspace(0, L, N, endpoint=False)
+        dx = x[1] - x[0]
+        x_start = x[0]
 
         try:
-            psi = tasks.gaussian_packet(x, self.sl_x0.val, self.sl_sigma.val, self.sl_k0.val)
+            psi = tasks.gaussian_packet(N, dx, x_start, self.sl_x0.val, self.sl_sigma.val, self.sl_k0.val)
             if psi is None: raise NotImplementedError("gaussian_packet returned None")
-            dx = x[1] - x[0]
             prob = np.abs(psi)**2
             norm = np.sum(prob) * dx
         except Exception as e:

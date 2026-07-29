@@ -66,7 +66,7 @@ class Level7Absorber:
         L  = 40.0
         x  = np.linspace(-L/2, L/2, N, endpoint=False)
         dx = x[1] - x[0]
-        k  = 2 * np.pi * fftfreq(N, d=dx)
+        # Momentum grid handled internally by dual-space transforms
         V  = np.zeros(N)
         dt = 0.002
         gf = self.sl_frac.val
@@ -90,10 +90,10 @@ class Level7Absorber:
         self.ax_mask.legend(fontsize=9, facecolor='#1a1a2e', labelcolor='white')
 
         # -- right panel: apply mask during evolution --
-        psi = tasks.gaussian_packet(x, -L * 0.25, 1.0, 10.0)
+        psi = tasks.gaussian_packet(N, dx, x[0], -L * 0.25, 1.0, 10.0)
         try:
             for _ in range(200):
-                psi = tasks.split_operator_step(psi, k, V, dt)
+                psi = tasks.split_operator_step(psi, V, dx, dt)
                 if psi is None: psi = np.zeros_like(x, dtype=complex)
                 psi *= mask
         except Exception:

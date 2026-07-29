@@ -37,11 +37,10 @@ class Level3FreeParticle:
         N  = 1024
         self.x  = np.linspace(0, L, N, endpoint=False)
         self.dx = self.x[1] - self.x[0]
-        from numpy.fft import fftfreq
-        self.k  = 2 * np.pi * fftfreq(N, d=self.dx)
+        # Momentum grid is now handled internally by the dual-space transforms.
         self.dt = 0.005
 
-        self.psi = tasks.gaussian_packet(self.x, L * 0.3, 0.6, 8.0)
+        self.psi = tasks.gaussian_packet(N, self.dx, self.x[0], L * 0.3, 0.6, 8.0)
         if self.psi is None: self.psi = np.zeros_like(self.x, dtype=complex)
         if self.psi is None: self.psi = np.zeros_like(self.x, dtype=complex)
         self.norms = []
@@ -77,7 +76,7 @@ class Level3FreeParticle:
     def _animate(self, frame):
         try:
             for _ in range(8):
-                res = tasks.evolve_free_particle(self.psi, self.k, self.dt)
+                res = tasks.evolve_free_particle(self.psi, self.dx, self.dt)
                 if res is None: raise NotImplementedError("evolve_free_particle returned None")
                 self.psi = res
             self.t += 8 * self.dt

@@ -8,6 +8,8 @@
 \usepackage{tabularx}
 \usepackage{booktabs}
 \usepackage{hyperref}
+\usepackage{tikz}
+\usepackage[compat=1.1.0]{tikz-feynman}
 
 \geometry{a4paper, margin=1in}
 
@@ -61,26 +63,68 @@ Open \lstinline|implementation_tasks.py|. You will find empty un-implemented fun
 
 \subsubsection*{Mathematical part}
 \textbf{Given:} A position spatial grid $x$, a centroid $x_0$, a width $\sigma$, and a momentum $k_0$. \\
-\textbf{Derive:} The normalized Gaussian wave packet. The formula is:
+\textbf{Derive:} The discrete normalization procedure. The continuous formula for the wave packet is given by:
 $$
 \psi(x) = \left(\frac{1}{2\pi \sigma^2}\right)^{1/4} \exp\left(-\frac{(x-x_0)^2}{4\sigma^2}\right) e^{i k_0 x}
 $$
-Ensure you perform a discrete normalization pass: divide by $\sqrt{\sum |\psi|^2 \Delta x}$ to combat grid effects.
+Because we are working on a discrete grid, the continuous normalization constant is only an approximation. \\
+\textit{Hint:} Use the discrete Riemann sum $\sum |\psi(x_i)|^2 \Delta x = 1$ to derive the correct numerical normalization factor, and apply it to your array to combat discretization effects.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|gaussian_packet(x, x0, sigma, k0)|. Must return a complex \lstinline|numpy.array|. \\
-\textbf{Test:} \lstinline|python levels/level_1_gaussian.py|. Does it look like a smooth bump? Does the integral display 1.000?
+\textbf{Implement:} \lstinline|gaussian_packet(N, dx, x_start, x0, sigma, k0)|. Construct the spatial grid $x$ internally and return the normalized complex \lstinline|numpy.array|.
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c | c | c | c | c}
+\toprule
+\textbf{Math Symbol} & $N$ & $\Delta x$ & $x_{start}$ & $x_0$ & $\sigma$ & $k_0$ & $\psi(x)$ \\
+\midrule
+\textbf{Argument} & \lstinline|N| & \lstinline|dx| & \lstinline|x_start| & \lstinline|x0| & \lstinline|sigma| & \lstinline|k0| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|int| & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|np.ndarray| \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} Does it look like a smooth bump? Does the integral display 1.000?
 
 
 \section*{Problem 2: Fourier Duality}
 
 \subsubsection*{Mathematical part}
-\textbf{Given:} The spatial wavefunction $\psi(x)$ and grid spacing $\Delta x$. \\
-\textbf{Derive:} The momentum-space wavefunction $\phi(k)$ and the conjugate $k$-grid. Use Fast Fourier Transform (FFT). Remember that $\phi(k) \approx \text{FFT}(\psi) \cdot \Delta x$. You must normalize $\phi(k)$ discretely.
+\textbf{Given:} The spatial wavefunction $\psi(x)$ and the spatial grid spacing $\Delta x$ (the physical distance between adjacent discrete $x$ coordinates). \\
+\textbf{Derive:} The symmetric dual-space transforms. Use the physicist's convention scaling factor $1/\sqrt{2\pi}$ to map the abstract FFT to the continuous $L^2(\mathbb{R})$ integral.
+
+\textit{Formal Derivation Challenge:} Standard \lstinline|fft| implicitly assumes the spatial domain starts at $x=0$. If our grid actually starts at $x_{start}$, the true Fourier integral picks up a global linear phase shift $e^{-i k x_{start}}$. Prove mathematically that because the kinetic time-evolution operator $e^{-i k^2 \Delta t / 2}$ commutes with spatial shifts, this absolute phase exactly cancels out when you inverse transform back to position space! Consequently, prove that you only ever need $\Delta x$ to perform both the forward and inverse symmetric transforms, and that $x_{start}$ and $\Delta k$ are mathematically redundant.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|momentum_wavefunction(psi, dx)|. \\
-\textbf{Test:} \lstinline|python levels/level_2_momentum_space.py|. Watch what happens when you adjust $\sigma$. As the packet gets narrow in space, does it broaden in momentum?
+\textbf{Implement:} \lstinline|to_momentum_space(psi, dx)| and \lstinline|to_position_space(phi, dx)|.
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c}
+\toprule
+\textbf{Math Symbol} & $\psi(x)$ & $\Delta x$ & $(k, \phi(k))$ \\
+\midrule
+\textbf{Argument} & \lstinline|psi| & \lstinline|dx| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|tuple[np.ndarray, np.ndarray]| \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c}
+\toprule
+\textbf{Math Symbol} & $\phi(k)$ & $\Delta x$ & $\psi(x)$ \\
+\midrule
+\textbf{Argument} & \lstinline|phi| & \lstinline|dx| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|np.ndarray| \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} Watch what happens when you adjust $\sigma$. As the packet gets narrow in space, does it broaden in momentum?
 
 
 \section*{Problem 3: Free Evolution}
@@ -88,21 +132,47 @@ Ensure you perform a discrete normalization pass: divide by $\sqrt{\sum |\psi|^2
 \subsubsection*{Mathematical part}
 \textbf{Given:} The Hamiltonian for a free particle is purely kinetic: $\hat{H} = \hat{p}^2 / 2m$. In $k$-space, the propagator is an exact algebraic multiplication:
 $$ \phi(k, t+\Delta t) = \phi(k, t) \exp\left(-i \frac{k^2 \Delta t}{2}\right) $$
+\textbf{Derive:} The numerical procedure to apply this continuous phase shift to a discretely sampled wave packet, utilizing your dual-space transforms from Problem 2 to hop back and forth between position and momentum space.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|evolve_free_particle(psi, k, dt)|. Use FFT to go to $k$-space, apply the phase, and IFFT back. \\
-\textbf{Test:} \lstinline|python levels/level_3_free_particle.py|. The wave packet should move to the right and spread.
+\textbf{Implement:} \lstinline|evolve_free_particle(psi, dx, dt)|.
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c | c}
+\toprule
+\textbf{Math Symbol} & $\psi(x, t)$ & $\Delta x$ & $\Delta t$ & $\psi(x, t+\Delta t)$ \\
+\midrule
+\textbf{Argument} & \lstinline|psi| & \lstinline|dx| & \lstinline|dt| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|float| & \lstinline|np.ndarray| \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} The wave packet should move to the right and spread.
 
 
 \section*{Problem 4: Why Quantization?}
 
 \subsubsection*{Mathematical part}
-\textbf{Given:} An infinite square well from $x=0$ to $x=L$. \\
-\textbf{Derive:} The eigenfunction $\psi_n(x) = \sqrt{\frac{2}{L}}\sin\left(\frac{n\pi x}{L}\right)$.
+\textbf{Given:} An infinite square well from $x=0$ to $x=L$. The continuous eigenfunction is given by:
+$$ \psi_n(x) = \sqrt{\frac{2}{L}}\sin\left(\frac{n\pi x}{L}\right) $$
+\textbf{Derive:} The discretized array for $\psi_n(x)$. Notice that while $\sqrt{2/L}$ normalizes the continuous integral $\int_0^L \psi^2 dx = 1$, your discrete array must also be normalized. \textit{Hint:} Does the continuous formula accurately normalize the discrete array out of the box, or do you need a discrete normalization pass?
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|well_eigenfunction(x, n, L)|. It returns the purely real function array. \\
-\textbf{Test:} \lstinline|python levels/level_4_eigenfunctions.py|. \textbf{Critial Experiment:} move the $n$ slider to a non-integer. Notice how $\psi(L) \neq 0$. This explicitly shows why only integers are allowed — particles cannot exist inside infinite walls.
+\textbf{Implement:} \lstinline|well_eigenfunction(x, n, L)|. It returns the purely real function array.
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c | c}
+\toprule
+\textbf{Math Symbol} & $x$ & $n$ & $L$ & $\psi_n(x)$ \\
+\midrule
+\textbf{Argument} & \lstinline|x| & \lstinline|n| & \lstinline|L| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|float| & \lstinline|np.ndarray| \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} Move the $n$ slider to a non-integer. Notice how $\psi(L) \neq 0$. This explicitly shows why only integers are allowed — particles cannot exist inside infinite walls.
 
 
 \section*{Problem 5: Split-Operator}
@@ -111,9 +181,45 @@ $$ \phi(k, t+\Delta t) = \phi(k, t) \exp\left(-i \frac{k^2 \Delta t}{2}\right) $
 \textbf{Given:} The full potential $V(x)$. The Trotter formula splits the propagator:
 $$ e^{-i \hat{H} \Delta t } \approx e^{-i \hat{V} \Delta t/2 } \, e^{-i \hat{T} \Delta t } \, e^{-i \hat{V} \Delta t/2 } $$
 
+\textit{Feynman Diagram Analogy:} This splitting is mathematically equivalent to the lowest-order term of a Dyson series expansion. The $e^{-i \hat{T} \Delta t}$ term is the \textbf{bare propagator} (the internal line representing free propagation through empty space), and the $e^{-i \hat{V} \Delta t / 2}$ terms are the \textbf{interaction vertices} (where the particle interacts with the external classical field and receives a momentum kick).
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+  \begin{feynman}
+    \vertex (a) at (0, 0);
+    \vertex (b) at (3, 0) [dot];
+    \vertex (c) at (6, 0) [dot];
+    \vertex (d) at (9, 0);
+    \vertex (v1) at (3, 1.5) {$V(x)$};
+    \vertex (v2) at (6, 1.5) {$V(x)$};
+    \diagram* {
+      (a) -- [fermion, edge label'=$\psi(t)$] (b) -- [fermion, edge label'=$e^{-i\hat{T}\Delta t}$] (c) -- [fermion, edge label'=$\psi(t+\Delta t)$] (d),
+      (b) -- [photon, edge label=$e^{-i\hat{V}\Delta t/2}$] (v1),
+      (c) -- [photon, edge label=$e^{-i\hat{V}\Delta t/2}$] (v2),
+    };
+  \end{feynman}
+\end{tikzpicture}
+\caption{The Trotter splitting viewed as a scattering process: half-interaction, free propagation, half-interaction.}
+\end{figure}
+
+\textbf{Derive:} The sequence of numerical operations required to apply this Trotter splitting. Notice that the bare propagator is exactly your \lstinline|evolve_free_particle| function!
+
 \subsubsection*{Implementation part}
-\textbf{Implement:} \lstinline|split_operator_step(psi, k, V, dt)|. Apply the first half potential kick, hop to $k$-space, apply the full kinetic kick, hop to $x$-space, and apply the final half potential kick. (Use your code from Problem 3). \\
-\textbf{Test:} \lstinline|python levels/level_5_split_operator.py|. Watch the packet scatter against the barrier... and then wrap around the edges!
+\textbf{Implement:} \lstinline|split_operator_step(psi, V, dx, dt)|. Sandwich the free propagation step between two half-potential interaction vertices.
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c | c | c}
+\toprule
+\textbf{Math Symbol} & $\psi(x, t)$ & $V(x)$ & $\Delta x$ & $\Delta t$ & $\psi(x, t+\Delta t)$ \\
+\midrule
+\textbf{Argument} & \lstinline|psi| & \lstinline|V| & \lstinline|dx| & \lstinline|dt| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|np.ndarray| & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|float| & \lstinline|np.ndarray| \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} Watch the packet scatter against the barrier... and then wrap around the edges!
 
 
 \section*{Problems 6 \& 7: The Final Fixes}
@@ -121,7 +227,36 @@ $$ e^{-i \hat{H} \Delta t } \approx e^{-i \hat{V} \Delta t/2 } \, e^{-i \hat{T} 
 You have two distinct problems to solve numerical artifacts:
 \begin{itemize}
     \item \textbf{Level 6 (Infinite Well via DST):} Use the Discrete Sine Transform (DST) to exactly solve the infinite well boundary condition. \textbf{Implement:} \lstinline|dst_energy_levels(N, L)|.
-    \item \textbf{Level 7 (Absorbing BCs):} In an open space, we want to kill scattering that reaches the grid boundary. \textbf{Implement:} \lstinline|absorbing_mask(N, gobble_frac)| using a $\sin^2$ taper envelope that goes to 0 near edges.
+    
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c}
+\toprule
+\textbf{Math Symbol} & $N$ & $L$ & $E_k$ \\
+\midrule
+\textbf{Argument} & \lstinline|N| & \lstinline|L| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|int| & \lstinline|float| & \lstinline|np.ndarray| \\
+\bottomrule
+\end{tabular}
+\end{center}
+    
+    \item \textbf{Level 7 (Absorbing BCs):} In an open space, we want to kill scattering that reaches the grid boundary. \\
+    \textbf{Derive:} A smooth array $M(x)$ that is exactly 1.0 in the interior and tapers to 0.0 at the edges according to a $\sin^2$ envelope, such that multiplying $\psi(x)$ by $M(x)$ smoothly absorbs outgoing waves without hard reflections. \\
+    \textbf{Implement:} \lstinline|absorbing_mask(N, gobble_frac)|.
+    
+\begin{center}
+\renewcommand{\arraystretch}{2.0}
+\begin{tabular}{r | c | c | c}
+\toprule
+\textbf{Math Symbol} & $N$ & $g_{frac}$ & $M(x)$ \\
+\midrule
+\textbf{Argument} & \lstinline|N| & \lstinline|gobble_frac| & \lstinline|return| \\
+\midrule
+\textbf{Type} & \lstinline|int| & \lstinline|float| & \lstinline|np.ndarray| \\
+\bottomrule
+\end{tabular}
+\end{center}
 \end{itemize}
 
 
@@ -139,4 +274,3 @@ python wave_explorer.py --mode finite_well
 Submit \texttt{implementation\_tasks.py} and two screenshots proving your \lstinline|wave_explorer.py| achieved scattering and bound states.
 
 \end{document}
-

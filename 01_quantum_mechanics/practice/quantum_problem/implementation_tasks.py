@@ -1,6 +1,5 @@
 import numpy as np
 from numpy.fft import fft, ifft, fftfreq
-from scipy.fft import dst, idst
 
 # --- Natural units: hbar = m = 1 ---
 hbar = 1.0
@@ -10,43 +9,51 @@ m    = 1.0
 #  STUDENT IMPLEMENTATION (ASSIGNMENTS 1-3)
 # =============================================================================
 
-def gaussian_packet(x, x0, sigma, k0): #contains solution
+def gaussian_packet(N, dx, x_start, x0, sigma, k0): #contains solution
     """
-    Create a normalized Gaussian wave packet.
+    Create a normalized Gaussian wave packet on a uniform spatial grid.
 
         psi(x) = A * exp(-(x - x0)^2 / (4*sigma^2)) * exp(i*k0*x)
 
     where A is chosen so that the integral of |psi|^2 dx over the grid = 1.
     """
+    x = x_start + np.arange(N) * dx
     psi = (1 / (2 * np.pi * sigma**2))**0.25 * \
           np.exp(-(x - x0)**2 / (4 * sigma**2)) * \
           np.exp(1j * k0 * x)
-    dx = x[1] - x[0]
     psi /= np.sqrt(np.sum(np.abs(psi)**2) * dx)
     return psi
 
 
-def momentum_wavefunction(psi, dx): #contains solution
+def to_momentum_space(psi, dx): #contains solution
     """
     Compute the momentum-space wavefunction phi(k) using FFT.
-    Normalized so that integral |phi|^2 dk = 1.
+    Uses the symmetric physicist convention (1/sqrt(2pi) scaling).
     """
     N = len(psi)
     k = 2 * np.pi * fftfreq(N, d=dx)
-    phi = fft(psi) * dx          # Riemann-sum approximation of Fourier integral
-    dk = 2 * np.pi / (N * dx)
-    phi /= np.sqrt(np.sum(np.abs(phi)**2) * dk)
+    phi = fft(psi) * dx / np.sqrt(2 * np.pi)
     return k, phi
 
 
-def evolve_free_particle(psi, k, dt): #contains solution
+def to_position_space(phi, dx): #contains solution
+    """
+    Compute the position-space wavefunction psi(x) from phi(k).
+    Uses the symmetric physicist convention (1/sqrt(2pi) scaling).
+    """
+    psi = ifft(phi) / dx * np.sqrt(2 * np.pi)
+    return psi
+
+
+def evolve_free_particle(psi, dx, dt): #contains solution
     """
     Evolve psi by dt under the free-particle propagator.
     H = hbar^2 k^2 / (2m)  =>  phase = exp(-i hbar k^2 dt / 2m)
     """
-    psi_k = fft(psi)
-    psi_k = psi_k * np.exp(-1j * hbar * k**2 * dt / (2 * m))
-    return ifft(psi_k)
+    k, phi = to_momentum_space(psi, dx)
+    phi = phi * np.exp(-1j * hbar * k**2 * dt / (2 * m))
+    psi = to_position_space(phi, dx)
+    return psi
 
 
 # =============================================================================
@@ -66,15 +73,13 @@ def well_eigenfunction(x, n, L): #contains solution
 #  STUDENT IMPLEMENTATION (ASSIGNMENTS 5-6)
 # =============================================================================
 
-def split_operator_step(psi, k, V, dt): #contains solution
+def split_operator_step(psi, V, dx, dt): #contains solution
     """
-    One Trotter split-operator step.
+    One Trotter split-operator step:
     exp(-iHdt) ≈ exp(-iV dt/2) · exp(-iT dt) · exp(-iV dt/2)
     """
     psi = psi * np.exp(-1j * V * dt / (2 * hbar))
-    psi_k = fft(psi)
-    psi_k = psi_k * np.exp(-1j * hbar * k**2 * dt / (2 * m))
-    psi = ifft(psi_k)
+    psi = evolve_free_particle(psi, dx, dt)
     psi = psi * np.exp(-1j * V * dt / (2 * hbar))
     return psi
 

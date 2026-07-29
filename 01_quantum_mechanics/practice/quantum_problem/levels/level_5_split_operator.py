@@ -41,8 +41,7 @@ class Level5SplitOperator:
         N  = 1024
         self.x  = np.linspace(-L/2, L/2, N, endpoint=False)
         self.dx = self.x[1] - self.x[0]
-        from numpy.fft import fftfreq
-        self.k_grid = 2 * np.pi * fftfreq(N, d=self.dx)
+        # Momentum grid is now handled internally by the dual-space transforms.
         self.L      = L
         self.dt     = 0.002
         self.V0     = 25.0
@@ -71,7 +70,7 @@ class Level5SplitOperator:
     def _init_state(self):
         self.V0   = self.sl_v0.val
         self.V    = np.where(np.abs(self.x) < self.a / 2, self.V0, 0.0)
-        self.psi  = tasks.gaussian_packet(self.x, -self.L * 0.25, 1.0, 10.0)
+        self.psi  = tasks.gaussian_packet(len(self.x), self.dx, self.x[0], -self.L * 0.25, 1.0, 10.0)
         if self.psi is None: self.psi = np.zeros_like(self.x, dtype=complex)
         self.norms = []
         self.t     = 0.0
@@ -122,7 +121,7 @@ class Level5SplitOperator:
     def _animate(self, frame):
         try:
             for _ in range(12):
-                res = tasks.split_operator_step(self.psi, self.k_grid, self.V, self.dt)
+                res = tasks.split_operator_step(self.psi, self.V, self.dx, self.dt)
                 if res is None: raise NotImplementedError()
                 self.psi = res
             self.t += 12 * self.dt
