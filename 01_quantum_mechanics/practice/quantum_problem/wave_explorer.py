@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.widgets as widgets
 import sys
-from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter1d
 
 # Import student implementations (should fail if not done)
@@ -153,46 +152,20 @@ def run_explorer():
     R_accumulated = 0.0
     T_accumulated = 0.0
 
-    if False:
-        L = 20.0
-        x = np.linspace(0, L, N, endpoint=False)
-        dx = x[1] - x[0]
-        try:
-            E_k = tasks.dst_energy_levels(N, L)
-            if E_k is None: raise NotImplementedError
-        except Exception:
-            E_k = np.zeros(N)
+    L = 40.0
+    x = np.linspace(-L/2, L/2, N, endpoint=False)
+    dx = x[1] - x[0]
+    from numpy.fft import fftfreq
+    k_grid = 2 * np.pi * fftfreq(N, d=dx)
 
-        x0, sigma_init, k0_init = L * 0.3, L * 0.05, 15.0
-        dt = 0.005
-        n_steps_per_frame = 10
-        title = "True Infinite Well ($V=\\infty$)"
-
-    elif True:
-        L = 40.0
-        x = np.linspace(-L/2, L/2, N, endpoint=False)
-        dx = x[1] - x[0]
-        from numpy.fft import fftfreq
-        k_grid = 2 * np.pi * fftfreq(N, d=dx)
-        
-        try:
-            mask = tasks.absorbing_mask(N, gobble_frac=0.1)
-            if mask is None: raise NotImplementedError
-        except Exception:
-            mask = np.ones(N)
-
-        barrier_width = 0.5
-        v0_init = 25.0
-        x0, sigma_init, k0_init = -L * 0.25, 1.0, 10.0
-        dt = 0.002
-        n_steps_per_frame = 15
-        
-        if True:
-            title = "Quantum Scattering (Custom Potential)"
-            V_custom = np.where(np.abs(x) < 0.5, 25.0, 0.0)
-        else:
-            title = "Quantum Tunneling & Scattering"
-            V_custom = None
+    barrier_width = 0.5
+    v0_init = 25.0
+    x0, sigma_init, k0_init = -L * 0.25, 1.0, 10.0
+    dt = 0.002
+    n_steps_per_frame = 15
+    
+    title = "Quantum Scattering (Custom Potential)"
+    V_custom = np.where(np.abs(x) < 0.5, 25.0, 0.0)
 
     # Build the initial wave packet
     try:
@@ -310,7 +283,10 @@ def run_explorer():
                 if new_psi is None: raise NotImplementedError
                 
                 prob_before = np.abs(new_psi)**2
-                psi = new_psi * mask
+                try:
+                    psi = tasks.apply_absorbing_mask(new_psi, 0.1)
+                except Exception:
+                    psi = new_psi
                 prob_after = np.abs(psi)**2
                 
                 loss = prob_before - prob_after

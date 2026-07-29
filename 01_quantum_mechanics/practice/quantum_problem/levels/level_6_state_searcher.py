@@ -9,7 +9,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import implementation_tasks as tasks
 
-class Level7StateSearcher:
+class Level6StateSearcher:
     def __init__(self):
         self.fig = plt.figure(figsize=(11, 7))
         gs = self.fig.add_gridspec(2, 1, height_ratios=[3, 1], hspace=0.2)
@@ -17,7 +17,7 @@ class Level7StateSearcher:
         self.ax_E = self.fig.add_subplot(gs[1])
         
         self.fig.patch.set_facecolor('#1a1a2e')
-        self.fig.suptitle('Level 7 — The State Searcher Engine',
+        self.fig.suptitle('Level 6 — The State Searcher Engine',
                           color='white', fontsize=13, fontweight='bold')
         self.fig.subplots_adjust(bottom=0.32)
 
@@ -185,5 +185,5 @@ class Level7StateSearcher:
             pass
             
 if __name__ == '__main__':
-    lvl = Level7StateSearcher()
+    lvl = Level6StateSearcher()
     plt.show()

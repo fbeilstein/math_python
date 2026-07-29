@@ -42,13 +42,12 @@ class QuantumDebugger(tk.Tk):
             2: ("Momentum Space", "level_2_momentum_space", "Level2MomentumSpace", "levels/level_2_momentum_space.py"),
             3: ("Free Particle", "level_3_free_particle", "Level3FreeParticle", "levels/level_3_free_particle.py"),
             4: ("Split-Operator", "level_4_split_operator", "Level4SplitOperator", "levels/level_4_split_operator.py"),
-            5: ("Infinite Well", "level_5_infinite_well", "Level5InfiniteWell", "levels/level_5_infinite_well.py"),
-            6: ("Absorbing Mask", "level_6_absorber", "Level6Absorber", "levels/level_6_absorber.py"),
-            7: ("State Searcher", "level_7_state_searcher", "Level7StateSearcher", "levels/level_7_state_searcher.py")
+            5: ("Absorbing Mask", "level_5_absorber", "Level5Absorber", "levels/level_5_absorber.py"),
+            6: ("State Searcher", "level_6_state_searcher", "Level6StateSearcher", "levels/level_6_state_searcher.py")
         }
         
         for num, (name, mod, cls, path) in self.tasks.items():
-            if num == 7:
+            if num == 6:
                 tk.Button(self.sidebar, text="🚀 Run Wave Explorer", bg="#007acc", fg="white", 
                           font=("Arial", 10, "bold"), command=self.run_main_simulation).pack(pady=(15, 15), padx=20, fill="x")
                           

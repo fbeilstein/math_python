@@ -153,9 +153,15 @@ $$ \phi(k, t+\Delta t) = \phi(k, t) \exp\left(-i \frac{k^2 \Delta t}{2}\right) $
 
 \section*{Problem 4: Split-Operator}
 
+
 \subsubsection*{Mathematical part}
-\textbf{Given:} The full potential $V(x)$. The Trotter formula splits the propagator:
-$$ e^{-i \hat{H} \Delta t } \approx e^{-i \hat{V} \Delta t/2 } \, e^{-i \hat{T} \Delta t } \, e^{-i \hat{V} \Delta t/2 } $$
+\textbf{Given:} The full potential $V(x)$. 
+
+\textbf{Derive:} The Trotter approximation for the time evolution operator 
+
+$$
+e^{-i \hat{H} \Delta t } = e^{-i \hat{V} \Delta t/2 } \, e^{-i \hat{T} \Delta t } \, e^{-i \hat{V} \Delta t/2 } + \mathcal{O}(\Delta t^3)
+$$
 
 \textit{Feynman Diagram Analogy:} This splitting is mathematically equivalent to the lowest-order term of a Dyson series expansion. The $e^{-i \hat{T} \Delta t}$ term is the \textbf{bare propagator} (the internal line representing free propagation through empty space), and the $e^{-i \hat{V} \Delta t / 2}$ terms are the \textbf{interaction vertices} (where the particle interacts with the external classical field and receives a momentum kick).
 
@@ -179,9 +185,11 @@ $$ e^{-i \hat{H} \Delta t } \approx e^{-i \hat{V} \Delta t/2 } \, e^{-i \hat{T} 
 \caption{The Trotter splitting viewed as a scattering process: half-interaction, free propagation, half-interaction.}
 \end{figure}
 
-\textbf{Derive:} The sequence of numerical operations required to apply this Trotter splitting. Notice that the bare propagator is exactly your \lstinline|evolve_free_particle| function!
-
 \subsubsection*{Implementation part}
+
+\textit{Hint: Think about in which space these exponents are just scalar multiplications! Remember that we already built a "jumper" operator in Problem 3 to handle the kinetic piece. Note similarity between the evolution operator in momentum space and the \lstinline|evolve_free_particle(psi, dx, dt)|. }
+
+
 \textbf{Implement:} \lstinline|split_operator_step(psi, V, dx, dt)|. Sandwich the free propagation step between two half-potential interaction vertices.
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
@@ -198,42 +206,38 @@ $$ e^{-i \hat{H} \Delta t } \approx e^{-i \hat{V} \Delta t/2 } \, e^{-i \hat{T} 
 \textbf{Test:} Watch the packet scatter against the barrier... and then wrap around the edges!
 
 
-\section*{Problems 5 \& 6: The Final Fixes}
+\section*{Problem 5: Absorbing Boundary Conditions}
 
-You have two distinct problems to solve numerical artifacts:
-\begin{itemize}
-    \item \textbf{Level 6 (Infinite Well via DST):} Use the Discrete Sine Transform (DST) to exactly solve the infinite well boundary condition. \textbf{Implement:} \lstinline|dst_energy_levels(N, L)|.
-    
+In an open space, we want to kill scattering that reaches the numerical grid boundary to simulate a truly infinite domain.
+
+\textbf{Theory:} To avoid artificial reflections from the numerical grid boundaries (due to the periodic nature of the FFT), we apply an absorbing mask $M(x)$ at each time step.
+The mask should be exactly $1.0$ in the interior of the simulation, but smoothly taper down to $0.0$ at both the left and right edges. 
+
+The parameter \lstinline|gobble_frac| defines what fraction of the total grid points $N$ are used for this taper on \textbf{each} side. 
+For example, if \lstinline|gobble_frac = 0.1|, then the leftmost 10\% of the grid points and the rightmost 10\% of the grid points form the absorbing zones.
+
+By multiplying the wavefunction $\psi$ by $M$ on every split-operator step, amplitude that wanders into the gobbler zones is smoothly destroyed.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{absorbing_mask}
+\caption{Absorbing boundary conditions}
+\end{figure}
+
+\textbf{Implement:} \lstinline|apply_absorbing_mask(psi, gobble_frac)|.
+
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
 \begin{tabular}{r | c | c | c}
 \toprule
-\textbf{Math Symbol} & $N$ & $L$ & $E_k$ \\
+\textbf{Math Symbol} & $\psi(x)$ & $g_{frac}$ & $\psi(x)M(x)$ \\
 \midrule
-\textbf{Argument} & \lstinline|N| & \lstinline|L| & \lstinline|return| \\
+\textbf{Argument} & \lstinline|psi| & \lstinline|gobble_frac| & \lstinline|return| \\
 \midrule
-\textbf{Type} & \lstinline|int| & \lstinline|float| & \lstinline|np.ndarray| \\
+\textbf{Type} & \lstinline|np.ndarray| & \lstinline|float| & \lstinline|np.ndarray| \\
 \bottomrule
 \end{tabular}
 \end{center}
-    
-    \item \textbf{Level 7 (Absorbing BCs):} In an open space, we want to kill scattering that reaches the grid boundary. \\
-    \textbf{Derive:} A smooth array $M(x)$ that is exactly 1.0 in the interior and tapers to 0.0 at the edges according to a $\sin^2$ envelope, such that multiplying $\psi(x)$ by $M(x)$ smoothly absorbs outgoing waves without hard reflections. \\
-    \textbf{Implement:} \lstinline|absorbing_mask(N, gobble_frac)|.
-    
-\begin{center}
-\renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c}
-\toprule
-\textbf{Math Symbol} & $N$ & $g_{frac}$ & $M(x)$ \\
-\midrule
-\textbf{Argument} & \lstinline|N| & \lstinline|gobble_frac| & \lstinline|return| \\
-\midrule
-\textbf{Type} & \lstinline|int| & \lstinline|float| & \lstinline|np.ndarray| \\
-\bottomrule
-\end{tabular}
-\end{center}
-\end{itemize}
 
 
 \section*{The Wave Explorer}
@@ -246,7 +250,7 @@ python wave_explorer.py
 \textbf{Task:} Experiment with the unified physics sandbox. Use the "Edit Potential" button to draw your own custom potentials, stamp down barriers or finite wells, and see how the wave packet scatters, tunnels, or binds to your drawn geometry.
 
 
-\section*{Problem 7: The State Searcher Engine}
+\section*{Problem 6: The State Searcher Engine}
 
 A stationary state is an energy eigenstate; its probability density does not change in time. We will build an engine that provides full thermodynamic control over an evolving wave, allowing us to interactively hunt for stationary states!
 

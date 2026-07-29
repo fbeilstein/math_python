@@ -69,33 +69,21 @@ def split_operator_step(psi, V, dx, dt): #contains solution
 #  STUDENT IMPLEMENTATION (ASSIGNMENT 5)
 # =============================================================================
 
-def dst_energy_levels(N, L): #contains solution
+def apply_absorbing_mask(psi, gobble_frac=0.1): #contains solution
     """
-    DST energy eigenvalues for infinite well: E_n = (n*pi/L)^2 / 2.
+    Applies a sine-squared absorbing boundary mask to the wavefunction.
     """
-    n_modes = np.arange(1, N + 1)
-    E_k = (hbar**2 * (n_modes * np.pi / L)**2) / (2 * m)
-    return E_k
-
-
-# =============================================================================
-#  STUDENT IMPLEMENTATION (ASSIGNMENT 6)
-# =============================================================================
-
-def absorbing_mask(N, gobble_frac=0.1): #contains solution
-    """
-    Sine-squared absorbing boundary mask (the Gobbler).
-    """
+    N = len(psi)
     mask = np.ones(N)
     gobble_width = int(gobble_frac * N)
     taper = np.sin(np.linspace(0, np.pi / 2, gobble_width))**2
     mask[:gobble_width]  = taper
     mask[-gobble_width:] = taper[::-1]
-    return mask
+    return psi * mask
 
 
 # =============================================================================
-#  STUDENT IMPLEMENTATION (ASSIGNMENT 7)
+#  STUDENT IMPLEMENTATION (ASSIGNMENT 6)
 # =============================================================================
 
 def calculate_energy(psi, V, dx): #contains solution
