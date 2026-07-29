@@ -63,7 +63,7 @@ This is a **probability measure** on $(\mathbb{R}, \mathcal{B}(\mathbb{R}))$ by 
 **Post-measurement state** (von Neumann projection postulate):
 
 $$
-|\psi\rangle \;\xrightarrow{\text{measure } a_n}\; \frac{E_{\{a_n\}}|\psi\rangle}{\|E_{\{a_n\}}|\psi\rangle\|}  = |a_n\rangle
+|\psi\rangle \\;\xrightarrow{\text{measure } a_n}\\; \frac{E_{\{a_n\}}|\psi\rangle}{\|E_{\{a_n\}}|\psi\rangle\|}  = |a_n\rangle
 $$
 
 ---

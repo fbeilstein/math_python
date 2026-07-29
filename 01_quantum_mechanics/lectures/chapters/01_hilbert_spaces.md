@@ -5,7 +5,7 @@
 The state space of quantum mechanics is a **separable complex Hilbert space** $\mathcal{H}$.
 For a single particle in $\mathbb{R}^n$, the concrete realization is:
 $$
-\mathcal{H} = L^2(\mathbb{R}^n, \mathbb{C}) = \left\lbrace f : \mathbb{R}^n \to \mathbb{C} \\;\middle\vert\\; \int_{\mathbb{R}^n} |f(\mathbf{x})|^2\, d^n x < \infty \right\rbrace
+\mathcal{H} = L^2(\mathbb{R}^n, \mathbb{C}) = \left\lbrace f : \mathbb{R}^n \to \mathbb{C} \\;\middle\vert\\; \int_{\mathbb{R}^n} |f(\mathbf{x})|^2\\, d^n x < \infty \right\rbrace
 $$
 with the inner product:
 $$
