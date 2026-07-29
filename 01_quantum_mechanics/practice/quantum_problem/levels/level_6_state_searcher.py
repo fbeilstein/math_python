@@ -34,10 +34,21 @@ class Level6StateSearcher:
         
         self._init_state()
         self._setup_plots()
+        
+        self.auto_cool = False
+        self.is_dragging = False
+        self.fig.canvas.mpl_connect('button_press_event', self.on_press)
+        self.fig.canvas.mpl_connect('button_release_event', self.on_release)
 
         # UI Controls - placed safely above the bottom crop
+        try:
+            initial_E = tasks.calculate_energy(self.psi, self.V, self.dx)
+            if initial_E is None: raise NotImplementedError
+        except Exception:
+            initial_E = 50.0
+
         ax_slider = plt.axes([0.15, 0.06, 0.70, 0.03])
-        self.slider_E = widgets.Slider(ax_slider, 'Target Energy', 0.0, 200.0, valinit=50.0, color='#ba68c8')
+        self.slider_E = widgets.Slider(ax_slider, 'Target Energy', 0.0, 200.0, valinit=initial_E, color='#ba68c8')
         self.slider_E.label.set_color('white')
         self.slider_E.valtext.set_color('white')
         self.slider_E.on_changed(self.on_slider_change)
@@ -105,35 +116,25 @@ class Level6StateSearcher:
         self.line_E, = self.ax_E.plot([], [], color='#ffb74d', lw=2)
 
     
+    def on_press(self, event):
+        if event.inaxes == self.slider_E.ax:
+            self.is_dragging = True
+            self.auto_cool = False
+            # Remove all mathematical vetoes so the user has full unrestricted 
+            # manual control to drag the energy down into lower states!
+            self.saved_states = []
+
+    def on_release(self, event):
+        self.is_dragging = False
+
     def on_slider_change(self, val):
-        if self.is_updating_slider:
-            return
-        target_E = self.slider_E.val
-        try:
-            current_E = tasks.calculate_energy(self.psi, self.V, self.dx)
-            if target_E > current_E:
-                self.psi = tasks.kick_to_energy(self.psi, target_E, self.V, self.dx)
-            elif target_E < current_E:
-                prev_E = current_E
-                while current_E > target_E + 0.1:
-                    self.psi = tasks.imaginary_time_step(self.psi, self.V, self.dx, 0.01)
-                    for state in self.saved_states:
-                        self.psi = tasks.project_out(self.psi, state, self.dx)
-                    current_E = tasks.calculate_energy(self.psi, self.V, self.dx)
-                    if np.abs(prev_E - current_E) < 1e-4:
-                        break
-                    prev_E = current_E
-            
-            # Snap slider to actual physically reached energy
-            final_E = tasks.calculate_energy(self.psi, self.V, self.dx)
-            self.is_updating_slider = True
-            self.slider_E.set_val(final_E)
-            self.is_updating_slider = False
-        except Exception: pass
+        # We don't do anything instantly anymore! The physics engine in animate() will 
+        # dynamically seek this value over time, allowing the user to watch the cooling/heating process!
+        pass
 
     def cool_ground(self, event):
         self.saved_states = []
-        self.slider_E.set_val(0.0)
+        self.auto_cool = True
 
     def find_next(self, event):
         self.saved_states.append(self.psi.copy())
@@ -143,24 +144,53 @@ class Level6StateSearcher:
         norm = np.sqrt(np.sum(np.abs(self.psi)**2) * self.dx)
         if norm > 1e-10: self.psi /= norm
         
-        self.slider_E.set_val(0.0)
+        self.auto_cool = True
 
 
     def animate(self, frame):
         try:
-            target_E = self.slider_E.val
+            if self.auto_cool:
+                target_E = 0.0
+            else:
+                target_E = self.slider_E.val
             
             for _ in range(50): 
                 current_E = tasks.calculate_energy(self.psi, self.V, self.dx)
                 if current_E is None: break
                 
                 try:
-                    self.psi = tasks.split_operator_step(self.psi, self.V, self.dx, self.dt)
+                    if current_E > target_E + 0.5:
+                        # Interleave imaginary cooling with real time evolution for a "damped" animation
+                        cooled_psi = tasks.imaginary_time_step(self.psi, self.V, self.dx, 0.00005)
+                        new_psi = tasks.split_operator_step(cooled_psi, self.V, self.dx, self.dt)
+                        
+                        for state in self.saved_states:
+                            try:
+                                new_psi = tasks.project_out(new_psi, state, self.dx)
+                                norm = np.sqrt(np.sum(np.abs(new_psi)**2) * self.dx)
+                                if norm > 1e-10: new_psi /= norm
+                            except Exception: pass
+                        new_E = tasks.calculate_energy(new_psi, self.V, self.dx)
+                        # Because we slowed down cooling significantly for the animation,
+                        # numerical Trotter errors can sometimes temporarily overwhelm the tiny energy drop.
+                        # We only abort cooling if the energy actually starts *rising* significantly
+                        # over an extended period, indicating we hit the orthogonal floor.
+                        if new_E > current_E + 0.1:
+                            self.psi = tasks.split_operator_step(self.psi, self.V, self.dx, self.dt)
+                        else:
+                            self.psi = new_psi
+                    elif current_E < target_E - 0.5:
+                        self.psi = tasks.kick_to_energy(self.psi, target_E, self.V, self.dx, self.x[0])
+                    else:
+                        self.psi = tasks.split_operator_step(self.psi, self.V, self.dx, self.dt)
                 except Exception: pass
                     
                 for state in self.saved_states:
                     try:
                         self.psi = tasks.project_out(self.psi, state, self.dx)
+                        norm = np.sqrt(np.sum(np.abs(self.psi)**2) * self.dx)
+                        if norm > 1e-10:
+                            self.psi /= norm
                     except Exception: pass
 
             self.t += 50 * self.dt
@@ -169,6 +199,12 @@ class Level6StateSearcher:
             self.line_real.set_ydata(np.real(self.psi))
             
             new_E = tasks.calculate_energy(self.psi, self.V, self.dx)
+            
+            if self.auto_cool and not self.is_dragging:
+                self.slider_E.eventson = False
+                self.slider_E.set_val(new_E)
+                self.slider_E.eventson = True
+                
             self.text_energy.set_text(f'Current <E>: {new_E:.2f}')
             self.text_states.set_text(f'Saved States: {len(self.saved_states)}')
             

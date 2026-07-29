@@ -99,7 +99,7 @@ def calculate_energy(psi, V, dx): #contains solution
     return np.real(K + U)
 
 
-def kick_to_energy(psi, E_target, V, dx): #contains solution
+def kick_to_energy(psi, E_target, V, dx, x_start): #contains solution
     """
     Calculates the exact momentum kick required to reach E_target,
     and returns the phase-shifted wavefunction.
@@ -124,7 +124,7 @@ def kick_to_energy(psi, E_target, V, dx): #contains solution
     else:
         p_kick = -p_expected - np.sqrt(discriminant)
         
-    x = np.arange(len(psi)) * dx
+    x = x_start + np.arange(len(psi)) * dx
     return psi * np.exp(1j * p_kick * x / hbar)
 
 
