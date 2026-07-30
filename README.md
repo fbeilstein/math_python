@@ -75,7 +75,6 @@ git clone --recurse-submodules <repo-url>
 - [Spectral Graph Theory, Segmentation](https://github.com/fbeilstein/math_python/releases/download/spectral_graph_v0/spectral_graph_problem.zip)
 - [Markov Chain Problem](https://github.com/fbeilstein/math_python/releases/download/markov_v0/markov_chain_problem.zip)
 - [Explore Differential Equation Stability](https://github.com/fbeilstein/math_python/releases/download/stability_v0/stability_problem.zip)
-- [Quantum Tunneling](https://github.com/fbeilstein/math_python/releases/download/quanta_v0/quantum_problem.zip)
 - [Topological Game](https://github.com/fbeilstein/math_python/releases/download/topo_v0/tron_problem.zip)
 - [Duplicate Documents Search](https://github.com/fbeilstein/math_python/releases/download/lsh_v0/lsh_problem.zip)
 
