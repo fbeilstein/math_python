@@ -289,3 +289,17 @@ def gf_mul(a, b, log_t, exp_t, q):
 ```
 
 This one-liner is given — the challenge is building the tables themselves.
+
+---
+
+# When Polynomials Become Numbers
+
+How do we represent bytes algebraically? We define an **extension field** $GF(p^n)$. 
+
+Instead of reducing integers modulo a prime $p$, we reduce **polynomials** modulo a primitive polynomial $f(x)$ of degree $n$. 
+
+1. **Multiply** two elements: Perform standard polynomial multiplication.
+2. **Reduce**: Take the remainder modulo $f(x)$.
+
+**The Duck-Typing Philosophy:**
+Because the rules of arithmetic (distributivity, associativity) apply universally, a `Polynomial` class implemented purely using Python's `__add__` and `__mul__` operators works flawlessly whether the coefficients are integers in $\mathbb{R}$ or polynomials themselves evaluated modulo $f(x)$!
