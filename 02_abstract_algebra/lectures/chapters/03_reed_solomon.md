@@ -293,9 +293,7 @@ $$
 $$
 
 
-**The Final System (The PGZ Matrix Emerges)**
-
-We repeat this elimination exactly $v$ times until every single error is targeted and killed. Because we multiply by **the same factors** in each step we get **the same values** $\Lambda_i$ for all equations.
+We repeat this elimination exactly $v$ times until every single error is targeted and killed. Every elimination step uses the same multipliers $(\alpha^{j_1},\ldots,\alpha^{j_v})$. Since each block of equations undergoes the same sequence of operations, the resulting recurrence has the same coefficients $(\Lambda_i)$.
 
 $$
 \begin{aligned} 
