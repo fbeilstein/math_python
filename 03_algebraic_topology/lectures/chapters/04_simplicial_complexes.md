@@ -275,62 +275,47 @@ These are the same as Gaussian elimination, except we cannot divide — only int
 
 ---
 
-# Smith Normal Form: Reading Homology
+# Smith Normal Form: Live Demo
 
-Given the boundary matrices $D_p$ and $D_{p+1}$, compute their Smith Normal Forms:
-
-$$
-\text{SNF}(D_p) = \text{diag}(d_1, \dots, d_r, 0, \dots, 0), \qquad \text{SNF}(D_{p+1}) = \text{diag}(e_1, \dots, e_s, 0, \dots, 0)
-$$
-
-Then:
-- $\ker(D_p) \cong \mathbb{Z}^{n_p - r}$ (the number of zero columns in SNF of $D_p$)
-- $\text{Im}(D_{p+1})$ has invariant factors $e_1, \dots, e_s$
-
-**The homology group:**
-$$
-H_p \cong \mathbb{Z}^{n_p - r - s} \oplus \mathbb{Z}\_{e_1} \oplus \cdots \oplus \mathbb{Z}\_{e_s}
-$$
-where terms with $e_i = 1$ are trivial and dropped, terms with $e_i > 1$ contribute torsion.
-
-- **Betti number:** $\beta_p = n_p - r - s$ (free rank)
-- **Torsion coefficients:** the $e_i > 1$
+<iframe src="./assets/snf_demo/snf_demo.html" width="100%" height="550px" style="border:none; margin: 10px 0; overflow: hidden;"></iframe>
 
 ---
 
-# Smith Normal Form: Worked Example
+# Smith Normal Form: Reading Rules
 
-Consider a simplicial complex with 3 vertices, 3 edges, and 1 triangle — the **filled triangle**.
+By definition, homology is $H_p = \ker(D_p) / \text{Im}(D_{p+1})$. 
+Once you have computed the Smith Normal Forms of $D_p$ and $D_{p+1}$, you can read off the features using these three rules:
 
-$$
-D_1 = \begin{bmatrix} -1 & -1 & 0 \\\\ 1 & 0 & -1 \\\\ 0 & 1 & 1 \end{bmatrix}, \qquad
-D_2 = \begin{bmatrix} 1 \\\\ -1 \\\\ 1 \end{bmatrix}
-$$
+**Rule 1: Count the cycles**
+Look at $\text{SNF}(D_p)$.
+- The number of $p$-cycles is the number of **all-zero columns**.
+- Let this number be $Z$.
 
-**Step 1: SNF of $D_1$.**
+**Rule 2: Count the boundaries**
+Look at $\text{SNF}(D_{p+1})$.
+- The number of trivial boundaries is the number of **non-zero elements**.
+- Let this number be $B$.
 
-$R_2 \leftarrow R_2 + R_1$, then $R_3 \leftarrow R_3 + R_2$:
-
-$$
-\begin{bmatrix} -1 & -1 & 0 \\\\ 0 & -1 & -1 \\\\ 0 & 0 & 0 \end{bmatrix}
-\xrightarrow{C_2 \leftarrow C_2 - C_1}
-\begin{bmatrix} -1 & 0 & 0 \\\\ 0 & -1 & -1 \\\\ 0 & 0 & 0 \end{bmatrix}
-\xrightarrow{C_3 \leftarrow C_3 - C_2}
-\begin{bmatrix} -1 & 0 & 0 \\\\ 0 & -1 & 0 \\\\ 0 & 0 & 0 \end{bmatrix}
-$$
-
-$\text{SNF}(D_1) = \text{diag}(1, 1, 0)$. Rank $r = 2$, one zero column.
-
-**Step 2: SNF of $D_2$.**
-
-$D_2 = [1, -1, 1]^T$ is already in SNF form: $\text{diag}(1)$. Rank $s = 1$.
-
-**Step 3: Read off $H_p$.**
-- $H_0 = \mathbb{Z}^{3 - 2} = \mathbb{Z}$ → 1 connected component ✓
-- $H_1 = \mathbb{Z}^{3 - 2 - 1} = \mathbb{Z}^0 = 0$ → no loops (triangle is filled!) ✓
-- $H_2 = \mathbb{Z}^{1 - 1} = 0$ → no cavities ✓
+**Rule 3: Calculate Betti and Torsion**
+- **Betti Number:** $\beta_p = Z - B$ (The number of true holes).
+- **Torsion:** Look at the non-zero elements of $\text{SNF}(D_{p+1})$. Any element $e_i > 1$ means the space is "twisted" and adds a $\mathbb{Z}_{e_i}$ torsion term. (Elements equal to $1$ are safely ignored).
 
 ---
+
+**Example (Klein Bottle):**
+Consider a triangulation of the Klein Bottle with 9 vertices, 27 edges, and 18 faces ($n_0 = 9$, $n_1 = 27$, $n_2 = 18$).
+A computer algebra system gives the following Smith Normal Forms for the boundary matrices:
+- $\text{SNF}(D_1) = [1, -1, -1, -1, -1, -1, -1, -1, 0]$
+  *It has 8 non-zero elements $\implies B_1=8$. Thus $Z_1 = n_1 - B_1 = 27 - 8 = 19$.*
+- $\text{SNF}(D_2) = [1, 1, 1, 1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -2]$
+  *It has 18 non-zero elements $\implies B_2=18$. Note: we take the absolute value of the entries.*
+
+Let's read off the homology groups using the rules:
+- $H_0$: $\beta_0 = Z_0 - B_1 = 9 - 8 = 1$ (One connected component).
+- $H_1$: $\beta_1 = Z_1 - B_2 = 19 - 18 = 1$. The $|-2|=2$ in $\text{SNF}(D_2)$ adds a $\mathbb{Z}_2$ torsion term.
+  Thus, $H_1 \cong \mathbb{Z} \oplus \mathbb{Z}_2$ (One true hole, plus a non-orientable twist).
+- $H_2$: $Z_2 = n_2 - B_2 = 18 - 18 = 0$. $\beta_2 = Z_2 - B_3 = 0 - 0 = 0$.
+  Thus, $H_2 = 0$ (No cavities, it doesn't enclose a 3D volume).
 
 # Interactive: Homology Explorer
 
