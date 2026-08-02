@@ -1,0 +1,7 @@
+gudhi
+matplotlib
+numpy
+scikit-learn
+POT
+seaborn
+tqdm

@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\title{TDA Wasserstein Classifier}
+\author{Algebraic Topology Laboratory}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Problem Description}
+
+In this optional laboratory, you will use the \texttt{gudhi} library to build a robust shape classifier based on Persistent Homology.
+
+You are given three ``clean'' reference point clouds: a circle ($H_1$ Betti number $\beta_1=1$), a figure-eight ($\beta_1=2$), and a Gaussian cluster ($\beta_1=0$). You are also given a noisy, randomly rotated point cloud, and you must determine which of the three reference shapes it was sampled from.
+
+Since the point clouds themselves cannot be easily compared (due to noise and rotation), you will compare their \textit{Persistence Diagrams}. You will use the \textbf{Wasserstein Distance} ($W_1$) to quantify the similarity between the diagrams. The noisy shape will be classified as the reference shape that minimizes the Wasserstein distance.
+
+\section*{Implementation Tasks}
+
+Open \texttt{implementation\_tasks.py} and implement the following functions:
+
+\subsection*{1. \texttt{compute\_h1\_diagram(point\_cloud, max\_edge\_length)}}
+Use \texttt{gudhi.RipsComplex} to build a Vietoris-Rips filtration of the \texttt{point\_cloud}. Create a simplex tree up to dimension 2, and compute its persistence. Filter the resulting diagram to return only the $H_1$ intervals as an $N \times 2$ array of \texttt{[birth, death]} values.
+
+\subsection*{2. \texttt{classify\_shape(noisy\_diag, reference\_diags)}}
+You are provided the $H_1$ persistence diagram of the noisy shape, and a dictionary of the reference diagrams: \texttt{\{"circle": diag\_c, "figure8": diag\_f, "cluster": diag\_n\}}. 
+
+Iterate through the dictionary and compute the Wasserstein distance using \texttt{gudhi.wasserstein.wasserstein\_distance} (with \texttt{order=1} and \texttt{internal\_p=2}). Return the string key (e.g., \texttt{"circle"}) that corresponds to the minimal distance.
+
+\section*{Testing Your Code}
+Run \texttt{python lab\_dashboard.py} to open the interactive visualization. 
+\begin{itemize}
+    \item Use the \textbf{Shape Explorer} to visualize how noise deforms the $H_1$ persistence diagram. The UI will draw exact matching lines between the clean and noisy diagrams to visualize the Wasserstein distance computation.
+    \item Click \textbf{Run ML Evaluation} to generate a dataset of 300 noisy, rotated point clouds. Your classifier will run on the entire dataset and output a Confusion Matrix demonstrating its accuracy!
+\end{itemize}
+
+\end{document}
