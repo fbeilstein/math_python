@@ -58,9 +58,23 @@ Run the file \lstinline|main.py|. You should see a menu to select a topology.
 Now use any editor to open the file \lstinline|implementation_tasks.py|. You should see the API for functions you should implement.
 
 \begin{lstlisting}
-def wrap_cylinder(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom):
+def wrap_cylinder(x, y, dx, dy, width, height):
     pass
 \end{lstlisting}
+
+\vspace{0.5cm}
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} l l X @{}}
+\toprule
+\textbf{Argument} & \textbf{Type} & \textbf{Description} \\ \midrule
+\lstinline|x, y| & \lstinline|int, int| & The current position coordinates of the light cycle. \\
+\lstinline|dx, dy| & \lstinline|int, int| & The current velocity vector (direction of movement). \\
+\lstinline|width, height| & \lstinline|int, int| & The dimensions of the grid. Valid coordinates are in $[0, \text{width}-1]$ and $[0, \text{height}-1]$. \\ \midrule
+\textbf{Return} & \lstinline|(int, int, int, int) or None| & A tuple \lstinline|(nx, ny, ndx, ndy)| with the calculated new coordinates and potentially flipped velocities, or \lstinline|None| if the cycle crashes into a solid boundary. \\
+\bottomrule
+\end{tabularx}
+\end{center}
 
 \noindent \textbf{Important Rule on Velocities:} When crossing a boundary with a ``twist'', the orientation of the surface locally flips. Even though our light cycles only move horizontally or vertically, a robust mathematical wrapper must flip the corresponding velocity vector (\lstinline|dx| or \lstinline|dy|) if the axis it traverses has been inverted!
 

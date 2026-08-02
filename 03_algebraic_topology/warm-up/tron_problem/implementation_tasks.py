@@ -2,136 +2,126 @@
 #  STUDENT IMPLEMENTATION (TOPOLOGICAL WRAPPING)
 # =============================================================================
 
-def wrap_cylinder(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom): #contains solution
-    if out_top or out_bottom:
+def wrap_cylinder(x, y, dx, dy, width, height): #contains solution
+    nx, ny = x + dx, y + dy
+    
+    if ny < 0 or ny >= height:
         return None
         
-    wx, wy = nx, ny
-    wdx, wdy = dx, dy
-    
-    if out_left:
-        wx = width - 1
-    elif out_right:
-        wx = 0
+    if nx < 0:
+        nx = width - 1
+    elif nx >= width:
+        nx = 0
         
-    return wx, wy, wdx, wdy
+    return nx, ny, dx, dy
 
 
-def wrap_mobius(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom): #contains solution
-    if out_top or out_bottom:
+def wrap_mobius(x, y, dx, dy, width, height): #contains solution
+    nx, ny = x + dx, y + dy
+    
+    if ny < 0 or ny >= height:
         return None
         
-    wx, wy = nx, ny
-    wdx, wdy = dx, dy
+    if nx < 0:
+        nx = width - 1
+        ny = (height - 1) - ny
+        dy = -dy
+    elif nx >= width:
+        nx = 0
+        ny = (height - 1) - ny
+        dy = -dy
+        
+    return nx, ny, dx, dy
+
+
+def wrap_torus(x, y, dx, dy, width, height): #contains solution
+    nx, ny = x + dx, y + dy
     
-    if out_left:
-        wx = width - 1
-        wy = (height - 1) - wy
-        wdy = -wdy
-    elif out_right:
-        wx = 0
-        wy = (height - 1) - wy
-        wdy = -wdy
+    if nx < 0:
+        nx = width - 1
+    elif nx >= width:
+        nx = 0
         
-    return wx, wy, wdx, wdy
+    if ny < 0:
+        ny = height - 1
+    elif ny >= height:
+        ny = 0
+        
+    return nx, ny, dx, dy
 
 
-def wrap_torus(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom): #contains solution
-    wx, wy = nx, ny
-    wdx, wdy = dx, dy
+def wrap_klein_bottle(x, y, dx, dy, width, height): #contains solution
+    nx, ny = x + dx, y + dy
     
-    if out_left:
-        wx = width - 1
-    elif out_right:
-        wx = 0
+    if nx < 0:
+        nx = width - 1
+    elif nx >= width:
+        nx = 0
         
-    if out_top:
-        wy = height - 1
-    elif out_bottom:
-        wy = 0
+    if ny < 0:
+        ny = height - 1
+        nx = (width - 1) - nx
+        dx = -dx
+    elif ny >= height:
+        ny = 0
+        nx = (width - 1) - nx
+        dx = -dx
         
-    return wx, wy, wdx, wdy
+    return nx, ny, dx, dy
 
 
-def wrap_klein_bottle(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom): #contains solution
-    wx, wy = nx, ny
-    wdx, wdy = dx, dy
+def wrap_projective_plane(x, y, dx, dy, width, height): #contains solution
+    nx, ny = x + dx, y + dy
     
-    if out_left:
-        wx = width - 1
-    elif out_right:
-        wx = 0
+    if nx < 0:
+        nx = width - 1
+        ny = (height - 1) - ny
+        dy = -dy
+    elif nx >= width:
+        nx = 0
+        ny = (height - 1) - ny
+        dy = -dy
         
-    if out_top:
-        wy = height - 1
-        wx = (width - 1) - wx
-        wdx = -wdx
-    elif out_bottom:
-        wy = 0
-        wx = (width - 1) - wx
-        wdx = -wdx
+    if ny < 0:
+        ny = height - 1
+        nx = (width - 1) - nx
+        dx = -dx
+    elif ny >= height:
+        ny = 0
+        nx = (width - 1) - nx
+        dx = -dx
         
-    return wx, wy, wdx, wdy
-
-
-def wrap_projective_plane(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom): #contains solution
-    wx, wy = nx, ny
-    wdx, wdy = dx, dy
-    
-    if out_left:
-        wx = width - 1
-        wy = (height - 1) - wy
-        wdy = -wdy
-    elif out_right:
-        wx = 0
-        wy = (height - 1) - wy
-        wdy = -wdy
-        
-    if out_top:
-        wy = height - 1
-        wx = (width - 1) - wx
-        wdx = -wdx
-    elif out_bottom:
-        wy = 0
-        wx = (width - 1) - wx
-        wdx = -wdx
-        
-    return wx, wy, wdx, wdy
+    return nx, ny, dx, dy
 
 # =============================================================================
 #  TOPOLOGY DISPATCHER, IMPLEMENTATION PROVIDED
 # =============================================================================
 
-def apply_topology(topology_name, nx, ny, dx, dy, width, height):
+def apply_topology(topology_name, x, y, dx, dy, width, height):
     """
-    Given a new position (nx, ny) and the direction (dx, dy),
-    returns the wrapped (wx, wy) and (wdx, wdy) based on the topology.
+    Given the current position (x, y) and the direction (dx, dy),
+    returns the wrapped (nx, ny) and (ndx, ndy) based on the topology.
     Returns None if the boundary is solid (death).
     """
-    out_left = nx < 0
-    out_right = nx >= width
-    out_top = ny < 0
-    out_bottom = ny >= height
-
-    if not (out_left or out_right or out_top or out_bottom):
+    if topology_name == "Square":
+        nx, ny = x + dx, y + dy
+        if nx < 0 or nx >= width or ny < 0 or ny >= height:
+            return None
         return nx, ny, dx, dy
 
-    if topology_name == "Square":
-        return None  # All boundaries are solid
-
     elif topology_name == "Cylinder":
-        return wrap_cylinder(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom)
+        return wrap_cylinder(x, y, dx, dy, width, height)
 
     elif topology_name == "Möbius":
-        return wrap_mobius(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom)
+        return wrap_mobius(x, y, dx, dy, width, height)
 
     elif topology_name == "Torus":
-        return wrap_torus(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom)
+        return wrap_torus(x, y, dx, dy, width, height)
 
     elif topology_name == "Klein Bottle":
-        return wrap_klein_bottle(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom)
+        return wrap_klein_bottle(x, y, dx, dy, width, height)
 
     elif topology_name == "Real Projective Plane":
-        return wrap_projective_plane(nx, ny, dx, dy, width, height, out_left, out_right, out_top, out_bottom)
+        return wrap_projective_plane(x, y, dx, dy, width, height)
 
     return None

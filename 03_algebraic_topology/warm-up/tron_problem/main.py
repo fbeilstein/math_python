@@ -168,9 +168,7 @@ class Game:
     def get_next_pos(self, p):
         p.dx = p.next_dx
         p.dy = p.next_dy
-        nx = p.x + p.dx
-        ny = p.y + p.dy
-        return apply_topology(self.topology, nx, ny, p.dx, p.dy, GRID_W, GRID_H)
+        return apply_topology(self.topology, p.x, p.y, p.dx, p.dy, GRID_W, GRID_H)
 
     def draw(self):
         self.screen.fill(BLACK)
