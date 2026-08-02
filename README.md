@@ -3,38 +3,36 @@
 
 Schedule: TBA
 
-## Course Structure
+## Lectures
 
 ### The Kickoff
-- Lecture: [Linear Algebra & Optics](https://fbeilstein.github.io/math_python/00_kickoff/lectures/linear_algebra_optics.html)
-- Practice: [Optics](https://github.com/fbeilstein/math_python/releases/download/optics_v1/optical_problem.zip)
+- **Lecture:** [Linear Algebra & Optics](https://fbeilstein.github.io/math_python/00_kickoff/lectures/linear_algebra_optics.html)
+- **Practice:** [Optics](https://github.com/fbeilstein/math_python/releases/download/optics_v1/optical_problem.zip)
 
 ---
 
 ### Module 1: Quantum Mechanics
-- Lecture: [Quantum Mechanics](https://fbeilstein.github.io/math_python/01_quantum_mechanics/lectures/quantum_mechanics.html)
-- Practice: [Quantum Tunneling](https://github.com/fbeilstein/math_python/releases/download/quanta_v3/quantum_problem.zip)
-- Optional:
+- **Lecture:** [Quantum Mechanics](https://fbeilstein.github.io/math_python/01_quantum_mechanics/lectures/quantum_mechanics.html)
+- **Practice:** [Quantum Tunneling](https://github.com/fbeilstein/math_python/releases/download/quanta_v3/quantum_problem.zip)
+- **Optional:**
     - [Fourier Neural Operator](https://github.com/fbeilstein/math_python/releases/download/fno_v0/fno_problem.zip)
     - [Quantum Tomography](https://github.com/fbeilstein/math_python/releases/download/qtomography_v0/tomography_problem.zip)
 
 ---
 
 ### Module 2: Abstract Algebra
-- Lecture: [Abstract Algebra](https://fbeilstein.github.io/math_python/02_abstract_algebra/lectures/abstract_algebra.html)
-- Warm-up: [Group Theory](https://github.com/fbeilstein/math_python/releases/download/groups_v0/group_problem.zip)
-- Practice: [Generate QR-code](https://github.com/fbeilstein/math_python/releases/download/qr_v2/qr_problem.zip)
-- Optional: [RSA Encryption](https://github.com/fbeilstein/math_python/releases/download/rsa_v0/rsa_problem.zip)
+- **Lecture:** [Abstract Algebra](https://fbeilstein.github.io/math_python/02_abstract_algebra/lectures/abstract_algebra.html)
+- **Warm-up:** [Group Theory](https://github.com/fbeilstein/math_python/releases/download/groups_v0/group_problem.zip)
+- **Practice:** [Generate QR-code](https://github.com/fbeilstein/math_python/releases/download/qr_v2/qr_problem.zip)
+- **Optional:** [RSA Encryption](https://github.com/fbeilstein/math_python/releases/download/rsa_v0/rsa_problem.zip)
 
 ---
 
 ### Module 3: Algebraic Topology
-**Session 6 — Lecture: Theory of Homologies**
-- Simplicial complexes, boundary operators, Betti numbers
-
-**Session 7 — Practice: Computing Homologies**
-- Matrix reduction (Smith Normal Form), Betti number computation
-- Practice: [`homology_problem`](03_algebraic_topology/practice/homology_problem/)
+- **Lecture:** [Algebraic Topology](https://fbeilstein.github.io/math_python/03_algebraic_topology/lectures/algebraic_topology.html)
+- **Warm-up:** [Topological Game](https://github.com/fbeilstein/math_python/releases/download/topo_v1/tron_problem.zip)
+- **Practice:** [Compute Homologies](https://github.com/fbeilstein/math_python/releases/download/homology_v0/homology_problem.zip)
+- **Optional:** [TDA classification (gudhi)](https://github.com/fbeilstein/math_python/releases/download/gudhi_v0/wasserstein_classifier_problem.zip)
 
 ---
 
@@ -48,7 +46,7 @@ Schedule: TBA
 
 ---
 
-## Lectures
+## Run Locally
 
 Each module contains its own HTML lecture files. To view lectures locally, you must run the server from the root of the repository:
 
@@ -67,7 +65,6 @@ git clone --recurse-submodules <repo-url>
 ## Download Optional Problem Sets
 
 - [Esher-Droste Transformation](https://github.com/fbeilstein/math_python/releases/download/esher_v0/esher_droste_problem.zip)
-- [Compute Homologies](https://github.com/fbeilstein/math_python/releases/download/homology_v0/homology_problem.zip)
 - [Compute Autodiff with Dual Numbers](https://github.com/fbeilstein/math_python/releases/download/autodiff_v0/autodiff_duals_problem.zip)
 - [Kinematics with Hypercomplex Numbers](https://github.com/fbeilstein/math_python/releases/download/kinematics_v0/kinematics_problem.zip)
 - [Drawing Fractals](https://github.com/fbeilstein/math_python/releases/download/fractals_v0/fractals_problem.zip)
@@ -75,11 +72,5 @@ git clone --recurse-submodules <repo-url>
 - [Spectral Graph Theory, Segmentation](https://github.com/fbeilstein/math_python/releases/download/spectral_graph_v0/spectral_graph_problem.zip)
 - [Markov Chain Problem](https://github.com/fbeilstein/math_python/releases/download/markov_v0/markov_chain_problem.zip)
 - [Explore Differential Equation Stability](https://github.com/fbeilstein/math_python/releases/download/stability_v0/stability_problem.zip)
-- [Topological Game](https://github.com/fbeilstein/math_python/releases/download/topo_v0/tron_problem.zip)
 - [Duplicate Documents Search](https://github.com/fbeilstein/math_python/releases/download/lsh_v0/lsh_problem.zip)
 
----
-
-### Retired
-
-- [Elementary Group Theory](https://github.com/fbeilstein/math_python/releases/download/cayley_v0/cayley_problem.zip)
