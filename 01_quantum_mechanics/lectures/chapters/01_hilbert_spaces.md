@@ -71,7 +71,7 @@ and $\hat{A}^\dagger \phi = \eta$. The key distinction:
 
 * **P4** --- **Dynamics**: $i\hbar\frac{d}{dt}|\psi(t)\rangle = \hat{H}|\psi(t)\rangle$. For time-independent $\hat{H}$, the solution is $|\psi(t)\rangle = e^{-i\hat{H}t/\hbar}|\psi(0)\rangle$ (one-parameter unitary group, Stone's theorem). For time-dependent $\hat{H}(t)$, the propagator is a time-ordered exponential (Dyson series).
 
-* **P5** --- **Canonical structure**: position and momentum satisfy the **Weyl relations** $e^{i\alpha\hat{x}}e^{i\beta\hat{p}} = e^{-i\alpha\beta\hbar}e^{i\beta\hat{p}}e^{i\alpha\hat{x}}$. The formal differential form $[\hat{x}_j, \hat{p}_k] = i\hbar\delta_{jk}\hat{I}$ follows on a suitable dense domain but cannot hold as a bounded operator identity (the trace of $[\hat{A},\hat{B}]$ is always zero, while $\text{tr}(i\hbar\hat{I})$ diverges).
+* **P5** --- **Canonical structure**: position and momentum satisfy the **Weyl relations** $e^{i\alpha\hat{x}}e^{i\beta\hat{p}} = e^{-i\alpha\beta\hbar}e^{i\beta\hat{p}}e^{i\alpha\hat{x}}$. The formal differential form $[\hat{x}\_j, \hat{p}\_k] = i\hbar\delta_{jk}\hat{I}$ follows on a suitable dense domain but cannot hold as a bounded operator identity (the trace of $[\hat{A},\hat{B}]$ is always zero, while $\text{tr}(i\hbar\hat{I})$ diverges).
 
 * **P6** --- **Composite systems**: the state space of a composite system is the **tensor product** $\mathcal{H} = \mathcal{H}_1 \otimes \mathcal{H}_2$. States that cannot be written as $|\psi_1\rangle \otimes |\psi_2\rangle$ are called **entangled**.
 
