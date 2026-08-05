@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin: 0; padding: 0; background: #1a1a1a; color: #fff; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; }
+        .container { display: flex; width: 100%; max-width: 800px; justify-content: center; margin-top: 10px; }
+        canvas { background: #222; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .controls { width: 100%; max-width: 800px; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; background: #2a2a2a; border-radius: 8px; margin-top: 15px; box-sizing: border-box; align-items: center; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; font-size: 14px; }
+        button:hover { background: #2563eb; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        .status { width: 100%; text-align: center; margin-top: 5px; font-size: 16px; font-weight: bold; color: #aaa; min-height: 20px; }
+        input[type="range"] { flex-grow: 1; margin: 0 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="canvas" width="600" height="400"></canvas>
+    </div>
+    <div class="status" id="status-text">Click "Play Eckmann-Hilton Proof" to see why π₂(X) is abelian.</div>
+    <div class="controls" id="btn-container">
+        <button id="btn-play">Prove Commutativity (A * B ≃ B * A)</button>
+        <button id="btn-play-dim">Prove Independence of Dim (A *₁ B ≃ A *₂ B)</button>
+    </div>
+    <div class="controls" id="slider-container" style="display: none;">
+        <button id="btn-back" style="background: #4b5563;">← Reset</button>
+        <input type="range" id="anim-slider" min="0" max="1" step="0.005" value="0">
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const statusText = document.getElementById('status-text');
+        
+        let animT = 0;
+        let isAutoAnimating = false;
+        let animFrame = null;
+        let animMode = 1;
+        
+        // Base parameter square
+        const SQ_X = 150, SQ_Y = 50, SQ_SIZE = 300;
+        
+        function drawScene() {
+            ctx.clearRect(0, 0, 600, 400);
+            
+            const X0_COLOR = '#16a34a'; // unified green for everything mapping to x0
+            
+            // Draw background square (maps to x_0)
+            ctx.fillStyle = X0_COLOR;
+            ctx.fillRect(SQ_X, SQ_Y, SQ_SIZE, SQ_SIZE);
+            
+            // Text labeling the x0 area
+            ctx.fillStyle = X0_COLOR;
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Solid green area maps to constant x₀', 300, SQ_Y - 15);
+            
+            let wScale = 0.5;
+            let hScale = 1.0;
+            let ax = 0.25, ay = 0.5; // normalized centers (0 to 1)
+            let bx = 0.75, by = 0.5;
+            
+            if (animMode === 1) {
+                if (animT < 0.2) {
+                    let t = animT / 0.2;
+                    wScale = 0.5 - 0.1 * t; // 0.5 to 0.4
+                    hScale = 1.0 - 0.6 * t; // 1.0 to 0.4
+                    statusText.innerHTML = '1. Homotopically expand the constant x₀ region (compressing the supports of A and B)';
+                } else if (animT < 0.4) {
+                    let t = (animT - 0.2) / 0.2;
+                    wScale = 0.4; hScale = 0.4;
+                    ay = 0.5 - 0.25 * t; // move A up to 0.25
+                    by = 0.5 + 0.25 * t; // move B down to 0.75
+                    statusText.innerHTML = '2. Displace vertically along the second dimension (requires n ≥ 2)';
+                } else if (animT < 0.6) {
+                    let t = (animT - 0.4) / 0.2;
+                    wScale = 0.4; hScale = 0.4;
+                    ay = 0.25; by = 0.75;
+                    ax = 0.25 + 0.5 * t; // A moves right
+                    bx = 0.75 - 0.5 * t; // B moves left
+                    statusText.innerHTML = '3. Slide past each other horizontally (impossible in 1D!)';
+                } else if (animT < 0.8) {
+                    let t = (animT - 0.6) / 0.2;
+                    wScale = 0.4; hScale = 0.4;
+                    ax = 0.75; bx = 0.25;
+                    ay = 0.25 + 0.25 * t; // A moves down
+                    by = 0.75 - 0.25 * t; // B moves up
+                    statusText.innerHTML = '4. Realign vertically';
+                } else {
+                    let t = (animT - 0.8) / 0.2;
+                    wScale = 0.4 + 0.1 * t;
+                    hScale = 0.4 + 0.6 * t;
+                    ax = 0.75; bx = 0.25;
+                    ay = 0.5; by = 0.5;
+                    if (animT === 1.0) statusText.innerHTML = '5. Contract the constant region. We have proven A * B ≃ B * A !';
+                    else statusText.innerHTML = '5. Contract the constant x₀ region back to the boundary';
+                }
+            } else if (animMode === 2) {
+                if (animT < 0.25) {
+                    let t = animT / 0.25;
+                    wScale = 0.5 - 0.1 * t;
+                    hScale = 1.0 - 0.6 * t;
+                    statusText.innerHTML = '1. Homotopically expand the constant x₀ region';
+                } else if (animT < 0.5) {
+                    let t = (animT - 0.25) / 0.25;
+                    wScale = 0.4; hScale = 0.4;
+                    ay = 0.5 - 0.25 * t;
+                    by = 0.5 + 0.25 * t;
+                    statusText.innerHTML = '2. Displace vertically into independent lanes';
+                } else if (animT < 0.75) {
+                    let t = (animT - 0.5) / 0.25;
+                    wScale = 0.4; hScale = 0.4;
+                    ay = 0.25; by = 0.75;
+                    ax = 0.25 + 0.25 * t; // A moves right to center
+                    bx = 0.75 - 0.25 * t; // B moves left to center
+                    statusText.innerHTML = '3. Align horizontally along the y-axis';
+                } else {
+                    let t = (animT - 0.75) / 0.25;
+                    wScale = 0.4 + 0.6 * t; // 0.4 to 1.0
+                    hScale = 0.4 + 0.1 * t; // 0.4 to 0.5
+                    ax = 0.5; bx = 0.5;
+                    ay = 0.25; by = 0.75;
+                    if (animT === 1.0) statusText.innerHTML = '4. Contract x₀ region. We have proven A *₁ B ≃ A *₂ B !';
+                    else statusText.innerHTML = '4. Expand into horizontal strips (gluing along y-axis)';
+                }
+            }
+            
+            // Draw A
+            let wA = SQ_SIZE * wScale;
+            let hA = SQ_SIZE * hScale;
+            
+            let pAx = SQ_X + ax * SQ_SIZE - wA / 2;
+            let pAy = SQ_Y + ay * SQ_SIZE - hA / 2;
+            
+            ctx.fillStyle = '#ec4899'; // Pink
+            ctx.fillRect(pAx, pAy, wA, hA);
+            ctx.strokeStyle = X0_COLOR; // Boundary of A maps to x0
+            ctx.lineWidth = 8;
+            ctx.strokeRect(pAx, pAy, wA, hA);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 24px serif';
+            ctx.fillText('A', pAx + wA/2, pAy + hA/2 + 8);
+            
+            // Draw B
+            let wB = SQ_SIZE * wScale;
+            let hB = SQ_SIZE * hScale;
+            
+            let pBx = SQ_X + bx * SQ_SIZE - wB / 2;
+            let pBy = SQ_Y + by * SQ_SIZE - hB / 2;
+            
+            ctx.fillStyle = '#3b82f6'; // Blue
+            ctx.fillRect(pBx, pBy, wB, hB);
+            ctx.strokeStyle = X0_COLOR; // Boundary of B maps to x0
+            ctx.lineWidth = 8;
+            ctx.strokeRect(pBx, pBy, wB, hB);
+            ctx.fillStyle = '#fff';
+            ctx.fillText('B', pBx + wB/2, pBy + hB/2 + 8);
+            
+            // Display equation at bottom
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px sans-serif';
+            if (animMode === 1) {
+                if (animT < 0.5) {
+                    ctx.fillText('Current state:  A * B', 300, 380);
+                } else if (animT > 0.5 && animT < 1.0) {
+                    ctx.fillText('Current state:  Homotopy...', 300, 380);
+                } else if (animT === 1.0) {
+                    ctx.fillText('Final state:  B * A', 300, 380);
+                }
+            } else {
+                if (animT < 0.5) {
+                    ctx.fillText('Current state:  A *₁ B (horizontal gluing)', 300, 380);
+                } else if (animT > 0.5 && animT < 1.0) {
+                    ctx.fillText('Current state:  Homotopy...', 300, 380);
+                } else if (animT === 1.0) {
+                    ctx.fillText('Final state:  A *₂ B (vertical gluing)', 300, 380);
+                }
+            }
+        }
+        
+        function animate() {
+            if (isAutoAnimating) {
+                animT += 0.005;
+                if (animT >= 1.0) {
+                    animT = 1.0;
+                    isAutoAnimating = false;
+                }
+                document.getElementById('anim-slider').value = animT;
+                drawScene();
+                if (isAutoAnimating) {
+                    animFrame = requestAnimationFrame(animate);
+                }
+            }
+        }
+        
+        document.getElementById('btn-play').addEventListener('click', () => {
+            document.getElementById('btn-container').style.display = 'none';
+            document.getElementById('slider-container').style.display = 'flex';
+            animMode = 1;
+            animT = 0;
+            document.getElementById('anim-slider').value = 0;
+            isAutoAnimating = true;
+            if (animFrame) cancelAnimationFrame(animFrame);
+            animate();
+        });
+        
+        document.getElementById('btn-play-dim').addEventListener('click', () => {
+            document.getElementById('btn-container').style.display = 'none';
+            document.getElementById('slider-container').style.display = 'flex';
+            animMode = 2;
+            animT = 0;
+            document.getElementById('anim-slider').value = 0;
+            isAutoAnimating = true;
+            if (animFrame) cancelAnimationFrame(animFrame);
+            animate();
+        });
+        
+        document.getElementById('anim-slider').addEventListener('input', (e) => {
+            isAutoAnimating = false;
+            if (animFrame) cancelAnimationFrame(animFrame);
+            animT = parseFloat(e.target.value);
+            drawScene();
+        });
+        
+        document.getElementById('btn-back').addEventListener('click', () => {
+            isAutoAnimating = false;
+            if (animFrame) cancelAnimationFrame(animFrame);
+            document.getElementById('slider-container').style.display = 'none';
+            document.getElementById('btn-container').style.display = 'flex';
+            animT = 0;
+            statusText.innerHTML = 'Click an animation below to explore higher homotopy.';
+            drawScene();
+        });
+        
+        drawScene();
+    </script>
+</body>
+</html>

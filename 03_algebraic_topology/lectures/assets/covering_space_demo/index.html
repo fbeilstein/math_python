@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin: 0; padding: 0; background: #1a1a1a; color: #fff; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; user-select: none; overflow: hidden; }
+        .container { display: flex; width: 100%; max-width: 800px; justify-content: center; margin-top: 10px; position: relative; }
+        canvas { background: #222; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: default; }
+        .controls { width: 100%; max-width: 800px; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; background: #2a2a2a; border-radius: 8px; margin-top: 15px; box-sizing: border-box; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; font-size: 14px; }
+        button:hover { background: #2563eb; }
+        .status { width: 100%; text-align: center; margin-top: 5px; font-size: 16px; font-weight: bold; color: #aaa; min-height: 20px; }
+        .instruction { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 15px; font-size: 14px; color: #ccc; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="canvas" width="600" height="450"></canvas>
+        <div class="instruction">Drag A/B to change interval. Drag background to rotate 3D view.</div>
+    </div>
+    <div class="status" id="status-text">Interval wraps: 0.25 turns</div>
+    <div class="controls">
+        <button id="btn-pin">Pin Unique Lift Segment</button>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const statusText = document.getElementById('status-text');
+        const btnPin = document.getElementById('btn-pin');
+        
+        const CX = 300, CY = 225, S = 100;
+        let camRotZ = Math.PI / 4;
+        let camRotX = Math.PI / 6;
+        
+        // Continuous unwrapped angles for A and B
+        let thetaA = 0;
+        let thetaB = Math.PI / 2;
+        
+        let draggingPoint = null; // 'A', 'B', or 'camera'
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        
+        let isPinned = false;
+        
+        function project(x, y, z) {
+            let x1 = x * Math.cos(camRotZ) - y * Math.sin(camRotZ);
+            let y1 = x * Math.sin(camRotZ) + y * Math.cos(camRotZ);
+            let y2 = y1 * Math.cos(camRotX) - z * Math.sin(camRotX);
+            let z2 = y1 * Math.sin(camRotX) + z * Math.cos(camRotX);
+            return { sx: CX + x1 * S, sy: CY - z2 * S, depth: y2 };
+        }
+        
+        // Depth-based color mapping
+        function getDepthColor(baseColor, depth) {
+            // depth is roughly between -1.5 (front) and +1.5 (back)
+            let factor = (depth + 1.5) / 3.0; 
+            factor = Math.max(0, Math.min(1, factor)); // 0 = front, 1 = back
+            
+            // RGB parser
+            let r, g, b;
+            if (baseColor === 'base') { r = 100; g = 100; b = 100; }
+            else if (baseColor === 'highlight') { r = 14; g = 165; b = 233; } // Cyan #0ea5e9
+            else if (baseColor === 'pink') { r = 236; g = 72; b = 153; } // Pink #ec4899
+            else if (baseColor === 'green') { r = 34; g = 197; b = 94; } // Green #22c55e
+            else if (baseColor === 'red') { r = 239; g = 68; b = 68; } // Red #ef4444
+            else if (baseColor === 'white') { r = 255; g = 255; b = 255; } // White
+            
+            // Darken back elements
+            let fade = 1.0 - 0.7 * factor; 
+            r = Math.floor(r * fade);
+            g = Math.floor(g * fade);
+            b = Math.floor(b * fade);
+            return `rgb(${r},${g},${b})`;
+        }
+        
+        function drawScene() {
+            ctx.clearRect(0, 0, 600, 450);
+            
+            let drawQueue = [];
+            
+            // 1. Central Axis
+            drawQueue.push({ type: 'line', p1: {x:0,y:0,z:-3.5}, p2: {x:0,y:0,z:4.5}, color: 'base', w: 1 });
+            
+            let zBase = -1.5; // Moved circle up slightly
+            
+            // 2. Base Circle (Bright White)
+            for (let a = 0; a < 2*Math.PI; a += 0.05) {
+                drawQueue.push({
+                    type: 'line', 
+                    p1: {x: Math.cos(a), y: Math.sin(a), z: zBase}, 
+                    p2: {x: Math.cos(a+0.05), y: Math.sin(a+0.05), z: zBase}, 
+                    color: 'white', w: 3 
+                });
+            }
+            
+            // 3. Base Interval U (Cyan)
+            let tMin = Math.min(thetaA, thetaB);
+            let tMax = Math.max(thetaA, thetaB);
+            for (let a = tMin; a < tMax; a += 0.05) {
+                let nextA = Math.min(a + 0.05, tMax);
+                // Draw at slightly larger radius to not completely overlap if it wraps > 2pi?
+                // Or just draw thicker.
+                drawQueue.push({
+                    type: 'line', 
+                    p1: {x: Math.cos(a), y: Math.sin(a), z: zBase}, 
+                    p2: {x: Math.cos(nextA), y: Math.sin(nextA), z: zBase}, 
+                    color: 'highlight', w: 4 
+                });
+            }
+            
+            // 4. Helix Background (Faint Pink)
+            for (let t = -3; t <= 4; t += 0.02) {
+                let a = t * 2 * Math.PI;
+                let aNext = (t + 0.02) * 2 * Math.PI;
+                drawQueue.push({
+                    type: 'line', 
+                    p1: {x: Math.cos(a), y: Math.sin(a), z: t}, 
+                    p2: {x: Math.cos(aNext), y: Math.sin(aNext), z: t+0.02}, 
+                    color: 'pink', w: 1.5 
+                });
+            }
+            
+            // 5. Preimages p^{-1}(U)
+            // n is the deck transformation index
+            for (let n = -4; n <= 4; n++) {
+                if (isPinned && n !== 0) continue; // Only draw n=0 segment if pinned
+                
+                let sStart = tMin / (2 * Math.PI) + n;
+                let sEnd = tMax / (2 * Math.PI) + n;
+                
+                // Only draw if within bounds
+                if (sEnd < -3 || sStart > 4) continue;
+                
+                sStart = Math.max(sStart, -3);
+                sEnd = Math.min(sEnd, 4);
+                
+                // Draw segment
+                for (let t = sStart; t < sEnd; t += 0.02) {
+                    let nextT = Math.min(t + 0.02, sEnd);
+                    let a = t * 2 * Math.PI;
+                    let aNext = nextT * 2 * Math.PI;
+                    drawQueue.push({
+                        type: 'line', 
+                        p1: {x: Math.cos(a), y: Math.sin(a), z: t}, 
+                        p2: {x: Math.cos(aNext), y: Math.sin(aNext), z: nextT}, 
+                        color: 'highlight', w: 4 
+                    });
+                }
+                
+                // Draw endpoints on helix
+                if (sStart > -3) {
+                    drawQueue.push({ type: 'dot', p: {x: Math.cos(sStart*2*Math.PI), y: Math.sin(sStart*2*Math.PI), z: sStart}, color: (tMin === thetaA ? 'green' : 'red'), r: 4 });
+                }
+                if (sEnd < 4) {
+                    drawQueue.push({ type: 'dot', p: {x: Math.cos(sEnd*2*Math.PI), y: Math.sin(sEnd*2*Math.PI), z: sEnd}, color: (tMax === thetaA ? 'green' : 'red'), r: 4 });
+                }
+            }
+            
+            // 6. Base Points A and B
+            drawQueue.push({ type: 'dot', p: {x: Math.cos(thetaA), y: Math.sin(thetaA), z: zBase}, color: 'green', r: 6, label: 'A' });
+            drawQueue.push({ type: 'dot', p: {x: Math.cos(thetaB), y: Math.sin(thetaB), z: zBase}, color: 'red', r: 6, label: 'B' });
+            
+            // 7. Projection lines (dotted) for A and B
+            drawQueue.push({ type: 'line', p1: {x: Math.cos(thetaA), y: Math.sin(thetaA), z: -3}, p2: {x: Math.cos(thetaA), y: Math.sin(thetaA), z: 4}, color: 'base', w: 1, dash: true });
+            drawQueue.push({ type: 'line', p1: {x: Math.cos(thetaB), y: Math.sin(thetaB), z: -3}, p2: {x: Math.cos(thetaB), y: Math.sin(thetaB), z: 4}, color: 'base', w: 1, dash: true });
+            
+            // Process queue
+            let renderList = [];
+            for (let item of drawQueue) {
+                if (item.type === 'line') {
+                    let p1 = project(item.p1.x, item.p1.y, item.p1.z);
+                    let p2 = project(item.p2.x, item.p2.y, item.p2.z);
+                    item.proj1 = p1;
+                    item.proj2 = p2;
+                    item.depth = (p1.depth + p2.depth) / 2;
+                } else if (item.type === 'dot') {
+                    item.proj = project(item.p.x, item.p.y, item.p.z);
+                    item.depth = item.proj.depth;
+                }
+                renderList.push(item);
+            }
+            
+            // Sort back-to-front (larger depth means further away)
+            renderList.sort((a, b) => b.depth - a.depth);
+            
+            // Render
+            for (let item of renderList) {
+                let color = getDepthColor(item.color, item.depth);
+                if (item.type === 'line') {
+                    ctx.beginPath();
+                    if (item.dash) ctx.setLineDash([4, 4]);
+                    else ctx.setLineDash([]);
+                    ctx.moveTo(item.proj1.sx, item.proj1.sy);
+                    ctx.lineTo(item.proj2.sx, item.proj2.sy);
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = item.w;
+                    ctx.stroke();
+                } else if (item.type === 'dot') {
+                    ctx.beginPath();
+                    ctx.arc(item.proj.sx, item.proj.sy, item.r, 0, 2*Math.PI);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    if (item.label) {
+                        ctx.fillStyle = '#fff';
+                        ctx.font = 'bold 14px sans-serif';
+                        ctx.fillText(item.label, item.proj.sx + 10, item.proj.sy + 5);
+                    }
+                }
+            }
+            ctx.setLineDash([]);
+            
+            // Update status
+            let turns = Math.abs(thetaB - thetaA) / (2 * Math.PI);
+            statusText.innerHTML = `Interval U wraps: <span style="color: #0ea5e9">${turns.toFixed(2)}</span> turns`;
+        }
+        
+        function getMouseAngle(mx, my) {
+            let center = project(0, 0, -1.5);
+            let dx = mx - center.sx;
+            let dy = my - center.sy;
+            
+            let viewDx = dx / S;
+            let viewDy = - (dy / S); 
+            
+            let y1 = viewDy / Math.sin(camRotX);
+            let x1 = viewDx;
+            
+            return Math.atan2(y1, x1) - camRotZ;
+        }
+        
+        function handleDown(ex, ey) {
+            let rect = canvas.getBoundingClientRect();
+            let mx = ex - rect.left;
+            let my = ey - rect.top;
+            
+            let pA = project(Math.cos(thetaA), Math.sin(thetaA), -1.5);
+            let pB = project(Math.cos(thetaB), Math.sin(thetaB), -1.5);
+            
+            let distA = Math.hypot(mx - pA.sx, my - pA.sy);
+            let distB = Math.hypot(mx - pB.sx, my - pB.sy);
+            
+            if (distA < 20 && distA <= distB) {
+                draggingPoint = 'A';
+            } else if (distB < 20) {
+                draggingPoint = 'B';
+            } else {
+                draggingPoint = 'camera';
+                lastMouseX = mx;
+                lastMouseY = my;
+            }
+        }
+        
+        function handleMove(ex, ey) {
+            if (!draggingPoint) return;
+            
+            let rect = canvas.getBoundingClientRect();
+            let mx = ex - rect.left;
+            let my = ey - rect.top;
+            
+            if (draggingPoint === 'camera') {
+                let dx = mx - lastMouseX;
+                let dy = my - lastMouseY;
+                camRotZ -= dx * 0.01;
+                camRotX -= dy * 0.01;
+                // clamp camRotX to avoid extreme angles
+                camRotX = Math.max(0.1, Math.min(Math.PI/2 - 0.1, camRotX));
+                lastMouseX = mx;
+                lastMouseY = my;
+                drawScene();
+                return;
+            }
+            
+            let rawA = getMouseAngle(mx, my);
+            let currentTheta = draggingPoint === 'A' ? thetaA : thetaB;
+            
+            let diff = rawA - (currentTheta % (2*Math.PI));
+            while (diff > Math.PI) diff -= 2*Math.PI;
+            while (diff < -Math.PI) diff += 2*Math.PI;
+            
+            if (draggingPoint === 'A') thetaA += diff;
+            else thetaB += diff;
+            
+            drawScene();
+        }
+        
+        canvas.addEventListener('mousedown', (e) => handleDown(e.clientX, e.clientY));
+        window.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+        window.addEventListener('mouseup', () => draggingPoint = null);
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleDown(e.touches[0].clientX, e.touches[0].clientY);
+        }, {passive: false});
+        window.addEventListener('touchmove', (e) => {
+            if (draggingPoint) {
+                e.preventDefault();
+                handleMove(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, {passive: false});
+        window.addEventListener('touchend', () => draggingPoint = null);
+        
+        btnPin.addEventListener('click', () => {
+            isPinned = !isPinned;
+            if (isPinned) {
+                btnPin.textContent = 'Unpin Lift (Show all preimages)';
+                btnPin.style.background = '#ef4444';
+            } else {
+                btnPin.textContent = 'Pin Unique Lift Segment';
+                btnPin.style.background = '#3b82f6';
+            }
+            drawScene();
+        });
+        
+        // Removed autoRotate
+        drawScene();
+    </script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin: 0; padding: 0; background: #1a1a1a; color: #fff; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; }
+        .container { display: flex; width: 100%; max-width: 800px; justify-content: center; margin-top: 10px; }
+        canvas { background: #222; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: default; }
+        .controls { width: 100%; max-width: 800px; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; background: #2a2a2a; border-radius: 8px; margin-top: 15px; box-sizing: border-box; align-items: center; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; font-size: 14px; }
+        button:hover { background: #2563eb; }
+        .btn-pi1 { background: #ec4899; }
+        .btn-pi1:hover { background: #be185d; }
+        .btn-h1 { background: #22c55e; }
+        .btn-h1:hover { background: #16a34a; }
+        .status { width: 100%; text-align: center; margin-top: 5px; font-size: 16px; font-weight: bold; color: #aaa; min-height: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="canvas" width="800" height="600"></canvas>
+    </div>
+    <div class="status" id="status-text">Select a mode to explore loop tightening.</div>
+    <div class="controls" id="btn-container">
+        <button class="btn-pi1" id="btn-pi1">Switch to π₁ (Hard-Wired)</button>
+        <button class="btn-h1" id="btn-h1">Switch to H₁ (Commutative Wiring)</button>
+        <div style="width: 100%; text-align: center; margin-top: 15px;">
+            <label for="slider-tighten" style="font-weight: bold; margin-right: 10px;">Tighten Parameter t:</label>
+            <input type="range" id="slider-tighten" min="0" max="1" step="0.01" value="0" style="width: 400px; vertical-align: middle;">
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const statusText = document.getElementById('status-text');
+        
+        const slider = document.getElementById('slider-tighten');
+        
+        let mode = 0; // 0 = pi1, 1 = H1
+        let animT = 0;
+        
+        // Connections mapping Left Index -> Right Index
+        // pi1: [0, 1, 2, 3] -> a->b, b->a^-1, a^-1->b^-1, b^-1->a
+        // H1 default: [1, 2, 0, 3] -> a->a^-1, b->b^-1, a^-1->b, b^-1->a
+        let connections = [0, 1, 2, 3];
+        
+        const LeftNodes = [
+            { label: 'End of a', x: 250, y: 380, pathId: 'a', color: '#ec4899' },
+            { label: 'End of b', x: 250, y: 440, pathId: 'b', color: '#3b82f6' },
+            { label: 'End of a⁻¹', x: 250, y: 500, pathId: 'ainv', color: '#f472b6' },
+            { label: 'End of b⁻¹', x: 250, y: 560, pathId: 'binv', color: '#60a5fa' }
+        ];
+
+        const RightNodes = [
+            { label: 'Start of b', x: 550, y: 380, pathId: 'b', color: '#3b82f6' },
+            { label: 'Start of a⁻¹', x: 550, y: 440, pathId: 'ainv', color: '#f472b6' },
+            { label: 'Start of b⁻¹', x: 550, y: 500, pathId: 'binv', color: '#60a5fa' },
+            { label: 'Start of a', x: 550, y: 560, pathId: 'a', color: '#ec4899' }
+        ];
+        
+        const L_C_HOLE = {x: 330, y: 150};
+        const R_C_HOLE = {x: 470, y: 150};
+        const X0 = {x: 400, y: 150};
+        const R_HOLE = 70;
+        
+        let draggedNode = null;
+        let mouseX = 0, mouseY = 0;
+        
+        function drawArrow(x, y, angle, color) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-12, -8);
+            ctx.lineTo(-12, 8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawTopology() {
+            // Background for top half
+            ctx.fillStyle = '#222';
+            ctx.fillRect(0, 0, 800, 300);
+            
+            // Draw figure-eight background (The topological space)
+            // Radius 200 properly contains all loops (max radius 130 reaching 140 on the x-axis)
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(L_C_HOLE.x, L_C_HOLE.y, 200, 0, Math.PI*2);
+            ctx.arc(R_C_HOLE.x, R_C_HOLE.y, 200, 0, Math.PI*2);
+            ctx.fill();
+            
+            // Draw holes (Obstacles)
+            ctx.fillStyle = '#111';
+            ctx.beginPath();
+            ctx.arc(L_C_HOLE.x, L_C_HOLE.y, R_HOLE, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(R_C_HOLE.x, R_C_HOLE.y, R_HOLE, 0, Math.PI*2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Basepoint
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(X0.x, X0.y, 6, 0, Math.PI*2);
+            ctx.fill();
+            ctx.font = '16px italic serif';
+            ctx.fillText('x₀', X0.x - 8, X0.y + 25);
+            
+            // Title
+            ctx.fillStyle = '#aaa';
+            ctx.font = '20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Topological Space (S¹ ∨ S¹)', 400, 30);
+            
+            let handled = { 'a': false, 'ainv': false, 'b': false, 'binv': false };
+
+            const drawUturn = (path1, path2, isLeft, dir, color) => {
+                let r1 = (path1 === 'a' || path1 === 'b') ? 130 : 105;
+                let r2 = (path2 === 'a' || path2 === 'b') ? 130 : 105;
+                let cx1 = isLeft ? X0.x - r1 : X0.x + r1;
+                let cx2 = isLeft ? X0.x - r2 : X0.x + r2;
+                let cy = X0.y;
+                let startAng = isLeft ? 0 : Math.PI;
+                
+                let ext = 2 * Math.PI * (1 - animT);
+                if (ext <= 0.01) return;
+                
+                let endAng = startAng + dir * ext;
+                
+                ctx.beginPath();
+                ctx.arc(cx1, cy, r1, startAng, endAng, dir < 0);
+                ctx.lineTo(cx2 + r2 * Math.cos(endAng), cy + r2 * Math.sin(endAng));
+                ctx.arc(cx2, cy, r2, endAng, startAng, dir > 0);
+                
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+                
+                // Draw arrow near the U-turn tip
+                let arrX = cx1 + r1 * Math.cos(endAng - dir * 0.15);
+                let arrY = cy + r1 * Math.sin(endAng - dir * 0.15);
+                let tang = endAng + dir * Math.PI/2;
+                drawArrow(arrX, arrY, tang, color);
+            };
+
+            // Check combinations for unwinding
+            if (connections[0] === 1) { drawUturn('a', 'ainv', true, -1, '#ec4899'); handled['a'] = true; handled['ainv'] = true; }
+            if (connections[2] === 3 && !handled['ainv']) { drawUturn('ainv', 'a', true, 1, '#f472b6'); handled['a'] = true; handled['ainv'] = true; }
+            if (connections[1] === 2) { drawUturn('b', 'binv', false, -1, '#3b82f6'); handled['b'] = true; handled['binv'] = true; }
+            if (connections[3] === 0 && !handled['binv']) { drawUturn('binv', 'b', false, 1, '#60a5fa'); handled['b'] = true; handled['binv'] = true; }
+
+            // Draw remaining stuck paths
+            const drawStuck = (pathId, isLeft, dir, looseRadius, color) => {
+                if (handled[pathId]) return;
+                let r = looseRadius - (looseRadius - R_HOLE) * animT;
+                let cx = isLeft ? X0.x - r : X0.x + r;
+                let cy = X0.y;
+                let startAng = isLeft ? 0 : Math.PI;
+                let endAng = startAng + dir * 2 * Math.PI;
+                
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, startAng, endAng, dir < 0);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+                
+                // Draw arrow at the far outer edge for visibility
+                let midAng = startAng + dir * Math.PI;
+                let arrX = cx + r * Math.cos(midAng);
+                let arrY = cy + r * Math.sin(midAng);
+                let tang = midAng + dir * Math.PI/2;
+                drawArrow(arrX, arrY, tang, color);
+            };
+
+            drawStuck('a', true, -1, 130, '#ec4899');
+            drawStuck('ainv', true, 1, 105, '#f472b6');
+            drawStuck('b', false, -1, 130, '#3b82f6');
+            drawStuck('binv', false, 1, 105, '#60a5fa');
+        }
+
+        function drawWirebox() {
+            // Background for wirebox
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 300, 800, 300);
+            
+            // Wirebox frame
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(150, 320, 500, 260);
+            
+            // Title
+            ctx.fillStyle = '#aaa';
+            ctx.font = '20px sans-serif';
+            ctx.textAlign = 'center';
+            let txt = mode === 0 ? 'π₁ Basepoint Wirebox (Hard-Wired)' : 'H₁ Basepoint Wirebox (Drag Wires to Commute)';
+            ctx.fillText(txt, 400, 345);
+            
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'right';
+            
+            // Draw connections
+            for (let i = 0; i < 4; i++) {
+                let n1 = LeftNodes[i];
+                let px, py;
+                if (draggedNode === i) {
+                    px = mouseX; py = mouseY;
+                } else {
+                    let n2 = RightNodes[connections[i]];
+                    px = n2.x; py = n2.y;
+                }
+                
+                ctx.beginPath();
+                ctx.moveTo(n1.x, n1.y);
+                ctx.bezierCurveTo(n1.x + 100, n1.y, px - 100, py, px, py);
+                ctx.strokeStyle = n1.color;
+                ctx.lineWidth = (draggedNode === i) ? 6 : 4;
+                ctx.stroke();
+            }
+            
+            // Draw nodes
+            for (let i = 0; i < 4; i++) {
+                let nL = LeftNodes[i];
+                ctx.fillStyle = nL.color;
+                ctx.beginPath(); ctx.arc(nL.x, nL.y, 8, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#ddd';
+                ctx.textAlign = 'right';
+                ctx.fillText(nL.label, nL.x - 15, nL.y + 5);
+                
+                let nR = RightNodes[i];
+                ctx.fillStyle = '#aaa';
+                ctx.beginPath(); ctx.arc(nR.x, nR.y, 8, 0, Math.PI*2); ctx.fill();
+                ctx.textAlign = 'left';
+                ctx.fillText(nR.label, nR.x + 15, nR.y + 5);
+            }
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, 800, 600);
+            drawTopology();
+            drawWirebox();
+        }
+
+        function updateStatusText() {
+            if (animT === 0) {
+                statusText.innerHTML = mode === 0 ? 'π₁: Continuous parameter t strictly enforces loop ordering. Drag slider to tighten.' 
+                                                  : 'H₁: Commutativity allows rewiring! (Drag connections to re-order). Drag slider to tighten.';
+                statusText.style.color = mode === 0 ? '#ec4899' : '#22c55e';
+                return;
+            }
+            if (animT < 1.0) {
+                statusText.innerHTML = 'Tightening loops...';
+                statusText.style.color = '#eab308';
+                return;
+            }
+            
+            // animT === 1.0
+            let unwinds = 0;
+            if (connections[0] === 1 || connections[2] === 3) unwinds++;
+            if (connections[1] === 2 || connections[3] === 0) unwinds++;
+            
+            if (unwinds === 0) statusText.innerHTML = 'Result: Tangled! Non-trivial sequence is permanently stuck around the holes.';
+            else if (unwinds === 2) statusText.innerHTML = 'Result: Unwound! The entire path cleanly retracts to zero.';
+            else statusText.innerHTML = 'Result: Partially unwound. Some segments are still trapped!';
+            statusText.style.color = '#fff';
+        }
+
+        slider.addEventListener('input', (e) => {
+            animT = parseFloat(e.target.value);
+            updateStatusText();
+            drawScene();
+        });
+        
+        document.getElementById('btn-pi1').addEventListener('click', () => {
+            mode = 0;
+            animT = 0;
+            slider.value = 0;
+            connections = [0, 1, 2, 3]; // Hardwired sequence
+            updateStatusText();
+            drawScene();
+        });
+        
+        document.getElementById('btn-h1').addEventListener('click', () => {
+            mode = 1;
+            animT = 0;
+            slider.value = 0;
+            connections = [1, 2, 0, 3]; // Rewired to pairing inverses
+            updateStatusText();
+            drawScene();
+        });
+        
+        // Mouse interaction for drag-and-drop rewiring
+        canvas.addEventListener('mousedown', (e) => {
+            if (mode === 0) return; // Locked in pi1
+            let rect = canvas.getBoundingClientRect();
+            let mx = e.clientX - rect.left;
+            let my = e.clientY - rect.top;
+            
+            // Check right handles (easier to grab)
+            for (let i = 0; i < 4; i++) {
+                let nR = RightNodes[connections[i]];
+                if (Math.hypot(mx - nR.x, my - nR.y) < 25) {
+                    draggedNode = i;
+                    mouseX = mx; mouseY = my;
+                    animT = 0; // reset animation if they rewire
+                    drawScene();
+                    return;
+                }
+            }
+            // Check left handles
+            for (let i = 0; i < 4; i++) {
+                let nL = LeftNodes[i];
+                if (Math.hypot(mx - nL.x, my - nL.y) < 25) {
+                    draggedNode = i;
+                    mouseX = mx; mouseY = my;
+                    animT = 0;
+                    drawScene();
+                    return;
+                }
+            }
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (draggedNode !== null) {
+                let rect = canvas.getBoundingClientRect();
+                mouseX = e.clientX - rect.left;
+                mouseY = e.clientY - rect.top;
+                drawScene();
+            }
+        });
+        
+        canvas.addEventListener('mouseup', (e) => {
+            if (draggedNode !== null) {
+                let rect = canvas.getBoundingClientRect();
+                let mx = e.clientX - rect.left;
+                let my = e.clientY - rect.top;
+                
+                let bestDist = 1000;
+                let bestJ = -1;
+                for (let j = 0; j < 4; j++) {
+                    let d = Math.hypot(mx - RightNodes[j].x, my - RightNodes[j].y);
+                    if (d < 40 && d < bestDist) {
+                        bestDist = d;
+                        bestJ = j;
+                    }
+                }
+                
+                if (bestJ !== -1) {
+                    // Swap to ensure 1-to-1 mapping
+                    for (let i = 0; i < 4; i++) {
+                        if (i !== draggedNode && connections[i] === bestJ) {
+                            connections[i] = connections[draggedNode];
+                        }
+                    }
+                    connections[draggedNode] = bestJ;
+                }
+                
+                draggedNode = null;
+                animT = 0;
+                slider.value = 0;
+                updateStatusText();
+                drawScene();
+            }
+        });
+        
+        // Initial setup
+        updateStatusText();
+        drawScene();
+    </script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin: 0; padding: 0; background: #1a1a1a; color: #fff; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; }
+        .container { display: flex; width: 100%; max-width: 800px; justify-content: center; margin-top: 10px; }
+        canvas { background: #222; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .controls { width: 100%; max-width: 800px; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; background: #2a2a2a; border-radius: 8px; margin-top: 15px; box-sizing: border-box; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; font-size: 14px; }
+        button:hover { background: #2563eb; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        .status { width: 100%; text-align: center; margin-top: 5px; font-size: 16px; font-weight: bold; color: #aaa; min-height: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="canvas" width="600" height="400"></canvas>
+    </div>
+    <div class="status" id="status-text">Click a button to start an animation.</div>
+    <div class="controls" id="btn-container">
+        <button id="btn-equiv">Equivalence (+2 ≃ +2)</button>
+        <button id="btn-obstruct">Obstruction (0 ≄ +1)</button>
+        <button id="btn-comp">Composition (+1 · +1 → +2)</button>
+        <button id="btn-cancel">Cancellation (+1 · −1 → 0)</button>
+    </div>
+    <div class="controls" id="slider-container" style="display: none; align-items: center;">
+        <button id="btn-back" style="background: #4b5563; margin-right: 15px;">← Back</button>
+        <input type="range" id="anim-slider" min="0" max="1" step="0.005" value="0" style="flex-grow: 1; height: 8px; cursor: pointer;">
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const statusText = document.getElementById('status-text');
+        const btns = document.querySelectorAll('button');
+        
+        // Canvas center and scale
+        const CX = 300, CY = 200, S = 50;
+        const HOLE_R = 0.6; // hole radius in world units
+        const BASE_D = 3.5; // distance from hole to basepoint
+        
+        let animT = 0;
+        let animFrame = null;
+        let currentAnim = null;
+        let isAutoAnimating = false;
+        
+        function toCanvas(wx, wy) {
+            return { sx: CX + wx * S, sy: CY - wy * S };
+        }
+        
+        function checkHole(px, py) {
+            // Hole check is no longer used for Obstruction, but kept for Equivalence safety
+            let dist = Math.sqrt(px*px + py*py);
+            let stuck = false;
+            if (dist < HOLE_R && dist > 0.001) {
+                px = px * (HOLE_R / dist);
+                py = py * (HOLE_R / dist);
+                stuck = true;
+            }
+            return { x: px, y: py, stuck: stuck };
+        }
+        
+        // =============================================
+        // LOOP DEFINITIONS
+        // =============================================
+        
+        // Standard teardrop from basepoint (-3.5, 0)
+        // t in [-1, 1] traces the loop once
+        function teardrop(t, rRight, rWidth) {
+            let x = -BASE_D + (BASE_D + rRight) * (1 - t*t);
+            let y = rWidth * 2.6 * t * (1 - t*t); // 2.6 is scaling factor for width
+            return {x: x, y: y};
+        }
+        
+        // --- 1. Composition ---
+        function compSource(s) {
+            if (s <= 0.5) {
+                let t = 2 * (2 * s) - 1; 
+                return teardrop(t, 2.8, 2.5); // Outer A
+            } else {
+                let t = 2 * (2 * s - 1) - 1; 
+                return teardrop(t, 1.4, 1.3); // Inner B
+            }
+        }
+        function compTarget(s) {
+            // Smooth +2 spiral target avoiding pinch at basepoint
+            let theta = -Math.PI + 4 * Math.PI * s;
+            let R_spiral = 1.9 + 0.9 * Math.cos(Math.PI * s);
+            let pinch = Math.pow(Math.cos(Math.PI * s), 16);
+            let R = R_spiral * (1 - pinch) + BASE_D * pinch;
+            return {x: R * Math.cos(theta), y: R * Math.sin(theta)};
+        }
+        function homotopyComp(s, animT) {
+            let p0 = compSource(s);
+            let p1 = compTarget(s);
+            return checkHole((1-animT)*p0.x + animT*p1.x, (1-animT)*p0.y + animT*p1.y);
+        }
+        
+        // --- 2. Obstruction ---
+        function obstructSource(s) {
+            let t = 2 * s - 1; 
+            // Stays strictly above the hole
+            let x = -BASE_D + 6.0 * (1 - t*t);
+            let y = 5.2 * (1 - t*t); 
+            return {x: x, y: y};
+        }
+        function obstructTarget(s) {
+            let t = 2 * s - 1; 
+            // Encloses hole (+1 winding)
+            let x = -BASE_D + 6.0 * (1 - t*t);
+            let y = 5.2 * t * (1 - t*t);
+            return {x: x, y: y};
+        }
+        function homotopyObstruct(s, animT) {
+            let p0 = obstructSource(s);
+            let p1 = obstructTarget(s);
+            
+            // Ray-circle intersection to create 'horns'
+            let dx = p1.x - p0.x;
+            let dy = p1.y - p0.y;
+            
+            let A = dx*dx + dy*dy;
+            let B = 2 * (p0.x * dx + p0.y * dy);
+            let C = p0.x*p0.x + p0.y*p0.y - HOLE_R*HOLE_R;
+            
+            let t_eff = animT;
+            let stuck = false;
+            
+            if (A > 0.0001) {
+                let det = B*B - 4*A*C;
+                if (det >= 0) {
+                    let sqrtDet = Math.sqrt(det);
+                    let t1 = (-B - sqrtDet) / (2*A);
+                    let t2 = (-B + sqrtDet) / (2*A);
+                    
+                    let t_hit = -1;
+                    if (t1 >= 0 && t1 <= 1) t_hit = t1;
+                    else if (t2 >= 0 && t2 <= 1) t_hit = t2;
+                    
+                    if (t_hit >= 0 && animT > t_hit) {
+                        t_eff = t_hit; // Clamp movement to boundary intersection
+                        stuck = true;
+                    }
+                }
+            }
+            
+            return { x: p0.x + t_eff * dx, y: p0.y + t_eff * dy, stuck: stuck };
+        }
+        
+        // --- 3. Cancellation ---
+        function cancelSource(s) {
+            if (s <= 0.5) {
+                let t = 2 * (2 * s) - 1; 
+                return teardrop(t, 2.7, 2.7); // Outbound (wider)
+            } else {
+                let u = 2 * (s - 0.5);
+                let t = 1 - 2 * u; 
+                return teardrop(t, 2.2, 2.2); // Inbound (narrower, forming U-turn)
+            }
+        }
+        function homotopyCancel(s, animT) {
+            let extent = 1 - animT; 
+            let s_eff;
+            if (s <= 0.5) s_eff = s * extent;
+            else s_eff = 1 - (1 - s) * extent;
+            let p = cancelSource(s_eff);
+            return { x: p.x, y: p.y, stuck: false };
+        }
+        
+        // --- 4. Equivalence ---
+        function equivSource(s) {
+            let p = compTarget(s); 
+            let theta = -Math.PI + 4 * Math.PI * s;
+            let pinch = Math.pow(Math.cos(Math.PI * s), 16);
+            let R = Math.sqrt(p.x*p.x + p.y*p.y);
+            // Wild squiggly wobble
+            let wobble = 0.8 * Math.sin(12 * Math.PI * s) + 0.4 * Math.cos(20 * Math.PI * s);
+            R += wobble * (1 - Math.pow(pinch, 0.1));
+            return {x: R * Math.cos(theta), y: R * Math.sin(theta)};
+        }
+        function equivTarget(s) { return compTarget(s); }
+        function homotopyEquiv(s, animT) {
+            let p0 = equivSource(s);
+            let p1 = equivTarget(s);
+            return checkHole((1-animT)*p0.x + animT*p1.x, (1-animT)*p0.y + animT*p1.y);
+        }
+        
+        // =============================================
+        // DRAWING LOGIC
+        // =============================================
+        
+        function drawScene() {
+            ctx.clearRect(0, 0, 600, 400);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            for (let i = -7; i <= 7; i++) {
+                ctx.beginPath(); ctx.moveTo(CX + i * S, 0); ctx.lineTo(CX + i * S, 400); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, CY - i * S); ctx.lineTo(600, CY - i * S); ctx.stroke();
+            }
+            
+            // Hole
+            let hc = toCanvas(0, 0);
+            ctx.fillStyle = '#111';
+            ctx.beginPath(); ctx.arc(hc.sx, hc.sy, HOLE_R * S, 0, 2 * Math.PI); ctx.fill();
+            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3; ctx.stroke();
+            ctx.fillStyle = '#ef4444'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText('Hole', hc.sx, hc.sy + 5);
+            
+            // Basepoint
+            let bc = toCanvas(-BASE_D, 0);
+            ctx.fillStyle = '#3b82f6';
+            ctx.beginPath(); ctx.arc(bc.sx, bc.sy, 7, 0, 2 * Math.PI); ctx.fill();
+            ctx.fillStyle = '#93c5fd'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'right';
+            ctx.fillText('x₀', bc.sx - 10, bc.sy + 5);
+        }
+        
+        function drawArrows(getPoint, color, s_start = 0, s_end = 1.0) {
+            // Draw arrows at specific parameter values
+            let s_vals = [0.15, 0.35, 0.65, 0.85];
+            
+            for (let s of s_vals) {
+                if (s < s_start || s > s_end) continue;
+                let p1 = getPoint(s);
+                let p2 = getPoint(s + 0.005);
+                
+                // Don't draw arrows if the point is stuck or at basepoint (meaningless derivative)
+                if (p1.stuck) continue; 
+                let d = Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+                if (d < 0.01) continue; 
+                
+                let c1 = toCanvas(p1.x, p1.y);
+                let c2 = toCanvas(p2.x, p2.y);
+                let dx = c2.sx - c1.sx;
+                let dy = c2.sy - c1.sy;
+                
+                let angle = Math.atan2(dy, dx);
+                let size = 10;
+                let arrAngle = Math.PI / 6;
+                
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(c1.sx, c1.sy);
+                ctx.lineTo(c1.sx - size * Math.cos(angle - arrAngle), c1.sy - size * Math.sin(angle - arrAngle));
+                ctx.lineTo(c1.sx - size * Math.cos(angle + arrAngle), c1.sy - size * Math.sin(angle + arrAngle));
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+        
+        function drawLoop(getPoint, color, width, dash, s_start = 0, s_end = 1.0) {
+            ctx.beginPath();
+            ctx.setLineDash(dash || []);
+            let stuck = false;
+            let steps = Math.ceil((s_end - s_start) / 0.004);
+            if (steps <= 0) steps = 1;
+            
+            for (let i = 0; i <= steps; i++) {
+                let s = s_start + i * (s_end - s_start) / steps;
+                if (s > 1) s = 1;
+                let p = getPoint(s);
+                let c = toCanvas(p.x, p.y);
+                if (i === 0) ctx.moveTo(c.sx, c.sy);
+                else ctx.lineTo(c.sx, c.sy);
+                if (p.stuck) stuck = true;
+            }
+            ctx.strokeStyle = stuck ? '#ef4444' : color;
+            ctx.lineWidth = width;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw Directional Arrows
+            drawArrows(getPoint, stuck ? '#ef4444' : color, s_start, s_end);
+            return stuck;
+        }
+        
+        function drawFrame() {
+            drawScene();
+            if (!currentAnim) return;
+            
+            // Draw Target (Green)
+            if (currentAnim === 'equiv') drawLoop(equivTarget, 'rgba(34, 197, 94, 0.5)', 2, [6, 4]);
+            else if (currentAnim === 'obstruct') drawLoop(obstructTarget, 'rgba(34, 197, 94, 0.5)', 2, [6, 4]);
+            else if (currentAnim === 'comp') drawLoop(compTarget, 'rgba(34, 197, 94, 0.5)', 2, [6, 4]);
+            else if (currentAnim === 'cancel') {
+                drawLoop(cancelSource, 'rgba(255, 255, 255, 0.12)', 2, [6, 4]);
+            }
+            
+            // Draw Source / Current Frame
+            let stuck = false;
+            if (currentAnim === 'equiv') stuck = drawLoop(s => homotopyEquiv(s, animT), '#ec4899', 3);
+            else if (currentAnim === 'obstruct') stuck = drawLoop(s => homotopyObstruct(s, animT), '#ec4899', 3);
+            else if (currentAnim === 'comp') {
+                let s1 = drawLoop(s => homotopyComp(s, animT), '#ec4899', 3, [], 0, 0.5); // Pink Loop A
+                let s2 = drawLoop(s => homotopyComp(s, animT), '#f97316', 3, [], 0.5, 1.0); // Orange Loop B
+                stuck = s1 || s2;
+            }
+            else if (currentAnim === 'cancel') {
+                let s1 = drawLoop(s => homotopyCancel(s, animT), '#ec4899', 3, [], 0, 0.5); // Pink outbound
+                let s2 = drawLoop(s => homotopyCancel(s, animT), '#38bdf8', 3, [], 0.5, 1.0); // Light blue inbound
+                stuck = s1 || s2;
+            }
+            
+            if (stuck) {
+                statusText.innerHTML = 'Winding 0 ≠ 1 — <span style="color:#ef4444">Topological obstruction! Loop gets caught on the hole.</span>';
+            }
+        }
+        
+        function animate() {
+            if (isAutoAnimating) {
+                animT += 0.008;
+                if (animT >= 1.0) {
+                    animT = 1.0;
+                    isAutoAnimating = false;
+                }
+                document.getElementById('anim-slider').value = animT;
+                drawFrame();
+                if (isAutoAnimating) {
+                    animFrame = requestAnimationFrame(animate);
+                }
+            }
+        }
+        
+        function startAnim(name, msg) {
+            document.getElementById('btn-container').style.display = 'none';
+            document.getElementById('slider-container').style.display = 'flex';
+            currentAnim = name;
+            animT = 0;
+            document.getElementById('anim-slider').value = 0;
+            statusText.textContent = msg;
+            
+            isAutoAnimating = true;
+            if (animFrame) cancelAnimationFrame(animFrame);
+            animate();
+        }
+
+        document.getElementById('anim-slider').addEventListener('input', (e) => {
+            isAutoAnimating = false;
+            if (animFrame) cancelAnimationFrame(animFrame);
+            animT = parseFloat(e.target.value);
+            drawFrame();
+        });
+
+        document.getElementById('btn-back').addEventListener('click', () => {
+            isAutoAnimating = false;
+            if (animFrame) cancelAnimationFrame(animFrame);
+            document.getElementById('slider-container').style.display = 'none';
+            document.getElementById('btn-container').style.display = 'flex';
+        });
+        
+        document.getElementById('btn-equiv').addEventListener('click', () => startAnim('equiv', 'Deforming +2 loop into another +2 loop...'));
+        document.getElementById('btn-obstruct').addEventListener('click', () => startAnim('obstruct', 'Deforming contractible loop into a +1 loop...'));
+        document.getElementById('btn-comp').addEventListener('click', () => startAnim('comp', 'Fusing loop A and loop B into a single +2 spiral...'));
+        document.getElementById('btn-cancel').addEventListener('click', () => startAnim('cancel', 'Retracting +1 · (−1) loop back to basepoint x₀...'));
+        
+        drawScene();
+        currentAnim = 'comp';
+        animT = 0;
+        drawFrame();
+        statusText.textContent = 'Click a button to start an animation.';
+    </script>
+</body>
+</html>

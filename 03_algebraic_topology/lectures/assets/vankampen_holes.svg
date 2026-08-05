@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" style="background:#1a1a1a; width:100%; max-width:800px; border-radius:8px;">
+    <defs>
+        <radialGradient id="gradU" cx="30%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.05"/>
+        </radialGradient>
+        <radialGradient id="gradV" cx="70%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ef4444" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="#ef4444" stop-opacity="0.05"/>
+        </radialGradient>
+        <marker id="arrowU" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#60a5fa" />
+        </marker>
+        <marker id="arrowV" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#f87171" />
+        </marker>
+        <marker id="arrowC" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#c084fc" />
+        </marker>
+    </defs>
+
+    <!-- Set U (Left region covering p and q) -->
+    <path d="M 500,50 C 600,50 600,450 500,450 L 100,450 C 50,450 50,50 100,50 Z" fill="url(#gradU)" stroke="#3b82f6" stroke-width="3" stroke-dasharray="10 5"/>
+    <text x="120" y="90" fill="#60a5fa" font-family="sans-serif" font-size="28" font-weight="bold">Set U</text>
+    
+    <!-- Set V (Right region covering q and r) -->
+    <path d="M 300,50 C 200,50 200,450 300,450 L 700,450 C 750,450 750,50 700,50 Z" fill="url(#gradV)" stroke="#ef4444" stroke-width="3" stroke-dasharray="10 5"/>
+    <text x="600" y="90" fill="#f87171" font-family="sans-serif" font-size="28" font-weight="bold">Set V</text>
+    
+    <!-- Intersection Label -->
+    <text x="365" y="430" fill="#c084fc" font-family="sans-serif" font-size="22" font-weight="bold">U ∩ V</text>
+
+    <!-- Holes -->
+    <!-- Hole p -->
+    <circle cx="200" cy="250" r="15" fill="#1a1a1a" stroke="#fff" stroke-width="2"/>
+    <text x="193" y="255" fill="#fff" font-family="sans-serif" font-size="16" font-weight="bold">p</text>
+    
+    <!-- Hole q (Shared) -->
+    <circle cx="400" cy="250" r="15" fill="#1a1a1a" stroke="#fff" stroke-width="2"/>
+    <text x="393" y="255" fill="#fff" font-family="sans-serif" font-size="16" font-weight="bold">q</text>
+
+    <!-- Hole r -->
+    <circle cx="600" cy="250" r="15" fill="#1a1a1a" stroke="#fff" stroke-width="2"/>
+    <text x="595" y="255" fill="#fff" font-family="sans-serif" font-size="16" font-weight="bold">r</text>
+
+    <!-- Basepoint x0 -->
+    <circle cx="400" cy="120" r="6" fill="#22c55e"/>
+    <text x="385" y="110" fill="#86efac" font-family="sans-serif" font-size="20" font-weight="bold">x₀</text>
+
+    <!-- Loops in U (Blue) -->
+    <!-- Loop a1 around p -->
+    <path d="M 400,120 C 300,120 150,150 150,250 C 150,350 250,350 250,250 C 250,180 350,140 400,120" fill="none" stroke="#60a5fa" stroke-width="2" marker-mid="url(#arrowU)"/>
+    <text x="175" y="190" fill="#60a5fa" font-family="sans-serif" font-size="22" font-weight="bold">a₁</text>
+    <path d="M 150,250 L 150.1,249.9" fill="none" stroke="transparent" marker-end="url(#arrowU)"/>
+
+    <!-- Loop a2 around q -->
+    <path d="M 400,120 C 370,150 350,180 350,250 C 350,320 450,320 450,250 C 450,180 430,150 400,120" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="6 3"/>
+    <text x="330" y="200" fill="#60a5fa" font-family="sans-serif" font-size="22" font-weight="bold">a₂</text>
+
+    <!-- Loops in V (Red) -->
+    <!-- Loop b1 around q -->
+    <path d="M 400,120 C 380,150 360,180 360,250 C 360,310 440,310 440,250 C 440,180 420,150 400,120" fill="none" stroke="#f87171" stroke-width="2" stroke-dasharray="6 3"/>
+    <text x="445" y="200" fill="#f87171" font-family="sans-serif" font-size="22" font-weight="bold">b₁</text>
+
+    <!-- Loop b2 around r -->
+    <path d="M 400,120 C 500,120 650,150 650,250 C 650,350 550,350 550,250 C 550,180 450,140 400,120" fill="none" stroke="#f87171" stroke-width="2" marker-mid="url(#arrowV)"/>
+    <text x="605" y="190" fill="#f87171" font-family="sans-serif" font-size="22" font-weight="bold">b₂</text>
+    <path d="M 650,250 L 649.9,249.9" fill="none" stroke="transparent" marker-end="url(#arrowV)"/>
+
+    <!-- Loop c in U intersect V (Purple) -->
+    <path d="M 400,120 C 390,160 375,190 375,250 C 375,300 425,300 425,250 C 425,190 410,160 400,120" fill="none" stroke="#c084fc" stroke-width="4" marker-mid="url(#arrowC)"/>
+    <text x="385" y="325" fill="#c084fc" font-family="sans-serif" font-size="24" font-weight="bold">c</text>
+    <path d="M 375,250 L 375.1,249.9" fill="none" stroke="transparent" marker-end="url(#arrowC)"/>
+
+</svg>

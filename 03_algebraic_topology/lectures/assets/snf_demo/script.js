@@ -209,7 +209,7 @@ function startSolve() {
         recordStep("Done! SNF form reached.", []);
     } catch (e) {
         console.error(e);
-        recordStep("Error during computation", []);
+        recordStep(e.stack || e.message || "Error", []);
     }
     
     currentStep = 0;
@@ -374,7 +374,7 @@ function invariant_factors_algo(m, r_start, c_start) {
     }
 
     // 2. Iteratively clear row and column
-    while (found) {
+    while (true) {
         let has_non_zero = false;
         for (let i = c_start + 1; i < cols; i++) if (m[r_start][i] !== 0) has_non_zero = true;
         for (let i = r_start + 1; i < rows; i++) if (m[i][c_start] !== 0) has_non_zero = true;

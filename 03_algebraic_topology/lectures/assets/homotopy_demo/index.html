@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin: 0; padding: 0; background: #1a1a1a; color: #fff; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; }
+        .container { display: flex; width: 100%; max-width: 800px; justify-content: space-around; margin-top: 10px; }
+        .panel { display: flex; flex-direction: column; align-items: center; }
+        canvas { background: #222; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .controls { width: 100%; max-width: 800px; padding: 15px; display: flex; align-items: center; justify-content: space-between; background: #2a2a2a; border-radius: 8px; margin-top: 15px; box-sizing: border-box; }
+        input[type="range"] { flex-grow: 1; margin: 0 15px; cursor: pointer; }
+        button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: #2563eb; }
+        button.active { background: #ec4899; }
+        .equation { font-family: monospace; font-size: 14px; background: #111; padding: 4px 8px; border-radius: 4px; }
+        canvas#canvas-target.is-3d { cursor: grab; }
+        canvas#canvas-target.is-3d:active { cursor: grabbing; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <div style="margin-bottom: 5px; font-size: 14px; color: #aaa;">Domain: <i>X &times; [0,1]</i></div>
+            <canvas id="canvas-domain" width="300" height="300"></canvas>
+        </div>
+        <div class="panel">
+            <div style="margin-bottom: 5px; font-size: 14px; color: #aaa;">Target Space: <i>Y = &reals;&sup2;</i></div>
+            <canvas id="canvas-target" width="300" height="300"></canvas>
+        </div>
+    </div>
+    <div class="controls">
+        <span style="font-size: 14px;"><i>t</i> = <span id="t-val" style="display:inline-block; width: 30px;">0.00</span></span>
+        <input type="range" id="t-slider" min="0" max="1" step="0.01" value="0">
+        <div class="equation">H(s, t) = (1-t)f(s) + t g(s)</div>
+        <button id="btn-3d">3D View</button>
+    </div>
+    
+    <script>
+        const tValDisplay = document.getElementById('t-val');
+        const tSlider = document.getElementById('t-slider');
+        const btn3D = document.getElementById('btn-3d');
+        const ctxD = document.getElementById('canvas-domain').getContext('2d');
+        const ctxT = document.getElementById('canvas-target').getContext('2d');
+        
+        let t = 0;
+        let is3D = false;
+        let yaw = Math.PI / 4;
+        let pitch = -Math.PI / 6;
+        let isDragging = false;
+        let lastX = 0, lastY = 0;
+        
+        btn3D.addEventListener('click', () => {
+            is3D = !is3D;
+            btn3D.classList.toggle('active', is3D);
+            document.getElementById('canvas-target').classList.toggle('is-3d', is3D);
+            draw();
+        });
+        
+        tSlider.addEventListener('input', (e) => {
+            t = parseFloat(e.target.value);
+            tValDisplay.textContent = t.toFixed(2);
+            draw();
+        });
+        
+        const canvasTarget = document.getElementById('canvas-target');
+        canvasTarget.addEventListener('mousedown', (e) => {
+            if (!is3D) return;
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+        });
+        
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - lastX;
+            const dy = e.clientY - lastY;
+            yaw += dx * 0.01;
+            pitch += dy * 0.01;
+            pitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, pitch));
+            lastX = e.clientX;
+            lastY = e.clientY;
+            draw();
+        });
+        
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        // Functions
+        // Circle (radius 1)
+        function f(s) {
+            const theta = s * 2 * Math.PI;
+            return { x: Math.sin(theta), y: -Math.cos(theta) }; // Start at top
+        }
+        
+        // Figure-eight
+        function g(s) {
+            const theta = s * 2 * Math.PI;
+            return { x: 1.2 * Math.sin(theta), y: -1.2 * Math.sin(theta * 2) };
+        }
+        
+        // Homotopy
+        function H(s, curr_t) {
+            const p1 = f(s);
+            const p2 = g(s);
+            return {
+                x: (1 - curr_t) * p1.x + curr_t * p2.x,
+                y: (1 - curr_t) * p1.y + curr_t * p2.y
+            };
+        }
+        
+        // 3D Projection
+        function project3D(x, y, z) {
+            z = z * 2.5; // scale z
+            
+            // Yaw (around Z axis)
+            let x1 = x * Math.cos(yaw) - y * Math.sin(yaw);
+            let y1 = x * Math.sin(yaw) + y * Math.cos(yaw);
+            
+            // Pitch (around X axis)
+            let y2 = y1 * Math.cos(pitch) - z * Math.sin(pitch);
+            let z2 = y1 * Math.sin(pitch) + z * Math.cos(pitch);
+            
+            // Screen mapping (y2 is up/down on screen, x1 is left/right)
+            // Screen Y is inverted (positive is down).
+            return { x: x1, y: -y2 };
+        }
+        
+        function drawDomain() {
+            ctxD.clearRect(0, 0, 300, 300);
+            
+            // Draw a grid for X x [0,1]
+            ctxD.strokeStyle = '#333';
+            ctxD.lineWidth = 1;
+            for(let i=0; i<=10; i++) {
+                ctxD.beginPath(); ctxD.moveTo(30 + i*24, 30); ctxD.lineTo(30 + i*24, 270); ctxD.stroke();
+                ctxD.beginPath(); ctxD.moveTo(30, 30 + i*24); ctxD.lineTo(270, 30 + i*24); ctxD.stroke();
+            }
+            
+            // Labels
+            ctxD.fillStyle = '#aaa';
+            ctxD.font = '12px sans-serif';
+            ctxD.fillText('s = 0', 15, 290);
+            ctxD.fillText('s = 1', 255, 290);
+            ctxD.fillText('t = 1', 2, 35);
+            ctxD.fillText('t = 0', 2, 275);
+            
+            // Draw current t line
+            const y = 270 - t * 240;
+            ctxD.fillStyle = 'rgba(236, 72, 153, 0.2)';
+            ctxD.fillRect(30, y - 5, 240, 10);
+            ctxD.strokeStyle = '#ec4899';
+            ctxD.lineWidth = 2;
+            ctxD.beginPath();
+            ctxD.moveTo(30, y);
+            ctxD.lineTo(270, y);
+            ctxD.stroke();
+        }
+        
+        function drawTarget() {
+            ctxT.clearRect(0, 0, 300, 300);
+            const cx = 150;
+            const cy = is3D ? 230 : 150; // shift down in 3D to fit the tube
+            const scale = 50;
+            
+            if (is3D) {
+                // Draw surface (horizontal slices)
+                const steps_t = 30;
+                for(let i=0; i<=steps_t; i++) {
+                    let curr_t = i / steps_t;
+                    ctxT.beginPath();
+                    for(let s=0; s<=1.01; s+=0.02) {
+                        let pt = H(s, curr_t);
+                        let proj = project3D(pt.x, pt.y, curr_t);
+                        let sx = cx + proj.x * scale;
+                        let sy = cy + proj.y * scale;
+                        if(s===0) ctxT.moveTo(sx, sy);
+                        else ctxT.lineTo(sx, sy);
+                    }
+                    ctxT.strokeStyle = 'rgba(100, 200, 255, 0.4)';
+                    ctxT.lineWidth = 1;
+                    ctxT.stroke();
+                }
+                
+                // Draw connecting lines (s constant)
+                const steps_s = 24;
+                ctxT.strokeStyle = 'rgba(100, 200, 255, 0.15)';
+                ctxT.lineWidth = 1;
+                for(let i=0; i<steps_s; i++) {
+                    let curr_s = i / steps_s;
+                    ctxT.beginPath();
+                    for(let j=0; j<=steps_t; j++) {
+                        let curr_t = j / steps_t;
+                        let pt = H(curr_s, curr_t);
+                        let proj = project3D(pt.x, pt.y, curr_t);
+                        let sx = cx + proj.x * scale;
+                        let sy = cy + proj.y * scale;
+                        if(j===0) ctxT.moveTo(sx, sy);
+                        else ctxT.lineTo(sx, sy);
+                    }
+                    ctxT.stroke();
+                }
+
+                // Draw active curve on top
+                ctxT.beginPath();
+                for(let s=0; s<=1.01; s+=0.02) {
+                    let pt = H(s, t);
+                    let proj = project3D(pt.x, pt.y, t);
+                    let sx = cx + proj.x * scale;
+                    let sy = cy + proj.y * scale;
+                    if(s===0) ctxT.moveTo(sx, sy);
+                    else ctxT.lineTo(sx, sy);
+                }
+                ctxT.strokeStyle = '#ec4899';
+                ctxT.lineWidth = 3;
+                ctxT.stroke();
+                
+            } else {
+                // 2D View
+                // Draw f(s) (t=0)
+                ctxT.beginPath();
+                for(let s=0; s<=1.01; s+=0.02) {
+                    let pt = f(s);
+                    if(s===0) ctxT.moveTo(cx + pt.x*scale, cy + pt.y*scale);
+                    else ctxT.lineTo(cx + pt.x*scale, cy + pt.y*scale);
+                }
+                ctxT.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                ctxT.lineWidth = 2;
+                ctxT.stroke();
+                
+                // Draw g(s) (t=1)
+                ctxT.beginPath();
+                for(let s=0; s<=1.01; s+=0.02) {
+                    let pt = g(s);
+                    if(s===0) ctxT.moveTo(cx + pt.x*scale, cy + pt.y*scale);
+                    else ctxT.lineTo(cx + pt.x*scale, cy + pt.y*scale);
+                }
+                ctxT.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                ctxT.lineWidth = 2;
+                ctxT.stroke();
+                
+                // Draw current H(s, t)
+                ctxT.beginPath();
+                for(let s=0; s<=1.01; s+=0.02) {
+                    let pt = H(s, t);
+                    if(s===0) ctxT.moveTo(cx + pt.x*scale, cy + pt.y*scale);
+                    else ctxT.lineTo(cx + pt.x*scale, cy + pt.y*scale);
+                }
+                ctxT.strokeStyle = '#ec4899';
+                ctxT.lineWidth = 3;
+                ctxT.stroke();
+            }
+        }
+        
+        function draw() {
+            drawDomain();
+            drawTarget();
+        }
+        
+        // Initial render
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" style="background:#1a1a1a; width:100%; max-width:800px; border-radius:8px;">
+    <defs>
+        <!-- Gradients -->
+        <radialGradient id="gradU" cx="30%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.05"/>
+        </radialGradient>
+        <radialGradient id="gradV" cx="70%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ef4444" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="#ef4444" stop-opacity="0.05"/>
+        </radialGradient>
+        
+        <!-- Markers -->
+        <marker id="arrowF" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffffff" />
+        </marker>
+        <marker id="arrowAlpha" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse">
+            <path d="M 0 0 L 8 4 L 0 8 z" fill="#c084fc" />
+        </marker>
+    </defs>
+
+    <!-- Set U -->
+    <path d="M 450,100 C 500,50 300,50 200,100 C 50,150 50,350 200,400 C 300,450 500,450 450,400 C 400,350 400,150 450,100 Z" fill="url(#gradU)" stroke="#3b82f6" stroke-width="3" stroke-dasharray="10 5"/>
+    <text x="120" y="120" fill="#60a5fa" font-family="sans-serif" font-size="28" font-weight="bold">U</text>
+    
+    <!-- Set V -->
+    <path d="M 350,100 C 300,50 500,50 600,100 C 750,150 750,350 600,400 C 500,450 300,450 350,400 C 400,350 400,150 350,100 Z" fill="url(#gradV)" stroke="#ef4444" stroke-width="3" stroke-dasharray="10 5"/>
+    <text x="650" y="120" fill="#f87171" font-family="sans-serif" font-size="28" font-weight="bold">V</text>
+    
+    <!-- Intersection Label -->
+    <text x="365" y="120" fill="#c084fc" font-family="sans-serif" font-size="22" font-weight="bold">U ∩ V</text>
+    
+    <!-- Hole in U -->
+    <circle cx="250" cy="250" r="30" fill="#1a1a1a" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4 4"/>
+    <text x="225" y="255" fill="#60a5fa" font-family="sans-serif" font-size="16">Hole</text>
+
+    <!-- Hole in V -->
+    <circle cx="550" cy="250" r="30" fill="#1a1a1a" stroke="#ef4444" stroke-width="2" stroke-dasharray="4 4"/>
+    <text x="525" y="255" fill="#f87171" font-family="sans-serif" font-size="16">Hole</text>
+    
+    <!-- Basepoint x0 -->
+    <circle cx="400" cy="250" r="6" fill="#22c55e"/>
+    <text x="415" y="255" fill="#86efac" font-family="sans-serif" font-size="20" font-weight="bold" font-style="italic">x₀</text>
+
+    <!-- The Big Loop f -->
+    <!-- Segment f1 -->
+    <path d="M 400,250 C 500,250 650,150 650,250 C 650,350 500,350 400,350" fill="none" stroke="#ffffff" stroke-width="2.5" />
+    <path d="M 650,249 L 650,250" fill="none" stroke="transparent" marker-end="url(#arrowF)"/>
+    <text x="620" y="210" fill="#ffffff" font-family="sans-serif" font-size="20" font-style="italic">f₁</text>
+
+    <!-- Segment f2 -->
+    <path d="M 400,350 C 300,350 150,350 150,250 C 150,150 300,150 400,150" fill="none" stroke="#ffffff" stroke-width="2.5" />
+    <path d="M 150,251 L 150,250" fill="none" stroke="transparent" marker-end="url(#arrowF)"/>
+    <text x="170" y="210" fill="#ffffff" font-family="sans-serif" font-size="20" font-style="italic">f₂</text>
+
+    <!-- Segment f3 -->
+    <path d="M 400,150 C 500,150 500,250 400,250" fill="none" stroke="#ffffff" stroke-width="2.5" />
+    <path d="M 474,199 L 475,200" fill="none" stroke="transparent" marker-end="url(#arrowF)"/>
+    <text x="490" y="180" fill="#ffffff" font-family="sans-serif" font-size="20" font-style="italic">f₃</text>
+
+    <!-- Wavy paths alpha1 and alpha2 -->
+    <!-- alpha1: x0 to f(a1) -->
+    <path d="M 400,258 L 400,260 Q 385,267.5 400,275 T 400,300 T 400,325 T 400,345" fill="none" stroke="#c084fc" stroke-width="2" stroke-dasharray="4 2" marker-start="url(#arrowAlpha)" marker-end="url(#arrowAlpha)"/>
+    <text x="365" y="300" fill="#c084fc" font-family="sans-serif" font-size="18" font-style="italic">α₁</text>
+    <text x="415" y="300" fill="#c084fc" font-family="sans-serif" font-size="18" font-style="italic">α₁⁻¹</text>
+
+    <!-- alpha2: x0 to f(a2) -->
+    <path d="M 400,242 L 400,240 Q 415,232.5 400,225 T 400,200 T 400,175 T 400,155" fill="none" stroke="#c084fc" stroke-width="2" stroke-dasharray="4 2" marker-start="url(#arrowAlpha)" marker-end="url(#arrowAlpha)"/>
+    <text x="415" y="200" fill="#c084fc" font-family="sans-serif" font-size="18" font-style="italic">α₂</text>
+    <text x="350" y="200" fill="#c084fc" font-family="sans-serif" font-size="18" font-style="italic">α₂⁻¹</text>
+
+    <!-- Division points -->
+    <circle cx="400" cy="350" r="5" fill="#ffffff"/>
+    <text x="415" y="360" fill="#ffffff" font-family="sans-serif" font-size="18" font-style="italic">f(a₁)</text>
+
+    <circle cx="400" cy="150" r="5" fill="#ffffff"/>
+    <text x="415" y="145" fill="#ffffff" font-family="sans-serif" font-size="18" font-style="italic">f(a₂)</text>
+
+</svg>
