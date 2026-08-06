@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Homology Z2 Demo</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 10px; 
+            background: transparent; 
+            display: flex; 
+            flex-direction: row; 
+            align-items: flex-start; 
+            gap: 20px;
+            font-family: sans-serif;
+            overflow: hidden;
+        }
+        .controls { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            width: 220px; 
+            margin-top: 10px;
+        }
+        button { 
+            background: #374151; 
+            color: white; 
+            border: 1px solid #4b5563; 
+            padding: 12px 16px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: 600;
+            transition: all 0.2s; 
+            text-align: center;
+        }
+        button:hover { background: #4b5563; }
+        button.primary { background: #2563eb; border-color: #3b82f6; }
+        button.primary:hover { background: #3b82f6; }
+        button.danger { background: #dc2626; border-color: #ef4444; }
+        button.danger:hover { background: #ef4444; }
+        canvas { 
+            background: #111827; 
+            border-radius: 8px; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); 
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button onclick="spawnBoundary()" class="primary">Spawn Boundary</button>
+        <button onclick="spawnCycle()" class="primary">Spawn Cycle</button>
+        <button onclick="spawnChain()" class="primary">Spawn Chain</button>
+        <button onclick="clearEdges()" class="danger">Clear</button>
+    </div>
+    <canvas id="canvas" width="750" height="380"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let nodes = [];
+        let edges = [];
+        let faces = [];
+        
+        const W = canvas.width;
+        const H = canvas.height;
+        const L = 45; 
+        
+        const cols = Math.ceil(W / L) + 2;
+        const rows = Math.ceil(H / (L * Math.sqrt(3)/2)) + 2;
+
+        for (let r = -2; r < rows; r++) {
+            for (let c = -2; c < cols; c++) {
+                let x = c * L + (r % 2 === 0 ? 0 : L/2);
+                let y = r * L * Math.sqrt(3)/2;
+                nodes.push({x, y});
+            }
+        }
+
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i+1; j < nodes.length; j++) {
+                let dx = nodes[i].x - nodes[j].x;
+                let dy = nodes[i].y - nodes[j].y;
+                if (Math.hypot(dx, dy) < L * 1.1) {
+                    edges.push({n1: i, n2: j, active: false});
+                }
+            }
+        }
+
+        for (let i = 0; i < edges.length; i++) {
+            for (let j = i+1; j < edges.length; j++) {
+                let e1 = edges[i], e2 = edges[j];
+                let shared = -1, v1 = -1, v2 = -1;
+                
+                if (e1.n1 === e2.n1) { shared = e1.n1; v1 = e1.n2; v2 = e2.n2; }
+                else if (e1.n1 === e2.n2) { shared = e1.n1; v1 = e1.n2; v2 = e2.n1; }
+                else if (e1.n2 === e2.n1) { shared = e1.n2; v1 = e1.n1; v2 = e2.n2; }
+                else if (e1.n2 === e2.n2) { shared = e1.n2; v1 = e1.n1; v2 = e2.n1; }
+                
+                if (shared !== -1) {
+                    let e3_idx = edges.findIndex(e => (e.n1 === v1 && e.n2 === v2) || (e.n1 === v2 && e.n2 === v1));
+                    if (e3_idx !== -1 && e3_idx > j) { 
+                        let cx = (nodes[shared].x + nodes[v1].x + nodes[v2].x) / 3;
+                        let cy = (nodes[shared].y + nodes[v1].y + nodes[v2].y) / 3;
+                        if (cx > -L && cx < W+L && cy > -L && cy < H+L) {
+                            faces.push({ edges: [i, j, e3_idx], cx, cy, is_hole: false, path: null });
+                        }
+                    }
+                }
+            }
+        }
+
+        let center_x = W / 2;
+        let center_y = H / 2;
+        
+        let center_node_idx = 0;
+        let min_dist = Infinity;
+        nodes.forEach((n, idx) => {
+            let d = Math.hypot(n.x - center_x, n.y - center_y);
+            if (d < min_dist) { min_dist = d; center_node_idx = idx; }
+        });
+        
+        faces.forEach(f => {
+            let n_set = new Set();
+            f.edges.forEach(e_idx => { n_set.add(edges[e_idx].n1); n_set.add(edges[e_idx].n2); });
+            if (n_set.has(center_node_idx)) {
+                f.is_hole = true;
+            }
+            
+            let p = new Path2D();
+            let e1 = edges[f.edges[0]];
+            let n1 = nodes[e1.n1];
+            let n2 = nodes[e1.n2];
+            let n3 = nodes[edges[f.edges[1]].n1];
+            if (n3 === n1 || n3 === n2) n3 = nodes[edges[f.edges[1]].n2];
+            p.moveTo(n1.x, n1.y);
+            p.lineTo(n2.x, n2.y);
+            p.lineTo(n3.x, n3.y);
+            p.closePath();
+            f.path = p;
+        });
+
+        edges.forEach(e => {
+            e.is_spoke = (e.n1 === center_node_idx || e.n2 === center_node_idx);
+        });
+
+        let hovered_face = null;
+
+        canvas.addEventListener('mousemove', (e) => {
+            let rect = canvas.getBoundingClientRect();
+            let mx = e.clientX - rect.left;
+            let my = e.clientY - rect.top;
+            
+            let found = null;
+            for (let f of faces) {
+                if (f.is_hole) continue;
+                if (ctx.isPointInPath(f.path, mx, my)) {
+                    found = f;
+                    break;
+                }
+            }
+            
+            if (found !== hovered_face) {
+                hovered_face = found;
+                draw();
+            }
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (hovered_face) {
+                hovered_face.edges.forEach(e_idx => {
+                    edges[e_idx].active = !edges[e_idx].active;
+                });
+                draw();
+            }
+        });
+
+        function clearEdges() {
+            edges.forEach(e => e.active = false);
+            draw();
+        }
+
+        function spawnBoundary() {
+            clearEdges();
+            let valid_faces = faces.filter(f => !f.is_hole);
+            
+            // Deterministic start point: near (150, 150)
+            let start = null;
+            let min_d = Infinity;
+            valid_faces.forEach(f => {
+                let d = Math.hypot(f.cx - 150, f.cy - 150);
+                if (d < min_d) { min_d = d; start = f; }
+            });
+            
+            let cluster = new Set([start]);
+            // Expand nicely
+            for(let i=0; i<3; i++) {
+                let current_cluster = Array.from(cluster);
+                valid_faces.forEach(f => {
+                    if (!cluster.has(f) && f.edges.some(e => current_cluster.some(cf => cf.edges.includes(e)))) {
+                        cluster.add(f);
+                    }
+                });
+            }
+            
+            cluster.forEach(f => {
+                f.edges.forEach(e_idx => edges[e_idx].active = !edges[e_idx].active);
+            });
+            draw();
+        }
+
+        function spawnCycle() {
+            clearEdges();
+            let cluster = new Set(faces.filter(f => f.is_hole));
+            // Expand by 3 layers to make a wide loop
+            for(let i=0; i<3; i++) {
+                let current_cluster = Array.from(cluster);
+                faces.forEach(f => {
+                    if (!cluster.has(f) && f.edges.some(e => current_cluster.some(cf => cf.edges.includes(e)))) {
+                        cluster.add(f);
+                    }
+                });
+            }
+            
+            cluster.forEach(f => {
+                f.edges.forEach(e_idx => edges[e_idx].active = !edges[e_idx].active);
+            });
+            draw();
+        }
+
+        function spawnChain() {
+            clearEdges();
+            
+            // Deterministic start: bottom left
+            let current_node = 0;
+            let min_d = Infinity;
+            nodes.forEach((n, idx) => {
+                let d = Math.hypot(n.x - 50, n.y - (H - 50));
+                if (d < min_d) { min_d = d; current_node = idx; }
+            });
+            
+            // Undulating path moving right
+            let path_nodes = new Set([current_node]);
+            for (let i = 0; i < 12; i++) {
+                let adjacent_edges = edges.filter(e => !e.is_spoke && (e.n1 === current_node || e.n2 === current_node));
+                let next_edge = null;
+                let max_score = -Infinity;
+                let next_node = current_node;
+                
+                adjacent_edges.forEach(e => {
+                    let n = (e.n1 === current_node) ? e.n2 : e.n1;
+                    if (path_nodes.has(n)) return; // no backtracking
+                    
+                    if (nodes[n].x > nodes[current_node].x - 5) {
+                        // Score based on moving right and a sine wave to make it snake
+                        let score = nodes[n].x + Math.sin(nodes[n].x * 0.03) * 60;
+                        if (score > max_score) { 
+                            max_score = score; 
+                            next_edge = e; 
+                            next_node = n; 
+                        }
+                    }
+                });
+                
+                if (!next_edge) break;
+                next_edge.active = true;
+                current_node = next_node;
+                path_nodes.add(current_node);
+            }
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+            
+            faces.forEach(f => {
+                if (f.is_hole) return;
+                
+                if (f === hovered_face) {
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+                } else {
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.02)";
+                }
+                ctx.fill(f.path);
+            });
+            
+            ctx.fillStyle = "rgba(239, 68, 68, 0.5)";
+            ctx.font = "20px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("HOLE", nodes[center_node_idx].x, nodes[center_node_idx].y);
+
+            edges.forEach(e => {
+                if (e.is_spoke) return;
+                
+                ctx.beginPath();
+                ctx.moveTo(nodes[e.n1].x, nodes[e.n1].y);
+                ctx.lineTo(nodes[e.n2].x, nodes[e.n2].y);
+                
+                if (e.active) {
+                    ctx.strokeStyle = "#22c55e"; 
+                    ctx.lineWidth = 4;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = "#22c55e";
+                } else {
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+                    ctx.lineWidth = 1.5;
+                    ctx.shadowBlur = 0;
+                }
+                ctx.stroke();
+            });
+            
+            ctx.shadowBlur = 0;
+        }
+
+        draw();
+    </script>
+</body>
+</html>

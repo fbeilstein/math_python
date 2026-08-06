@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" width="100%" height="100%">
+    <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 2 L 8 5 L 0 8 z" fill="#3b82f6" />
+        </marker>
+    </defs>
+    
+    <style>
+        .edge { stroke: #3b82f6; stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+        .node { fill: #e5e7eb; }
+        .text-node { fill: #e5e7eb; font-family: monospace; font-size: 24px; font-weight: bold; }
+        .text-plus { fill: #22c55e; font-family: monospace; font-size: 20px; font-weight: bold; }
+        .text-minus { fill: #ec4899; font-family: monospace; font-size: 20px; font-weight: bold; }
+        .text-eq { fill: #facc15; font-family: monospace; font-size: 22px; font-weight: bold; }
+        .title { fill: #9ca3af; font-family: sans-serif; font-size: 16px; text-anchor: middle; font-style: italic; }
+    </style>
+    
+    <!-- Triangle Edges with markers at the midpoints -->
+    <!-- a to b -->
+    <path d="M 250 220 L 400 220 L 550 220" fill="none" class="edge" marker-mid="url(#arrow)" />
+    <!-- b to c -->
+    <path d="M 550 220 L 475 145 L 400 70" fill="none" class="edge" marker-mid="url(#arrow)" />
+    <!-- c to a -->
+    <path d="M 400 70 L 325 145 L 250 220" fill="none" class="edge" marker-mid="url(#arrow)" />
+    
+    <!-- Triangle Fill (optional, for aesthetics) -->
+    <path d="M 250 220 L 550 220 L 400 70 Z" fill="rgba(59, 130, 246, 0.1)" />
+
+    <!-- Nodes -->
+    <circle cx="250" cy="220" r="8" class="node" />
+    <circle cx="550" cy="220" r="8" class="node" />
+    <circle cx="400" cy="70" r="8" class="node" />
+    
+    <!-- Node Labels -->
+    <text x="220" y="240" class="text-node">a</text>
+    <text x="565" y="240" class="text-node">b</text>
+    <text x="393" y="50" class="text-node">c</text>
+    
+    <!-- Contributions at a -->
+    <text x="210" y="190" class="text-plus">+a</text>
+    <text x="270" y="250" class="text-minus">-a</text>
+    <text x="90" y="225" class="text-eq">+a - a = 0</text>
+    
+    <!-- Contributions at b -->
+    <text x="495" y="250" class="text-plus">+b</text>
+    <text x="560" y="190" class="text-minus">-b</text>
+    <text x="600" y="225" class="text-eq">+b - b = 0</text>
+    
+    <!-- Contributions at c -->
+    <text x="430" y="100" class="text-plus">+c</text>
+    <text x="345" y="100" class="text-minus">-c</text>
+    <text x="340" y="30" class="text-eq">+c - c = 0</text>
+    
+    <!-- Title -->
+    <text x="400" y="290" class="title">Visualizing ∂₁ ∘ ∂₂ = 0: In a closed cycle, every vertex has exactly one incoming and one outgoing edge.</text>
+</svg>

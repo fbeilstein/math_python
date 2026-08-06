@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240" width="100%" height="100%">
+    <style>
+        .point-good { fill: #22c55e; }
+        .line-good { stroke: #22c55e; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+        .fill-good { fill: rgba(34, 197, 94, 0.2); }
+        .text-good { fill: #22c55e; font-family: sans-serif; font-size: 18px; text-anchor: middle; font-weight: bold; }
+        
+        .point-bad { fill: #ef4444; }
+        .line-bad { stroke: #ef4444; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+        .fill-bad { fill: rgba(239, 68, 68, 0.2); }
+        .text-bad { fill: #ef4444; font-family: sans-serif; font-size: 18px; text-anchor: middle; font-weight: bold; }
+        
+        .label { fill: #9ca3af; font-family: sans-serif; font-size: 14px; text-anchor: middle; font-style: italic; }
+    </style>
+
+    <!-- Good Complex -->
+    <g transform="translate(50, 0)">
+        <!-- Triangles -->
+        <path d="M 100 150 L 200 150 L 150 50 Z" class="fill-good line-good" />
+        <path d="M 150 50 L 200 150 L 250 50 Z" class="fill-good line-good" />
+        <!-- Extra edge -->
+        <line x1="200" y1="150" x2="300" y2="150" class="line-good" />
+        
+        <!-- Points -->
+        <circle cx="100" cy="150" r="5" class="point-good" />
+        <circle cx="200" cy="150" r="5" class="point-good" />
+        <circle cx="150" cy="50" r="5" class="point-good" />
+        <circle cx="250" cy="50" r="5" class="point-good" />
+        <circle cx="300" cy="150" r="5" class="point-good" />
+        
+        <text x="175" y="190" class="text-good">Valid Complex</text>
+        <text x="175" y="210" class="label">Intersects only at common faces</text>
+    </g>
+
+    <!-- Bad Complex -->
+    <g transform="translate(150, 0)">
+        <!-- Triangle 1 -->
+        <path d="M 450 150 L 550 150 L 500 50 Z" class="fill-bad line-bad" />
+        <!-- Overlapping edge not at a vertex -->
+        <line x1="400" y1="100" x2="600" y2="100" class="line-bad" />
+        <!-- Overlapping triangle -->
+        <path d="M 520 120 L 620 120 L 570 20 Z" class="fill-bad line-bad" />
+        
+        <!-- Points -->
+        <circle cx="450" cy="150" r="5" class="point-bad" />
+        <circle cx="550" cy="150" r="5" class="point-bad" />
+        <circle cx="500" cy="50" r="5" class="point-bad" />
+        
+        <!-- Edge points -->
+        <circle cx="400" cy="100" r="5" class="point-bad" />
+        <circle cx="600" cy="100" r="5" class="point-bad" />
+        
+        <!-- Overlapping triangle points -->
+        <circle cx="520" cy="120" r="5" class="point-bad" />
+        <circle cx="620" cy="120" r="5" class="point-bad" />
+        <circle cx="570" cy="20" r="5" class="point-bad" />
+        
+        <text x="500" y="190" class="text-bad">Invalid Complex</text>
+        <text x="500" y="210" class="label">Improper gluing (overlaps are not faces)</text>
+    </g>
+</svg>

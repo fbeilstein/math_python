@@ -50,9 +50,9 @@ where $\Delta A = \sqrt{\langle\hat{A}^2\rangle - \langle\hat{A}\rangle^2}$.
 2. Apply Cauchy-Schwarz: $|\langle f|g\rangle|^2 \leq \|f\|^2\|g\|^2$
 3. Note $\|f\|^2 = (\Delta A)^2$, $\|g\|^2 = (\Delta B)^2$
 4. Decompose: $\langle f|g\rangle = \frac{1}{2}\langle[\hat{A},\hat{B}]\rangle + \frac{1}{2}\langle\{\hat{A}-\langle A\rangle, \hat{B}-\langle B\rangle\}\rangle$
-5. Take imaginary part: $|\text{Im}\,\langle f|g\rangle| = \frac{1}{2}|\langle[\hat{A},\hat{B}]\rangle|$
+5. Take imaginary part: $|\text{Im}\\,\langle f|g\rangle| = \frac{1}{2}|\langle[\hat{A},\hat{B}]\rangle|$
 
-For $\hat{x}, \hat{p}$: $[\hat{x},\hat{p}] = i\hbar\hat{I}$, so $\Delta x\,\Delta p \geq \hbar/2$.
+For $\hat{x}, \hat{p}$: $[\hat{x},\hat{p}] = i\hbar\hat{I}$, so $\Delta x\\,\Delta p \geq \hbar/2$.
 
 **Fourier-analytic interpretation:** $\psi(x)$ and $\tilde{\psi}(p)$ are Fourier duals. The uncertainty principle is the **bandwidth theorem** — a function cannot be simultaneously narrow and have a narrow Fourier transform.
 

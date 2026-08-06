@@ -1,6 +1,9 @@
 # Simplices: The Building Blocks
 
-A **$k$-simplex** is the convex hull of $k+1$ affinely independent points (vertices):
+:::matrix { cols="30/70" }
+[[0,0:2]]
+A set of points $\{a_0,\dots,a_n\}$ in some Euclidean space $\mathbb{R}^m$ is said to be **independent** if vectors $a_1 - a_0$, $a_2 - a_0$,...,$a_n - a_0$ are linearly independent. 
+A **$k$-simplex** is the convex hull of $k+1$ independent points (vertices):
 
 | $k$ | Name | Notation | Geometric Object |
 |-----|------|----------|-----------------|
@@ -11,28 +14,59 @@ A **$k$-simplex** is the convex hull of $k+1$ affinely independent points (verti
 
 **Faces.** Every subset of vertices spans a lower-dimensional simplex called a **face**. A $k$-simplex has $\binom{k+1}{j+1}$ faces of dimension $j$.
 
+[[1,0]]
 **Example:** The triangle $[v_0, v_1, v_2]$ has:
 - 3 edges (1-faces): $[v_0,v_1]$, $[v_0,v_2]$, $[v_1,v_2]$
 - 3 vertices (0-faces): $[v_0]$, $[v_1]$, $[v_2]$
 - 1 triangle (2-face): itself
 
+[[1,1]]
+![](./assets/simplices.svg){width=90% center}
+
+:::
+
+---
+
+# Geometric Simplicial Complex
+
+A simplicial complex is powerful because it serves as a bridge between continuous topology and discrete combinatorics. We begin in continuous Euclidean space $\mathbb{R}^m$.
+
+**Definition.** A **geometric simplicial complex $K$** is a finite set of geometric simplices satisfying two strict rules:
+1. If $\sigma^n \in K$ and $\tau^p$ is a face of $\sigma^n$, then $\tau^p \in K$. *(Closed under taking faces)*
+2. If $\sigma^n \in K$ and $\tau^p \in K$, then their intersection $\sigma^n \cap \tau^p$ is either empty or a common face of both. *(Properly glued together)*
+
+**Definition.** The union of all simplices in $K$, equipped with the subspace topology from $\mathbb{R}^m$, forms a continuous topological space called a **polyhedron $|K|$**.
+
+![](./assets/valid_complex.svg){width=100% center}
+
+*(Note: There exist other types of complexes, such as CW-complexes and $\Delta$-complexes, which have more relaxed gluing rules but can represent the same underlying topological spaces.)*
+
 ---
 
 # Abstract Simplicial Complex
+
+What if we drop the geometry entirely and only define the relations between vertices?
 
 **Definition.** An **abstract simplicial complex** $\mathcal{K}$ on a vertex set $V$ is a collection of finite subsets of $V$ such that:
 1. Every single vertex $\\{v\\} \in \mathcal{K}$
 2. If $\sigma \in \mathcal{K}$ and $\tau \subseteq \sigma$, then $\tau \in \mathcal{K}$ (closed under taking subsets)
 
-The second property is the key: **every face of every simplex must also be in $\mathcal{K}$**.
+Notice how the abstract definition perfectly mirrors the geometric one, but replaces "faces" with pure subset algebra!
 
-**Example:** $\mathcal{K} = \\{[a], [b], [c], [d], [a,b], [b,c], [a,c], [a,b,c], [c,d]\\}$
+**Example:** $\mathcal{K} = \\{[a], [b], [c], [d], [a,b], [b,c], [a,c], [a,b,c], [c,d]\\}$ purely algebraically defines a filled triangle $[a,b,c]$ with an edge $[c,d]$ sticking out, without needing any spatial coordinates.
 
-This is a filled triangle $[a,b,c]$ with an edge $[c,d]$ sticking out.
 
-**Non-example:** $\\{[a], [b], [c], [a,b,c]\\}$ is **not** a valid simplicial complex — it contains the triangle but is missing the edges $[a,b]$, $[b,c]$, $[a,c]$.
 
-**The geometric realization** $|\mathcal{K}|$ is the topological space obtained by "gluing" all the simplices together along their shared faces.
+# The Topological Bridge: Geometric Realization
+
+**Definition.** $\mathcal{K}$ is called an **abstraction** of $K$, and $K$ is called a **realization** of $\mathcal{K}$, if there is a bijection between their vertices that perfectly preserves the simplex/subset structure.
+
+Can we always go back from discrete algebra to continuous geometry? Yes!
+
+**Theorem (Geometric Realization).** Every $n$-dimensional abstract simplicial complex $\mathcal{K}$ has a geometric realization in $\mathbb{R}^{2n+1}$. Moreover, any two realizations of $\mathcal{K}$ are **homeomorphic** via a simplicial map.
+
+> [!IMPORTANT]
+> **No topology is lost!** If abstraction destroyed topological information, we could build non-homeomorphic realizations from the same abstract complex. Because the realization is unique up to homeomorphism, the purely combinatorial abstract complex $\mathcal{K}$ perfectly retains all topological properties of the geometric polyhedron $|K|$. This guarantees that calculating discrete algebra on $\mathcal{K}$ perfectly solves the continuous topology of $|K|$!
 
 ---
 
@@ -56,8 +90,13 @@ Think of orientation as a "circulation direction":
 - An oriented edge $[a, b]$ points from $a$ to $b$
 - An oriented triangle $[a, b, c]$ has a counterclockwise circulation $a \to b \to c \to a$
 
+![](./assets/oriented_simplices.svg){width=90% center}
+
 ---
 
+:::matrix { cols="50/50" }
+
+[[0,0]]
 # Chain Groups $C_p(\mathcal{K})$
 
 **Definition.** The **$p$-th chain group** $C_p(\mathcal{K})$ is the free abelian group generated by the oriented $p$-simplices of $\mathcal{K}$.
@@ -76,8 +115,8 @@ $$
 
 **Rank:** $C_p(\mathcal{K})$ is isomorphic to $\mathbb{Z}^{n_p}$, where $n_p$ is the number of $p$-simplices.
 
----
 
+[[0,1]]
 # The Boundary Operator $\partial_p$
 
 **Definition.** The **boundary operator** $\partial_p: C_p(\mathcal{K}) \to C_{p-1}(\mathcal{K})$ maps each oriented $p$-simplex to its oriented boundary:
@@ -101,6 +140,8 @@ $$
 
 $\partial_p$ is extended to all chains by **linearity**: $\partial_p(\sum n_i \sigma_i) = \sum n_i \partial_p(\sigma_i)$.
 
+:::
+
 ---
 
 # The Fundamental Lemma: $\partial^2 = 0$
@@ -116,6 +157,8 @@ $$
 \partial_1 \partial_2 [a,b,c] = \partial_1 \big([b,c] - [a,c] + [a,b]\big) = (c-b) - (c-a) + (b-a) = 0 \quad \checkmark
 $$
 
+![](./assets/boundary_of_boundary.svg){width=50% center}
+
 **The Chain Complex:** This gives us an exact algebraic pipeline:
 $$
 \cdots \xrightarrow{\partial_3} C_2 \xrightarrow{\partial_2} C_1 \xrightarrow{\partial_1} C_0 \xrightarrow{\partial_0} 0
@@ -126,6 +169,9 @@ with $\text{Im}(\partial_{p+1}) \subseteq \ker(\partial_p)$ guaranteed at every 
 
 # Cycles, Boundaries, and Homology
 
+:::matrix { cols="50/50" gap="10px" }
+
+[[0, 0]]
 The chain complex naturally produces two important subgroups at each level:
 
 **$p$-Cycles:** $Z_p = \ker(\partial_p) = \\{c \in C_p : \partial_p c = 0\\}$ — chains whose boundary vanishes ("closed loops")
@@ -134,6 +180,7 @@ The chain complex naturally produces two important subgroups at each level:
 
 Because $\partial^2 = 0$, every boundary is automatically a cycle: $B_p \subseteq Z_p$.
 
+[[0, 1]]
 **Homology Group:**
 $$
 \boxed{H_p(\mathcal{K}) = Z_p / B_p = \ker(\partial_p) / \text{Im}(\partial_{p+1})}
@@ -142,6 +189,11 @@ $$
 A class $[\alpha] \in H_p$ represents a cycle that is **not** a boundary — a genuine $p$-dimensional "hole" that cannot be filled.
 
 Two cycles $\alpha, \beta$ are **homologous** ($\alpha \sim \beta$) if $\alpha - \beta \in B_p$, i.e., they differ by a boundary.
+
+:::
+
+
+<iframe src="./assets/homology_demo/index.html" width="100%" height="420px" style="border:none; margin-top:20px; border-radius: 8px;"></iframe>
 
 ---
 
@@ -180,8 +232,11 @@ $$
 | Point | 1 | 0 | 0 | 1 |
 | Circle $S^1$ | 1 | 1 | 0 | 0 |
 | Sphere $S^2$ | 1 | 0 | 1 | 2 |
+| Projective plane $P^2$ | 1 | 0 | 0 | 1 |
 | Torus $T^2$ | 1 | 2 | 1 | 0 |
-| Klein bottle | 1 | 1 | 0 | 0 |
+| Klein bottle $K^2$ | 1 | 1 | 0 | 0 |
+| $g$-holed torus | 1 | $2g$ | 1 | $2-2g$ |
+| 2-Manifold ($g$ holes, $c>0$ cross-caps) | 1 | $2g+c-1$ | 0 | $2-2g-c$ |
 
 </div>
 
@@ -189,10 +244,12 @@ $$
 
 # Torsion in Homology
 
-In general, homology groups are finitely generated abelian groups. By the classification theorem:
+In general, homology groups are **finitely generated** (not free!) abelian groups. By the **classification theorem** for a group $G \cong F / K$ (where $F$ is a free abelian group of generators and $K$ is a subgroup of relations):
 $$
 H_p(\mathcal{K}) \cong \mathbb{Z}^{\beta_p} \oplus \underbrace{\mathbb{Z}\_{d_1} \oplus \mathbb{Z}\_{d_2} \oplus \cdots \oplus \mathbb{Z}\_{d_m}}\_{T_p \text{ (torsion part)}}
 $$
+
+In homology, our free generators $F$ are the cycles ($Z_p$), and our relations $K$ are the boundaries ($B_p$). The quotient $Z_p / B_p$ forces every boundary to equal zero.
 
 The **free part** $\mathbb{Z}^{\beta_p}$ counts genuine holes. The **torsion part** $T_p$ detects **non-orientability**.
 
@@ -201,7 +258,7 @@ $$
 H_0(\mathbb{RP}^2) = \mathbb{Z}, \qquad H_1(\mathbb{RP}^2) = \mathbb{Z}_2, \qquad H_2(\mathbb{RP}^2) = 0
 $$
 
-The $\mathbb{Z}_2$ in $H_1$ means: there exists a loop that is not a boundary, but **traversing it twice** creates a boundary. This is the algebraic signature of the Möbius-type twist.
+The $\mathbb{Z}_2$ in $H_1$ means: there exists a loop that is not a boundary, but **traversing it twice** creates a boundary. This is the algebraic signature of a cross-cap type gluing.
 
 **Torsion over $\mathbb{Z}_2$:** If we compute homology with coefficients in $\mathbb{Z}_2$ instead of $\mathbb{Z}$, torsion disappears entirely (all arithmetic is mod 2). This is common in computational TDA — simpler, but loses the orientability information.
 
@@ -283,38 +340,81 @@ These are the same as Gaussian elimination, except we cannot divide — only int
 
 # Smith Normal Form: Reading Rules
 
-By definition, homology is $H_p = \ker(D_p) / \text{Im}(D_{p+1})$. 
-Once you have computed the Smith Normal Forms of $D_p$ and $D_{p+1}$, you can read off the features using these three rules:
+By definition, homology is $H_p = \ker(\partial_p) / \operatorname{im}(\partial_{p+1})$. 
 
-**Rule 1: Count the cycles**
-Look at $\text{SNF}(D_p)$.
-- The number of $p$-cycles is the number of **all-zero columns**.
-- Let this number be $Z$.
+Because the boundary matrix $\partial_{p+1}$ maps $(p+1)$-chains to $p$-boundaries, **its columns mathematically generate the exact relations we want to impose** (forcing boundaries to equal zero). Therefore, $\partial_{p+1}$ acts directly as our relations matrix.
 
-**Rule 2: Count the boundaries**
-Look at $\text{SNF}(D_{p+1})$.
-- The number of trivial boundaries is the number of **non-zero elements**.
-- Let this number be $B$.
+When we diagonalize $\partial_{p+1}$ into Smith Normal Form, the relations between the cycles and boundaries are completely decoupled. We can read the structure of the homology group directly off the diagonal!
 
-**Rule 3: Calculate Betti and Torsion**
-- **Betti Number:** $\beta_p = Z - B$ (The number of true holes).
-- **Torsion:** Look at the non-zero elements of $\text{SNF}(D_{p+1})$. Any element $e_i > 1$ means the space is "twisted" and adds a $\mathbb{Z}_{e_i}$ torsion term. (Elements equal to $1$ are safely ignored).
+$$
+\text{SNF}(D_{p+1}) = \begin{bmatrix}
+\color{#ef4444}1 & 0 & 0 & 0 & 0 \\\\
+0 & \color{#ef4444}1 & 0 & 0 & 0 \\\\
+0 & 0 & \color{#eab308}2 & 0 & 0 \\\\
+0 & 0 & 0 & \color{#22c55e}0 & 0 \\\\
+0 & 0 & 0 & 0 & \color{#22c55e}0
+\end{bmatrix}
+$$
+
+- A diagonal entry $\color{#ef4444} d_i = 1$ means a generator is killed entirely ($\mathbb{Z}_1 = \\{0\\}$). The cycle is just a trivial boundary.
+- A diagonal entry $\color{#eab308} d_i > 1$ gives us a **torsion cycle** $\mathbb{Z}_{d_i}$.
+- A $\color{#22c55e} \text{column of all zeros}$ means a boundary relation is trivial (it restricts nothing). When combined with the knowledge of how many total cycles we have (from $D_p$), the remaining unrestricted cycles give us copies of $\mathbb{Z}$ (the **free part**!).
+
+**Computational Steps:** To compute the exact Betti numbers algorithmically using just the SNFs of $\partial_p$ and $\partial_{p+1}$:
+1. $Z$ = number of **all-zero columns** in $\text{SNF}(\partial_p)$.
+2. $B$ = number of **non-zero diagonal entries** in $\text{SNF}(\partial_{p+1})$ (these non-zero entries are your $d_i$ values).
+3. **Betti number:** $\beta_p = Z - B$.
 
 ---
 
 **Example (Klein Bottle):**
 Consider a triangulation of the Klein Bottle with 9 vertices, 27 edges, and 18 faces ($n_0 = 9$, $n_1 = 27$, $n_2 = 18$).
 A computer algebra system gives the following Smith Normal Forms for the boundary matrices:
-- $\text{SNF}(D_1) = [1, -1, -1, -1, -1, -1, -1, -1, 0]$
-  *It has 8 non-zero elements $\implies B_1=8$. Thus $Z_1 = n_1 - B_1 = 27 - 8 = 19$.*
-- $\text{SNF}(D_2) = [1, 1, 1, 1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -2]$
-  *It has 18 non-zero elements $\implies B_2=18$. Note: we take the absolute value of the entries.*
 
-Let's read off the homology groups using the rules:
+:::matrix {cols="60/40"}
+[[0,0]]
+- **$\partial_1$ (vertices $\times$ edges):** A $9 \times 27$ matrix.
+  $$ \text{diag}(\text{SNF}(\partial_1)) = [1, 1, 1, 1, 1, 1, 1, 1, 0] $$
+  We have $27 - 9 = 18$ guaranteed zero columns, plus $1$ zero on the diagonal.
+  Total zero columns: $Z_1 = 18 + 1 = 19$. 
+  Non-zero elements: $B_1 = 8$.
+
+- **$\partial_2$ (edges $\times$ faces):** A $27 \times 18$ matrix.
+  $$ \text{diag}(\text{SNF}(\partial_2)) = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2] $$
+  We have 18 columns in total. Since there are 18 non-zero elements on the diagonal, there are $0$ zero columns ($Z_2 = 0$) and $B_2 = 18$.
+
+[[0,1]]
+
+$$
+\require{html}
+\text{SNF}(\partial\_p) = 
+\underbrace{
+\left.\left[
+\begin{array}{ccc|ccc}
+d_1 & & & 0 & \cdots & 0 \\\\
+ & \ddots & & \vdots & & \vdots \\\\
+ & & d_B & 0 & \cdots & 0 \\\\
+\hline
+0 & \cdots & 0 & 0 & \cdots & 0 \\\\
+\vdots & & \vdots & \vdots & & \vdots \\\\
+0 & \cdots & 0 & 0 & \cdots & 0
+\end{array}
+\right]
+\right\\}}_{n\_p \text{ columns}}
+\hspace{-1cm}
+\style{
+display:inline-block;
+transform:rotate(-90deg);
+transform-origin:left center;
+}{n\_{p-1} \text{ rows}}
+$$
+
+:::
+Let's read off the homology groups using the visual rules:
 - $H_0$: $\beta_0 = Z_0 - B_1 = 9 - 8 = 1$ (One connected component).
-- $H_1$: $\beta_1 = Z_1 - B_2 = 19 - 18 = 1$. The $|-2|=2$ in $\text{SNF}(D_2)$ adds a $\mathbb{Z}_2$ torsion term.
+- $H_1$: $\beta_1 = Z_1 - B_2 = 19 - 18 = 1$. The $d_{18} = 2$ in $\partial_2$ adds a $\mathbb{Z}_2$ torsion term.
   Thus, $H_1 \cong \mathbb{Z} \oplus \mathbb{Z}_2$ (One true hole, plus a non-orientable twist).
-- $H_2$: $Z_2 = n_2 - B_2 = 18 - 18 = 0$. $\beta_2 = Z_2 - B_3 = 0 - 0 = 0$.
+- $H_2$: $\beta_2 = Z_2 - B_3 = 0 - 0 = 0$.
   Thus, $H_2 = 0$ (No cavities, it doesn't enclose a 3D volume).
 
 # Interactive: Homology Explorer
