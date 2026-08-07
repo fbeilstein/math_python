@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Persistence Diagrams</title>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 250px;
+            background: #ffffff;
+            border-right: 1px solid #e9ecef;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: #212529;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+
+        .surface-btn {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .surface-btn:hover {
+            background-color: #f8f9fa;
+            border-color: #adb5bd;
+            transform: translateY(-1px);
+        }
+
+        .surface-btn.active {
+            background-color: #e7f1ff;
+            border-color: #0d6efd;
+            color: #0d6efd;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(13, 110, 253, 0.1);
+        }
+
+        #main-content {
+            flex-grow: 1;
+            position: relative;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #diagram-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #persistence-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* The wrapper matches the natural aspect ratio/bounds of the image to allow % positioning */
+        #interactive-wrapper {
+            position: relative;
+            width: 1200px;
+            height: 600px;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1200 / 600;
+        }
+
+        #interactive-wrapper img {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #plotly-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let clicks pass through except on overlays */
+        }
+
+        .plotly-overlay {
+            position: absolute;
+            pointer-events: auto; /* Re-enable clicks for plotly interactive elements */
+        }
+        
+        /* Torus positions 
+           ax2: (0.5, 0.2, 0.3, 0.3)
+           ax3: (0.3, 0.45, 0.15, 0.15)
+           ax4: (0.45, 0.62, 0.15, 0.15)
+        */
+        #torus-main { left: 50%; bottom: 20%; width: 30%; height: 30%; }
+        #torus-small { left: 30%; bottom: 55%; width: 15%; height: 15%; }
+        #torus-big { left: 40%; bottom: 65%; width: 15%; height: 15%; }
+
+        /* Sphere positions 
+           ax2: (0.5, 0.2, 0.4, 0.4)
+        */
+        #sphere-main { left: 50%; bottom: 20%; width: 40%; height: 40%; }
+
+        /* Cylinder positions 
+           ax2: (0.5, 0.1, 0.3, 0.4)
+           ax4: (0.3, 0.45, 0.15, 0.15)
+        */
+        #cylinder-main { left: 50%; bottom: 10%; width: 30%; height: 40%; }
+        #cylinder-big { left: 30%; bottom: 55%; width: 15%; height: 15%; }
+
+        /* Mobius positions 
+           ax2: (0.5, 0.1, 0.3, 0.4)
+           ax4: (0.3, 0.45, 0.15, 0.15)
+        */
+        #mobius-main { left: 50%; bottom: 10%; width: 30%; height: 40%; }
+        #mobius-big { left: 30%; bottom: 55%; width: 15%; height: 15%; }
+
+    </style>
+    <!-- Load the pre-compiled plots data to avoid fetch CORS issues -->
+    <script src="plots_data.js"></script>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Surface Types</h2>
+        <button class="surface-btn active" data-surface="torus">Torus</button>
+        <button class="surface-btn" data-surface="sphere">Sphere</button>
+        <button class="surface-btn" data-surface="cylinder">Cylinder</button>
+        <button class="surface-btn" data-surface="mobius">Möbius Strip</button>
+        <div style="margin-top:auto; font-size:0.85rem; color:#6c757d;">
+            <p><strong>Interactive:</strong> Click and drag on the 3D surfaces to rotate them.</p>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div id="diagram-container">
+            <div id="interactive-wrapper">
+                <img id="persistence-img" src="torus_persistence.png" alt="Persistence Diagram">
+                
+                <!-- Plotly containers will be injected here dynamically -->
+                <div id="plotly-layer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const config = {
+            torus: {
+                img: 'torus_persistence.png',
+                plots: [
+                    { id: 'torus-main', key: 'torus_main' },
+                    { id: 'torus-small', key: 'torus_gen_small' },
+                    { id: 'torus-big', key: 'torus_gen_big' }
+                ]
+            },
+            sphere: {
+                img: 'sphere_persistence.png',
+                plots: [
+                    { id: 'sphere-main', key: 'sphere_main' }
+                ]
+            },
+            cylinder: {
+                img: 'cylinder_persistence.png',
+                plots: [
+                    { id: 'cylinder-main', key: 'cylinder_main' },
+                    { id: 'cylinder-big', key: 'cylinder_gen_big' }
+                ]
+            },
+            mobius: {
+                img: 'mobius_persistence.png',
+                plots: [
+                    { id: 'mobius-main', key: 'mobius_main' },
+                    { id: 'mobius-big', key: 'mobius_gen_big' }
+                ]
+            }
+        };
+
+        const plotlyLayer = document.getElementById('plotly-layer');
+        const persistenceImg = document.getElementById('persistence-img');
+        const buttons = document.querySelectorAll('.surface-btn');
+
+        // Decode Base64 typed arrays created by Plotly Python
+        function decodeBData(obj) {
+            if (obj && typeof obj === 'object') {
+                if (obj.bdata !== undefined && obj.dtype !== undefined) {
+                    const str = atob(obj.bdata);
+                    const buf = new ArrayBuffer(str.length);
+                    const view = new Uint8Array(buf);
+                    for (let i = 0; i < str.length; i++) view[i] = str.charCodeAt(i);
+                    
+                    if (obj.dtype === 'float64' || obj.dtype === 'f8') return Array.from(new Float64Array(buf));
+                    if (obj.dtype === 'float32' || obj.dtype === 'f4') return Array.from(new Float32Array(buf));
+                    if (obj.dtype === 'int32' || obj.dtype === 'i4') return Array.from(new Int32Array(buf));
+                    if (obj.dtype === 'uint32' || obj.dtype === 'u4') return Array.from(new Uint32Array(buf));
+                    return obj;
+                }
+                if (Array.isArray(obj)) {
+                    for (let i = 0; i < obj.length; i++) obj[i] = decodeBData(obj[i]);
+                } else {
+                    for (let k in obj) obj[k] = decodeBData(obj[k]);
+                }
+            }
+            return obj;
+        }
+
+        // Pre-process all loaded Plotly JSONs to remove bdata Base64 encodings
+        if (typeof plotsData !== 'undefined') {
+            decodeBData(plotsData);
+        }
+
+        async function loadSurface(surfaceId) {
+            // Update active button
+            buttons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-surface="${surfaceId}"]`).classList.add('active');
+
+            // Update image
+            const surfaceConfig = config[surfaceId];
+            persistenceImg.src = surfaceConfig.img;
+
+            // Purge WebGL contexts before removing old plots
+            const oldOverlays = document.querySelectorAll('.plotly-overlay');
+            oldOverlays.forEach(overlay => {
+                try { Plotly.purge(overlay); } catch(e) {}
+            });
+            plotlyLayer.innerHTML = '';
+
+            // Load Plotly graphs
+            for (const plot of surfaceConfig.plots) {
+                // Create container
+                const div = document.createElement('div');
+                div.id = plot.id;
+                div.className = 'plotly-overlay';
+                plotlyLayer.appendChild(div);
+
+                try {
+                    const fig = plotsData[plot.key];
+                    
+                    if (!fig) {
+                        console.error("Plotly data not found for key: " + plot.key);
+                        continue;
+                    }
+                    
+                    // Force transparent background & hide controls
+                    if (fig.layout) {
+                        fig.layout.paper_bgcolor = 'rgba(0,0,0,0)';
+                        fig.layout.plot_bgcolor = 'rgba(0,0,0,0)';
+                        fig.layout.margin = {l:0, r:0, b:0, t:0};
+                        delete fig.layout.width;
+                        delete fig.layout.height;
+                    }
+                    
+                    Plotly.newPlot(div, fig.data, fig.layout, {displayModeBar: false, responsive: true});
+                } catch (e) {
+                    console.error("Error loading plotly json:", e);
+                }
+            }
+        }
+
+        // Add event listeners to buttons
+        buttons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                loadSurface(e.target.dataset.surface);
+            });
+        });
+
+        // Initialize with default surface (Torus)
+        loadSurface('torus');
+
+        // Handle window resize for plotly responsive
+        window.addEventListener('resize', () => {
+            const plots = document.querySelectorAll('.plotly-overlay');
+            plots.forEach(plot => {
+                try { Plotly.Plots.resize(plot); } catch(e){}
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filtrations Demo</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/delaunator@5.0.0/delaunator.min.js"></script>
+</head>
+<body>
+    <div id="sidebar">
+        <div class="control-group">
+            <label>Complex Type</label>
+            <button class="btn active" id="btn-cech" onclick="setComplex('cech')">Čech Complex</button>
+            <button class="btn" id="btn-alpha" onclick="setComplex('alpha')">Alpha Complex</button>
+            <button class="btn" id="btn-rips" onclick="setComplex('rips')">Vietoris-Rips Complex</button>
+        </div>
+
+        <div class="control-group">
+            <label>Radius ($\epsilon$): <span id="radius-val">70</span></label>
+            <input type="range" id="radius-slider" min="5" max="200" value="70">
+        </div>
+
+        <div class="info-text">
+            <b>Controls:</b><br>
+            - Left-click to add/drag points.<br>
+            - Right-click to remove points.
+        </div>
+    </div>
+    
+    <div id="canvas-container">
+        <canvas id="simCanvas"></canvas>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
