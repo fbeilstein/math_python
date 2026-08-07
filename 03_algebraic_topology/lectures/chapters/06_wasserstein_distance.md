@@ -1,19 +1,19 @@
 # Comparing Persistence Diagrams
 
-Given two persistence diagrams $\text{Dgm}(X)$ and $\text{Dgm}(Y)$, how do we measure their distance?
+:::matrix {cols="60/40"}
+[[0,0]]
+Our topological methods allowed us o extract the information but now we have to compare the obtained persistence diagrams.
 
-**The challenge:** Diagrams may have different numbers of points. 
+Given two persistence diagrams $\text{Dgm}(X)$ and $\text{Dgm}(Y)$, how do we measure their distance? Is there even a notion of distance between persistence diagrams? 
 
-**Solution:** Add **virtual points** on the diagonal $\Delta = \\{(t, t) : t \ge 0\\}$. A virtual point represents a feature with zero lifetime — it was born and immediately died.
-
-By adding enough virtual points, we can always make two diagrams have the same cardinality, and then look for the best **matching** (bijection) between them.
-
-![](./assets/wasserstein_distance.png){width=60% center}
-
----
+[[0,1]]
+![](./assets/wasserstein_distance_2_diags.svg){width=100% center}
+:::
 
 # The $p$-Wasserstein Distance
 
+:::matrix {cols="60/40"}
+[[0,0]]
 **Definition.** The **$p$-Wasserstein distance** between persistence diagrams $X$ and $Y$:
 
 $$
@@ -22,10 +22,12 @@ $$
 
 where the infimum is over all bijections $\varphi$ between the augmented diagrams (with virtual points on $\Delta$).
 
-**Intuition:** Find the optimal way to match every point in $X$ to a point in $Y$ (or to the diagonal), minimizing the total "transport cost."
-
 - $\|x - \varphi(x)\|\_\infty = \max(|b_x - b_{\varphi(x)}|, |d_x - d_{\varphi(x)}|)$ — the $L^\infty$ distance between matched points
 - Unmatched points are sent to their closest projection on the diagonal: $(b, d) \mapsto \left(\frac{b+d}{2}, \frac{b+d}{2}\right)$, at cost $\frac{d-b}{2}$
+
+[[0,1]]
+![](./assets/wasserstein_distance.png){width=100% center}
+:::
 
 ---
 
@@ -49,6 +51,13 @@ Only the **single worst-matched pair** matters — the maximum over all individu
 
 **The Stability Theorem** is stated using the bottleneck distance: $W_\infty(\text{Dgm}(X), \text{Dgm}(Y)) \le d_H(X, Y)$.
 
+# Interactive: Wasserstein Distance
+
+Drag points in two persistence diagrams and watch the optimal matching update in real time.
+
+<button class="demo-btn" onclick="showDemo('https://fbeilstein.github.io/topological_data_analysis/wasserstein_distance/wasserstein_distance.html')">
+    Launch Wasserstein Distance Explorer 📐
+</button>
 ---
 
 # Computing Wasserstein Distance
@@ -70,12 +79,4 @@ The Wasserstein distance reduces to the classical **optimal assignment problem**
 - **Hera** (C++) — optimized for bottleneck and Wasserstein
 - **Ripser** (C++/Python) — fast Vietoris-Rips persistence computation
 
----
 
-# Interactive: Wasserstein Distance
-
-Drag points in two persistence diagrams and watch the optimal matching update in real time.
-
-<button class="demo-btn" onclick="showDemo('https://fbeilstein.github.io/topological_data_analysis/wasserstein_distance/wasserstein_distance.html')">
-    Launch Wasserstein Distance Explorer 📐
-</button>
