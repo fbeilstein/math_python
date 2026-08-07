@@ -37,12 +37,8 @@ Schedule: TBA
 ---
 
 ### Module 4: Systems Biochemistry
-**Session 8 — Lecture: Theory of Biological Networks**
 - Enzymatic kinetics, metabolic pathways, ODEs for biochemical systems
-
-**Session 9 — Practice: Simulating Biochemical Systems**
 - Glycolytic oscillations in yeast, bioswitches, bifurcation analysis
-- Practice: [`biochem_problem`](04_systems_biochemistry/practice/biochem_problem/)
 
 ---
 
