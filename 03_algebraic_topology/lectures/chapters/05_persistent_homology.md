@@ -78,7 +78,7 @@ $
 
 These homomorphisms let us **track** individual homology classes as they evolve across the filtration.
 
-<iframe src="./assets/filtration_demo/filtration.html" width="100%" height="550px" style="border:1px solid #ddd; border-radius: 8px; margin: 20px 0;"></iframe>
+<iframe src="./demos/filtration/filtration.html" width="100%" height="550px" style="border:1px solid #ddd; border-radius: 8px; margin: 20px 0;"></iframe>
 
 ---
 
@@ -98,7 +98,7 @@ Each point $(b_i, d_i)$ represents a homology class that is **born** at scale $b
 - **Short-lived features** ($d - b$ small) → likely noise
 
 [[0,1]]
-<iframe src="./assets/persistence_diagrams_demo/persistence_diagrams_demo.html" width="100%" height="600px" style="border:1px solid #ddd; border-radius: 8px; margin: 20px 0;"></iframe>
+<iframe src="./demos/persistence_diagrams/persistence_diagrams_demo.html" width="100%" height="600px" style="border:1px solid #ddd; border-radius: 8px; margin: 20px 0;"></iframe>
 :::
 
 

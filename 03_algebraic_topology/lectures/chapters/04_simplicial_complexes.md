@@ -193,7 +193,7 @@ Two cycles $\alpha, \beta$ are **homologous** ($\alpha \sim \beta$) if $\alpha -
 :::
 
 
-<iframe src="./assets/homology_demo/index.html" width="100%" height="420px" style="border:none; margin-top:20px; border-radius: 8px;"></iframe>
+<iframe src="./demos/homology/index.html" width="100%" height="420px" style="border:none; margin-top:20px; border-radius: 8px;"></iframe>
 
 ---
 
@@ -334,7 +334,7 @@ These are the same as Gaussian elimination, except we cannot divide — only int
 
 # Smith Normal Form: Live Demo
 
-<iframe src="./assets/snf_demo/snf_demo.html" width="100%" height="550px" style="border:none; margin: 10px 0; overflow: hidden;"></iframe>
+<iframe src="./demos/snf/snf_demo.html" width="100%" height="550px" style="border:none; margin: 10px 0; overflow: hidden;"></iframe>
 
 ---
 

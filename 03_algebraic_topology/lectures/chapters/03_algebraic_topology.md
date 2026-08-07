@@ -44,7 +44,7 @@ $H$ continuously deforms $f$ into $g$ — a "movie" where each frame is a valid 
 Homotopy equivalence is weaker than homeomorphism but preserves all the algebraic invariants we care about.
 
 [[1,1]]
-<iframe src="./assets/homotopy_demo/index.html" width="100%" height="450px" style="border: none;"></iframe>
+<iframe src="./demos/homotopy/index.html" width="100%" height="450px" style="border: none;"></iframe>
 
 :::
 
@@ -77,7 +77,7 @@ $$
 </div>
 
 [[0,1]]
-<iframe src="./assets/pi1_demo/index.html" width="100%" height="600px" style="border: none;"></iframe>
+<iframe src="./demos/pi1/index.html" width="100%" height="600px" style="border: none;"></iframe>
 
 :::
 
@@ -100,7 +100,7 @@ The real line wraps around the circle infinitely many times. Each point of $S^1$
 - Subgroups of $\pi_1(X)$ $\longleftrightarrow$ intermediate covering spaces (Galois correspondence!)
 
 [[0,1]]
-<iframe src="./assets/covering_space_demo/index.html" width="100%" height="600px" style="border: none;"></iframe>
+<iframe src="./demos/covering_space/index.html" width="100%" height="600px" style="border: none;"></iframe>
 
 [[1,0:2]]
 **Examples:**
@@ -185,7 +185,7 @@ $$
 Because the boundary $\partial I^n$ maps entirely to the constant basepoint $x_0$, the "empty space" around the non-trivial parts of $f$ and $g$ is flexible. As the demo proves, the existence of at least one *extra* dimension ($n \ge 2$) gives the domains enough "room" to shrink, move into different lanes, and slide past each other horizontally. This forces $f * g \simeq g * f$, making $\pi_n$ abelian!
 
 [[0,1]]
-<iframe src="./assets/pi2_abelian_demo/index.html" width="100%" height="580px" style="border: none;"></iframe>
+<iframe src="./demos/pi2_abelian/index.html" width="100%" height="580px" style="border: none;"></iframe>
 
 
 :::
@@ -219,7 +219,7 @@ The first homology group is exactly the abelianization of the fundamental group.
 </div>
 
 [[0,1]]
-<iframe src="./assets/hurewicz_demo/index.html" width="100%" height="780px" style="border: none;"></iframe>
+<iframe src="./demos/hurewicz/index.html" width="100%" height="780px" style="border: none;"></iframe>
 
 :::
 
