@@ -1,0 +1,227 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, mathtools}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{Systems Biochemistry \& Synergetics \\ \large Problem Set \& Implementation Guide}
+\author{VB}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Problem 0: Start the engine}
+
+Consider the files given in the laboratory package.
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{@{} >{\bfseries\raggedright\arraybackslash}p{5.5cm} X @{}}
+\toprule
+\textcolor{blue}{Filename} & \textcolor{blue}{Purpose} \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
+\lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Contains the kinetic models, reductions, continuation routines, and spatial models used by Problems 1--6. \\
+\lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} An educational dashboard for visual debugging of the six levels. \\
+\lstinline|levels/level_*.py| & Interactive graphical sandbox for each problem. \textbf{Can be run standalone} with \lstinline|python levels/level_*.py|. \\ \midrule
+\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
+\lstinline|levels/base_level.py| & Base class for graphical debuggers and plot visualisers. \\
+\lstinline|tests/| & Instructor tests for the required function interfaces. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{Prerequisites:} Install \lstinline|numpy|, \lstinline|scipy|, and \lstinline|matplotlib| with \lstinline|pip install -r requirements.txt|.
+
+Run \lstinline|python lab_dashboard.py|. Open \lstinline|implementation_tasks.py| in your editor. Every problem below has a mathematical part, an implementation part, and a visual check. Solve the mathematics first; use the dashboard to test the consequences of your result.
+
+\subsubsection*{Self-Testing (Optional)}
+You may add \lstinline|unittest.TestCase| classes at the bottom of \lstinline|implementation_tasks.py| and run \lstinline|python implementation_tasks.py|. This is optional, but useful before checking a plot in the dashboard.
+
+\textbf{Timing note:} The six problems are deliberately separate levels. A first pass through the required interfaces is designed for roughly 90--120 minutes after the lecture; careful derivations and the visual investigations may reasonably take longer.
+
+\section*{Problem 1: Mass-Action Kinetics \& Singular Perturbation (QSSA)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The enzyme-substrate mechanism
+\[
+E+S \xrightleftharpoons[k_{-1}]{k_1} C \xrightarrow{k_{cat}} E+P,
+\qquad E_{tot}=E+C,
+\]
+with equations
+\[
+\dot S=-k_1(E_{tot}-C)S+k_{-1}C,
+\qquad
+\dot C=k_1(E_{tot}-C)S-(k_{-1}+k_{cat})C.
+\]
+\textbf{Derive:} Using $\varepsilon=E_{tot}/S_0$, explain why $C$ is fast and $S$ is slow when $\varepsilon\ll1$. Derive the QSSA relation $C\approx E_{tot}S/(K_m+S)$ and the reduced Michaelis--Menten equation.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|full_enzyme_system_rhs|, \lstinline|qssa_reduced_rhs|, and \lstinline|compute_boundary_layer_error|. The final function returns an $L_2$ relative error for every supplied value of $\varepsilon$.
+\begin{center}
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{r | c | c | c}
+\toprule
+\textbf{Function} & \lstinline|full_enzyme_system_rhs| & \lstinline|qssa_reduced_rhs| & \lstinline|compute_boundary_layer_error| \\ \midrule
+\textbf{Return} & $[\dot S,\dot C]$ & $\dot S$ & array of errors \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} Press \texttt{L1 QSSA Boundary Layer}. As $\varepsilon\to0$, check that the numerical error decreases. Explain where the reduced model is least reliable.
+
+\section*{Problem 2: Goldbeter--Koshland Ultrasensitivity \& Signalling Cascades}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} A covalent modification cycle has modified fraction $y=[P^*]/[P]_{tot}$ and steady-state balance
+\[
+v_1\frac{1-y}{K_1+1-y}=v_2\frac{y}{K_2+y}.
+\]
+\textbf{Derive:} Verify the explicit Goldbeter--Koshland solution
+\[
+y=\frac{2v_1K_2}{B+\sqrt{B^2-4(v_2-v_1)v_1K_2}},
+\quad B=v_2-v_1+v_1K_2+v_2K_1.
+\]
+Explain why small $K_1,K_2$ create a sharp response, and why a sharp single-valued response is not yet hysteresis.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|goldbeter_koshland(v1, v2, K1, K2)| and \lstinline|frz_pathway_rhs(state, t, k, k_bar, K, K_bar, signal_boost)|. The first returns $y\in[0,1]$; the second returns the three derivatives of the Frz cascade.
+\begin{center}
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{r | c | c}
+\toprule
+\textbf{Function} & \lstinline|goldbeter_koshland| & \lstinline|frz_pathway_rhs| \\ \midrule
+\textbf{Return} & float $y$ & $[\dot{Frz},\dot{FrzCD},\dot{FrzE}]$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} Press \texttt{L2 Ultrasensitivity}. Compare the curves for $K=0.5$ and $K=0.01$. The transition should become much narrower as the enzymes saturate.
+
+\section*{Problem 3: Synergetics \& Haken's Slaving Principle}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:}
+\[
+\dot u=\gamma_u u-uv,
+\qquad
+\dot v=-\gamma_vv+u^2,
+\qquad \gamma_v\gg\gamma_u>0.
+\]
+\textbf{Derive:} Apply adiabatic elimination to obtain $v\approx u^2/\gamma_v$ and the reduced order-parameter equation $\dot u=\gamma_uu-u^3/\gamma_v$. Find its nonzero fixed points.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|synergetic_2d_rhs|, \lstinline|slaved_order_parameter_rhs|, and \lstinline|verify_manifold_collapse|. The last function returns the final distances from $v=u^2/\gamma_v$ for a list of initial conditions.
+\begin{center}
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{r | c | c | c}
+\toprule
+\textbf{Function} & \lstinline|synergetic_2d_rhs| & \lstinline|slaved_order_parameter_rhs| & \lstinline|verify_manifold_collapse| \\ \midrule
+\textbf{Return} & $[\dot u,\dot v]$ & $\dot u$ & array of distances \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} Press \texttt{L3 Slaving Principle}. Check that trajectories approach the parabolic manifold before moving slowly along it.
+
+\section*{Problem 4: Glycolytic Oscillations \& Hopf Bifurcation Analysis}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:}
+\[
+\dot G=V_{in}-k_1GA,
+\qquad
+\dot A=2k_1GA-k_p\frac{A}{A+K_m}.
+\]
+\textbf{Derive:} For $k_p>2V_{in}$, show that
+\[
+A^*=\frac{2V_{in}K_m}{k_p-2V_{in}},
+\qquad
+G^*=\frac{k_p-2V_{in}}{2k_1K_m}.
+\]
+Derive the Jacobian at $(G^*,A^*)$. Use its trace and determinant to predict where varying $K_m$ can destabilise the equilibrium through a Hopf bifurcation.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|glycolysis_rhs|, \lstinline|glycolysis_fixed_point|, \lstinline|glycolysis_jacobian|, \lstinline|calc_quiver_arrows|, and \lstinline|bifurcation_sweep_km|. \lstinline|glycolysis_fixed_point| must raise \lstinline|ValueError| when no positive equilibrium exists.
+\begin{center}
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{r | c | c | c}
+\toprule
+\textbf{Function} & \lstinline|glycolysis_rhs| & \lstinline|glycolysis_fixed_point| & \lstinline|glycolysis_jacobian| \\ \midrule
+\textbf{Return} & $[\dot G,\dot A]$ & $(G^*,A^*)$ & $2\times2$ array \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} Press \texttt{L4 Yeast Glycolysis}. Compare the opening of the numerical amplitude band with the stability change predicted by your Jacobian.
+
+\section*{Problem 5: Biological Switches, Nullclines, \& Hysteresis}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The Tyson switch model
+\[
+\dot R=k_{R0}(E_{tot}-E+S)-k_{R1}R,
+\qquad
+\dot E=k_{E0}\frac{E_{tot}-E}{E_{tot}-E+K_0}-k_{E1}\frac{RE}{E+K_1}.
+\]
+\textbf{Derive:} Write the $R$- and $E$-nullclines. Explain how three intersections can yield two stable states separated by a saddle, and how this differs from Problem 2.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|bioswitch_rhs|, \lstinline|gaussian_pulse|, and \lstinline|hysteresis_continuation|. The continuation function returns high and low response branches and a detected threshold.
+\begin{center}
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{r | c | c | c}
+\toprule
+\textbf{Function} & \lstinline|bioswitch_rhs| & \lstinline|gaussian_pulse| & \lstinline|hysteresis_continuation| \\ \midrule
+\textbf{Return} & $[\dot R,\dot E]$ & float $S(t)$ & $(R_{high},R_{low},S_{thr})$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} Press \texttt{L5 Bio-switch Hysteresis}. Identify a signal interval where the two branches differ. Explain why the initial condition matters there.
+
+\section*{Problem 6: Morphogenesis \& Spatial Synergetics (Turing Patterns)}
+
+\subsubsection*{Mathematical part}
+\textbf{Given:} The Schnakenberg reaction--diffusion system
+\[
+\frac{\partial u}{\partial t}=a-u+u^2v+D_u\frac{\partial^2u}{\partial x^2},
+\qquad
+\frac{\partial v}{\partial t}=b-u^2v+D_v\frac{\partial^2v}{\partial x^2}.
+\]
+\textbf{Derive:} Find the homogeneous equilibrium $(u_0,v_0)$. Linearise around it using Fourier perturbations $e^{\sigma t+ikx}$ and explain how diffusion can amplify a nonzero mode even when the homogeneous ODE is stable.
+
+\subsubsection*{Implementation part}
+\textbf{Implement:} \lstinline|schnakenberg_2d_pde_rhs_flat| and \lstinline|turing_dispersion_relation|. Use second-order central differences with periodic boundary conditions on the 2D grid; the second function returns $\sigma(k)$, the largest eigenvalue of the linearised reaction-diffusion Jacobian for wavenumber $k$.
+\begin{center}
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{r | c | c}
+\toprule
+\textbf{Function} & \lstinline|schnakenberg_2d_pde_rhs_flat| & \lstinline|turing_dispersion_relation| \\ \midrule
+\textbf{Return} & flattened $2N_xN_y$ derivative array & float array $\sigma(k)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Test:} Press \texttt{L6 Turing Patterns}. Observe the 2D spatial heatmap as the homogeneous steady state breaks symmetry into spots or stripes. Compare the dominant mode in the live dispersion relation plot with the theoretical prediction.
+
+\section*{\textcolor{red}{Submission}}
+
+Submit the file \texttt{implementation\_tasks.py}.
+
+\end{document}

@@ -33,7 +33,7 @@ $$
 [[0, 1]]
 **Unbounded operators** (the ones we actually need!):
 * Defined only on a **dense subspace** $D(\hat{A}) \subset \mathcal{H}$
-* $\hat{x}$: multiplication by $x$, domain $D(\hat{x}) = \{f \in L^2 : xf \in L^2\}$
+* $\hat{x}$: multiplication by $x$, domain $D(\hat{x}) = \\{f \in L^2 : xf \in L^2\\}$
 * $\hat{p} = -i\hbar\frac{d}{dx}$, domain $D(\hat{p}) = H^1(\mathbb{R})$ (Sobolev space)
 * **Hellinger-Toeplitz theorem**: a self-adjoint operator defined on all of $\mathcal{H}$ must be bounded. So $\hat{x}$ and $\hat{p}$ *cannot* be everywhere-defined.
 

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ODE Interactive Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { margin: 0; font-family: sans-serif; }
+        
+        .demo-container { 
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin: 0 auto;
+            background: white;
+        }
+        
+        canvas { 
+            display: block; 
+            width: 100%; 
+            height: 100%; 
+        }
+
+        .internal-legend {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="demo-container">
+    <div class="internal-legend">
+        <div style="color: #1f77b4; font-weight: bold;">— [R]</div>
+        <div style="color: #ff7f0e; font-weight: bold;">— 1000 × [S]</div>
+    </div>
+    <canvas id="simChart"></canvas>
+</div>
+
+<script>
+    const k_R = [0.22, 0.001];
+    const k_E = [0.8, 0.01];
+    const Km = [0.01, 0.01];
+    const E_total = 0.5;
+
+    let current_intensity = 0.1;
+    let current_center = 30000;
+    let dragTimeout = null;
+
+    // Optimized gaussian (s = 1000 -> 2*s^2 = 2000000)
+    function gaussian(x, a, c) {
+        return a * Math.exp(-Math.pow(x - c, 2) / 2000000);
+    }
+
+    function func_act(variables, t, intensity, center) {
+        let [R, E] = variables;
+        E = Math.max(0, Math.min(E, 0.4999));
+        R = Math.max(0, R);
+
+        const S_val = gaussian(t, intensity, center);
+        const dR = k_R[0] * (E_total - E) + S_val - k_R[1] * R;
+        const dE = k_E[0] * (E_total - E) / (E_total - E + Km[0]) - k_E[1] * R * E / (E + Km[1]);
+                 
+        return [dR, dE];
+    }
+
+    function generateData(intensity, center) {
+        let y = [0, 0];
+        const R_out = [{x: 0, y: y[0]}];
+        const S_out = [{x: 0, y: 1000 * gaussian(0, intensity, center)}];
+        
+        const f = (vars, time) => func_act(vars, time, intensity, center);
+        
+        let t = 0;
+        const dt = 0.1;
+        
+        for (let i = 1; i <= 600; i++) { 
+            for (let j = 0; j < 1000; j++) {
+                let k1 = f(y, t);
+                let k2 = f([y[0] + k1[0]*dt/2, y[1] + k1[1]*dt/2], t + dt/2);
+                let k3 = f([y[0] + k2[0]*dt/2, y[1] + k2[1]*dt/2], t + dt/2);
+                let k4 = f([y[0] + k3[0]*dt,   y[1] + k3[1]*dt],   t + dt);
+
+                y[0] += (dt/6) * (k1[0] + 2*k2[0] + 2*k3[0] + k4[0]);
+                y[1] += (dt/6) * (k1[1] + 2*k2[1] + 2*k3[1] + k4[1]);
+                t += dt;
+            }
+            R_out.push({x: t, y: y[0]});
+            S_out.push({x: t, y: 1000 * gaussian(t, intensity, center)});
+        }
+        return { R: R_out, S: S_out };
+    }
+
+    const ctx = document.getElementById('simChart').getContext('2d');
+    const simChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [
+                { borderColor: '#1f77b4', borderWidth: 2.5, pointRadius: 0, data: [] },
+                { borderColor: '#ff7f0e', borderWidth: 2.5, pointRadius: 0, data: [] },
+                { type: 'scatter', backgroundColor: '#d62728', pointRadius: 6, pointHoverRadius: 8, data: [] }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            interaction: { mode: 'none' },
+            scales: {
+                x: {
+                    type: 'linear', // Critical: Forces X-axis to use numeric coordinates, not category labels
+                    title: { display: true, text: 'time, t, sec', font: {size: 14} },
+                    ticks: { maxTicksLimit: 15 },
+                    min: 0,
+                    max: 60000
+                },
+                y: {
+                    title: { display: true, text: 'concentration, [X]', font: {size: 14} },
+                    min: 0,
+                    max: 250
+                }
+            },
+            plugins: { legend: { display: false }, title: { display: false } }
+        }
+    });
+
+    // Decoupled Updates
+    function updateSignalInstant() {
+        const S_out = [];
+        for (let i = 0; i <= 60000; i += 100) {
+            S_out.push({x: i, y: 1000 * gaussian(i, current_intensity, current_center)});
+        }
+        simChart.data.datasets[1].data = S_out;
+        simChart.data.datasets[2].data = [{x: current_center, y: current_intensity * 1000}];
+        simChart.update('none');
+    }
+
+    function updateODEFull() {
+        const newData = generateData(current_intensity, current_center);
+        simChart.data.datasets[0].data = newData.R;
+        simChart.data.datasets[1].data = newData.S;
+        simChart.data.datasets[2].data = [{x: current_center, y: current_intensity * 1000}];
+        simChart.update('none');
+    }
+
+    let isDragging = false;
+    const canvas = document.getElementById('simChart');
+
+    canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const peakX = simChart.scales.x.getPixelForValue(current_center);
+        const peakY = simChart.scales.y.getPixelForValue(current_intensity * 1000);
+
+        if (Math.hypot(x - peakX, y - peakY) < 20) {
+            isDragging = true;
+            canvas.style.cursor = 'grabbing';
+        }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        if (isDragging) {
+            let new_center = simChart.scales.x.getValueForPixel(x);
+            let new_intensity = simChart.scales.y.getValueForPixel(y) / 1000;
+
+            current_center = Math.max(0, Math.min(60000, new_center));
+            current_intensity = Math.max(0, Math.min(0.25, new_intensity));
+
+            // Instantly redraw the dragged peak and orange curve
+            updateSignalInstant();
+
+            // Throttle the heavy ODE calculation so it doesn't freeze the mouse
+            clearTimeout(dragTimeout);
+            dragTimeout = setTimeout(updateODEFull, 20); 
+            
+        } else {
+            const peakX = simChart.scales.x.getPixelForValue(current_center);
+            const peakY = simChart.scales.y.getPixelForValue(current_intensity * 1000);
+            
+            if (Math.hypot(x - peakX, y - peakY) < 20) {
+                canvas.style.cursor = 'grab';
+            } else {
+                canvas.style.cursor = 'default';
+            }
+        }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            canvas.style.cursor = 'default';
+            clearTimeout(dragTimeout);
+            updateODEFull();
+        }
+    });
+    
+    canvas.addEventListener('mouseout', () => {
+        if (isDragging) {
+            isDragging = false;
+            canvas.style.cursor = 'default';
+            clearTimeout(dragTimeout);
+            updateODEFull();
+        }
+    });
+
+    updateODEFull();
+</script>
+
+</body>
+</html>
