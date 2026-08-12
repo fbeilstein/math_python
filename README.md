@@ -37,8 +37,9 @@ Schedule: TBA
 ---
 
 ### Module 4: Systems Biochemistry
-- Enzymatic kinetics, metabolic pathways, ODEs for biochemical systems
-- Glycolytic oscillations in yeast, bioswitches, bifurcation analysis
+- **Lecture:** [Systems Biochemistry](https://fbeilstein.github.io/math_python/04_systems_biochemistry/lectures/systems_biochemistry.html)
+- **Warm-up:** [Explore Differential Equation Stability](https://github.com/fbeilstein/math_python/releases/download/stability_v0/stability_problem.zip)
+- **Practice:** [Systems Biochemistry](https://github.com/fbeilstein/math_python/releases/download/bio_v0/biochem_problem.zip)
 
 ---
 
@@ -67,6 +68,5 @@ git clone --recurse-submodules <repo-url>
 - [Game Theory, Tournament](https://github.com/fbeilstein/math_python/releases/download/tournament_v0/evolutionary_game_problem.zip)
 - [Spectral Graph Theory, Segmentation](https://github.com/fbeilstein/math_python/releases/download/spectral_graph_v0/spectral_graph_problem.zip)
 - [Markov Chain Problem](https://github.com/fbeilstein/math_python/releases/download/markov_v0/markov_chain_problem.zip)
-- [Explore Differential Equation Stability](https://github.com/fbeilstein/math_python/releases/download/stability_v0/stability_problem.zip)
 - [Duplicate Documents Search](https://github.com/fbeilstein/math_python/releases/download/lsh_v0/lsh_problem.zip)
 
