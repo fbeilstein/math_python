@@ -52,11 +52,37 @@ This is the multiplicative group of the field $GF(p)$ — the starting point for
 
 ---
 
+# Cyclic Groups & Generators
+
+A group $G$ is **cyclic** if there exists $g \in G$ such that $G = \\{g^0, g^1, g^2, \\ldots, g^{n-1}\\}$.
+
+**Theorem:** Every finite cyclic group of order $n$ is isomorphic to $\\mathbb{Z}_n$.
+
+**Theorem (Primitive Root):** $U(p) \\cong \\mathbb{Z}_{p-1}$ for every prime $p$. In particular, there exists $\\alpha \\in U(p)$ such that $\\alpha, \\alpha^2, \\ldots, \\alpha^{p-1} = 1$ generates all nonzero elements.
+
+**Why this matters:** In $GF(p^n)$, the multiplicative group $GF(p^n)^*$ is also cyclic of order $p^n - 1$. The generator $\alpha$ is a root of a **primitive polynomial** — this is the key to constructing extension fields.
+
+<br><br><br><br>
+
+# The Dihedral Group $D_n$
+
+The symmetries of a regular $n$-gon form the **dihedral group** $D_n$ of order $2n$.
+
+- **Rotations** $\{e, r, r^2, \ldots, r^{n-1}\}$ form a cyclic normal subgroup $\langle r \rangle \cong \mathbb{Z}_n$
+- **Reflections** $\{s, sr, sr^2, \ldots, sr^{n-1}\}$ form a coset
+
+**Key relation:** $srs^{-1} = r^{-1}$ — conjugating a rotation by a reflection *reverses* it. This is why $D_n$ is non-abelian for $n \geq 3$.
+
+**Presentation:** $D_n = \langle\\, r, s \mid r^n = s^2 = e,\ srs = r^{-1}\\,\rangle$
+
+**Semi-direct product:** $D_n \cong \mathbb{Z}_n \rtimes \mathbb{Z}_2$, where $\mathbb{Z}_2$ acts on $\mathbb{Z}_n$ by inversion. The "twist" distinguishes this from the direct product $\mathbb{Z}_n \times \mathbb{Z}_2$.
+
+---
 # Multiplication Tables (Cayley Tables)
 
 A group's entire structure is captured by its multiplication table. Each row and column is a permutation of the elements (Latin square property).
 
-:::matrix { cols="50/50" height="60%"}
+:::matrix { cols="50/50" height="60%" gap="20px"}
 
 [[0, 0]]
 <div class="cayley-table-wrapper">
@@ -107,10 +133,10 @@ Every group can be visualized as a directed graph. Given generators $S \subset G
 ![](./assets/cayley_z6.png){height=90% center}
 
 [[0, 1]]
-![](./assets/cayley_d3.png){height=90% center}
+![](./assets/cayley_d3.png?v=2){height=90% center}
 
 [[0, 2]]
-![](./assets/cayley_d4.png){height=90% center}
+![](./assets/cayley_d4.png?v=2){height=90% center}
 
 :::
 
@@ -124,33 +150,6 @@ The Cayley graph encodes the entire group structure: subgroups appear as sub-gra
 
 ---
 
-# Cyclic Groups & Generators
-
-A group $G$ is **cyclic** if there exists $g \in G$ such that $G = \{g^0, g^1, g^2, \ldots, g^{n-1}\}$.
-
-**Theorem:** Every finite cyclic group of order $n$ is isomorphic to $\mathbb{Z}_n$.
-
-**Theorem (Primitive Root):** $U(p) \cong \mathbb{Z}_{p-1}$ for every prime $p$. In particular, there exists $\alpha \in U(p)$ such that $\alpha, \alpha^2, \ldots, \alpha^{p-1} = 1$ generates all nonzero elements.
-
-**Why this matters:** In $GF(p^n)$, the multiplicative group $GF(p^n)^*$ is also cyclic of order $p^n - 1$. The generator $\alpha$ is a root of a **primitive polynomial** — this is the key to constructing extension fields.
-
----
-
-# The Dihedral Group $D_n$
-
-The symmetries of a regular $n$-gon form the **dihedral group** $D_n$ of order $2n$.
-
-- **Rotations** $\{e, r, r^2, \ldots, r^{n-1}\}$ form a cyclic normal subgroup $\langle r \rangle \cong \mathbb{Z}_n$
-- **Reflections** $\{s, sr, sr^2, \ldots, sr^{n-1}\}$ form a coset
-
-**Key relation:** $srs^{-1} = r^{-1}$ — conjugating a rotation by a reflection *reverses* it. This is why $D_n$ is non-abelian for $n \geq 3$.
-
-**Presentation:** $D_n = \langle\\, r, s \mid r^n = s^2 = e,\ srs = r^{-1}\\,\rangle$
-
-**Semi-direct product:** $D_n \cong \mathbb{Z}_n \rtimes \mathbb{Z}_2$, where $\mathbb{Z}_2$ acts on $\mathbb{Z}_n$ by inversion. The "twist" distinguishes this from the direct product $\mathbb{Z}_n \times \mathbb{Z}_2$.
-
----
-
 # Subgroups & Lagrange's Theorem
 
 A **subgroup** $H \leq G$ is a subset closed under the group operation and inverses.
@@ -159,59 +158,63 @@ A **subgroup** $H \leq G$ is a subset closed under the group operation and inver
 
 The **index** $[G:H] = |G| / |H|$ counts the number of distinct cosets.
 
-:::matrix { cols="50/50" height="65%"}
+:::matrix { cols="50/50" }
 
 [[0, 0]]
-![](./assets/coset_partition.png){height=90% center}
+![](./assets/coset_partition.png){width="80%" center}
 
 [[0, 1]]
 **Left cosets** of $H$ in $G$:
 
-$$gH = \{g \cdot h \mid h \in H\}$$
+$$gH = \\{g \cdot h \mid h \in H\\}$$
 
 Cosets partition $G$ into blocks of equal size $|H|$. Two elements are in the same coset iff $g_1^{-1} g_2 \in H$.
 
-**Example:** $H = \langle s \rangle = \{e, s\}$ in $D_3$.
+**Example:** $H = \\langle s \\rangle = \\{e, s\\}$ in $D\_3$.
 
-$|D_3| = 6$, $|H| = 2$, so $[D_3 : H] = 3$ cosets.
+$|D\_3| = 6$, $|H| = 2$, so $[D\_3 : H] = 3$ cosets.
 :::
 
 ---
+
+:::matrix { cols="50/50" gap="30px"}
+[[0¸0]]
 
 # Homomorphisms, Kernels, and Images
 
 A **group homomorphism** $\phi: G \to H$ preserves structure: $\phi(ab) = \phi(a)\phi(b)$.
 
-The **kernel** $\ker\phi = \{g \in G \mid \phi(g) = e_H\}$ measures "what gets collapsed."
+The **kernel** $\ker\phi = \\{g \in G \mid \phi(g) = e_H\\}$ measures "what gets collapsed."
 
-The **image** $\mathrm{im}\\,\phi = \{\phi(g) \mid g \in G\}$ is what $G$ "looks like" inside $H$.
+The **image** $\mathrm{im}\\,\phi = \\{\phi(g) \mid g \in G\\}$ is what $G$ "looks like" inside $H$.
 
 **Key facts:**
 - $\ker\phi$ is always a normal subgroup of $G$
 - $\mathrm{im}\\,\phi$ is always a subgroup of $H$
-- $\phi$ is injective $\iff$ $\ker\phi = \{e\}$
+- $\phi$ is injective $\iff$ $\ker\phi = \\{e\\}$
 
 **Example:** $\phi: \mathbb{Z} \to \mathbb{Z}_n$, $\phi(k) = k \bmod n$.
-- $\ker\phi = n\mathbb{Z} = \{\ldots, -n, 0, n, 2n, \ldots\}$
+- $\ker\phi = n\mathbb{Z} = \\{\ldots, -n, 0, n, 2n, \ldots\\}$
 - $\mathrm{im}\\,\phi = \mathbb{Z}_n$ (surjective)
 
----
 
+[[0,1]]
 # Normal Subgroups & Quotient Groups
 
-A subgroup $H$ is **normal** ($H \trianglelefteq G$) if it is invariant under conjugation:
+A subgroup $N$ is **normal** ($N \trianglelefteq G$) if it is invariant under conjugation:
 
-$$gHg^{-1} = H \quad \text{for all } g \in G$$
+$$gNg^{-1} = N \quad \text{for all } g \in G$$
 
-Equivalently: left cosets = right cosets, so $gH = Hg$.
+Equivalently: left cosets = right cosets, so $gN = Ng$.
 
-**When $H$ is normal**, the set of cosets $G/H$ itself forms a group under $[g_1H] \cdot [g_2H] = [(g_1 g_2)H]$.
+**When $N$ is normal**, the set of cosets $G/N$ itself forms a group under $[g_1N] \cdot [g_2N] = [(g_1 g_2)N]$.
 
 **Examples:**
 - Every subgroup of an abelian group is normal
 - The **center** $Z(G) = \{z \in G \mid zg = gz \ \forall g\}$ is always normal
 - The **commutator subgroup** $[G,G] = \langle aba^{-1}b^{-1} \rangle$ is always normal
 - $G/[G,G]$ is always abelian — the "abelianization" of $G$
+:::
 
 ---
 

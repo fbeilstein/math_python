@@ -398,7 +398,7 @@ The algorithm is **mathematically identical** to what you know from linear algeb
 
 # Interactive: RS Encoder / Decoder
 
-<iframe src="demos/rs_demo.html" style="width: 100%; height: 62vh; border: 1px solid #30363d; border-radius: 8px;"></iframe>
+<iframe src="demos/rs_demo.html?v=2" style="width: 100%; height: 62vh; border: 1px solid #30363d; border-radius: 8px;"></iframe>
 
 ---
 

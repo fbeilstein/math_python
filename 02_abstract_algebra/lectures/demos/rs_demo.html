@@ -228,7 +228,8 @@ function decode() {
     // Chien search
     const errPos = [];
     for (let i = 0; i < r.length; i++) {
-        const root = EXP[(Q - 1 - i) % (Q - 1)];
+        const p = r.length - 1 - i;
+        const root = EXP[(Q - 1 - (p % (Q - 1))) % (Q - 1)];
         let val = 0;
         for (const c of sigma) val = gfAdd(gfMul(val, root), c);
         if (val === 0) errPos.push(i);

@@ -23,7 +23,7 @@ plt.rcParams.update({
 # ────────────────────────────────────────────────────────────
 def draw_zn_clock(n, filename):
     fig, ax = plt.subplots(figsize=(5, 5))
-    angles = [2 * np.pi * k / n - np.pi/2 for k in range(n)]
+    angles = [np.pi/2 - 2 * np.pi * k / n for k in range(n)]
     r = 0.85
     for k in range(n):
         x, y = r * np.cos(angles[k]), r * np.sin(angles[k])
@@ -88,7 +88,7 @@ def cayley_d3():
     nx.draw_networkx_edges(G, pos, edgelist=r_edges, ax=ax, edge_color='#ff7b72', arrows=True, 
                            arrowsize=18, connectionstyle='arc3,rad=0.15', width=2, label='r (rotate)')
     nx.draw_networkx_edges(G, pos, edgelist=s_edges, ax=ax, edge_color='#7ee787', arrows=True,
-                           arrowsize=18, connectionstyle='arc3,rad=0.15', width=2, style='dashed', label='s (reflect)')
+                           arrowsize=18, width=2, style='dashed', label='s (reflect)')
 
     ax.set_title('Cayley Graph of $D_3 \\cong S_3$', fontsize=16, color='#58a6ff')
     ax.legend(loc='lower right', facecolor='#161b22', labelcolor='white', fontsize=10)
@@ -107,7 +107,7 @@ def cayley_z6():
     for i in range(6):
         G.add_node(str(i))
         G.add_edge(str(i), str((i+1) % 6))
-    angles = [2 * np.pi * k / 6 - np.pi/2 for k in range(6)]
+    angles = [np.pi/2 - 2 * np.pi * k / 6 for k in range(6)]
     pos = {str(k): (np.cos(angles[k]), np.sin(angles[k])) for k in range(6)}
 
     fig, ax = plt.subplots(figsize=(5, 5))
@@ -128,7 +128,7 @@ print("✓ Cayley Z_6")
 # ────────────────────────────────────────────────────────────
 def cayley_d4():
     elems = ['e', 'r', 'r²', 'r³', 's', 'sr', 'sr²', 'sr³']
-    r_map = {'e':'r', 'r':'r²', 'r²':'r³', 'r³':'e', 's':'sr³', 'sr':'s', 'sr²':'sr', 'sr³':'sr²'}
+    r_map = {'e':'r', 'r':'r²', 'r²':'r³', 'r³':'e', 's':'sr', 'sr':'sr²', 'sr²':'sr³', 'sr³':'s'}
     s_map = {'e':'s', 'r':'sr³', 'r²':'sr²', 'r³':'sr', 's':'e', 'sr':'r³', 'sr²':'r²', 'sr³':'r'}
 
     G = nx.DiGraph()
@@ -143,8 +143,8 @@ def cayley_d4():
     pos = {
         'e':   (outer, outer),   'r':   (outer, -outer),
         'r²':  (-outer, -outer), 'r³':  (-outer, outer),
-        's':   (inner, inner),   'sr':  (inner, -inner),
-        'sr²': (-inner, -inner), 'sr³': (-inner, inner),
+        's':   (inner, inner),   'sr³': (inner, -inner),
+        'sr²': (-inner, -inner), 'sr':  (-inner, outer),
     }
 
     fig, ax = plt.subplots(figsize=(6, 5))
@@ -156,7 +156,7 @@ def cayley_d4():
     nx.draw_networkx_edges(G, pos, edgelist=r_edges, ax=ax, edge_color='#ff7b72', arrows=True,
                            arrowsize=15, connectionstyle='arc3,rad=0.2', width=1.8)
     nx.draw_networkx_edges(G, pos, edgelist=s_edges, ax=ax, edge_color='#7ee787', arrows=True,
-                           arrowsize=15, connectionstyle='arc3,rad=0.2', width=1.8, style='dashed')
+                           arrowsize=15, width=1.8, style='dashed')
 
     ax.set_title('Cayley Graph of $D_4$', fontsize=16, color='#58a6ff')
     ax.axis('off')
@@ -261,7 +261,7 @@ def un_comparison():
         from math import gcd
         elems = [k for k in range(1, n) if gcd(k, n) == 1]
         m = len(elems)
-        angles = [2 * np.pi * i / m - np.pi/2 for i in range(m)]
+        angles = [np.pi/2 - 2 * np.pi * i / m for i in range(m)]
         r = 0.85
 
         # Find if cyclic: check if any element has order m

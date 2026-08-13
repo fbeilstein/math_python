@@ -149,7 +149,7 @@ There are exactly $p^n$ such polynomials → $|GF(p^n)| = p^n$.
 
 $GF(4) = GF(2)[x] / \langle x^2 + x + 1 \rangle$. Let $\alpha$ be a root, so $\alpha^2 + \alpha + 1 = 0$, i.e., $\alpha^2 = \alpha + 1$.
 
-:::matrix { cols="50/50" gap="5%" height="78%"}
+:::matrix { cols="50/50" gap="20pt" }
 
 [[0, 0]]
 
@@ -173,13 +173,7 @@ The multiplicative group $GF(4)^* = \{1, \alpha, \alpha+1\}$ is cyclic of order 
 | $\alpha$ | $\alpha$ | $\alpha{+}1$ | $0$ | $1$ |
 | $\alpha{+}1$ | $\alpha{+}1$ | $\alpha$ | $1$ | $0$ |
 
-:::
-
----
-
-# $GF(4)$ Multiplication
-
-Using $\alpha^2 = \alpha + 1$ and $\alpha^3 = \alpha \cdot \alpha^2 = \alpha(\alpha+1) = \alpha^2 + \alpha = 1$:
+[[1,1]]
 
 | $\times$ | $0$ | $1$ | $\alpha$ | $\alpha{+}1$ |
 |---|---|---|---|---|
@@ -188,11 +182,20 @@ Using $\alpha^2 = \alpha + 1$ and $\alpha^3 = \alpha \cdot \alpha^2 = \alpha(\al
 | $\alpha$ | $0$ | $\alpha$ | $\alpha{+}1$ | $1$ |
 | $\alpha{+}1$ | $0$ | $\alpha{+}1$ | $1$ | $\alpha$ |
 
-Every nonzero row is a permutation — no zero divisors. Division is well-defined. $GF(4)$ is a field.
+[[1,0]]
 
-**Verify:** $\alpha \cdot \alpha = \alpha^2 = \alpha + 1$ ✓. $\alpha \cdot (\alpha+1) = \alpha^2 + \alpha = (\alpha+1) + \alpha = 1$ ✓.
+Every nonzero row is a permutation — no zero divisors. 
+Division is well-defined. 
+$GF(4)$ is a field.
 
-So $\alpha^{-1} = \alpha + 1$ and $(\alpha+1)^{-1} = \alpha$. Multiplicative inverses via log/exp: $\alpha^{-1} = \alpha^{3-1} = \alpha^2 = \alpha + 1$.
+**Verify:** 
+   - $\alpha \cdot \alpha = \alpha^2 = \alpha + 1$ ✓. 
+   - $\alpha \cdot (\alpha+1) = \alpha^2 + \alpha = (\alpha+1) + \alpha = 1$ ✓.
+
+So $\alpha^{-1} = \alpha + 1$ and $(\alpha+1)^{-1} = \alpha$. 
+Multiplicative inverses via log/exp: $\alpha^{-1} = \alpha^{3-1} = \alpha^2 = \alpha + 1$.
+
+:::
 
 ---
 
