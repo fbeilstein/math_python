@@ -4,7 +4,7 @@ A **ring** $(R, +, \cdot)$ has two operations:
 - $(R, +)$ is an abelian group
 - $\cdot$ is associative and distributes over $+$
 
-A **field** is a ring where $(R \setminus \{0\}, \cdot)$ is also a group (every nonzero element has a multiplicative inverse).
+A **field** is a ring where $(R \setminus \\{0\\}, \cdot)$ is also a group (every nonzero element has a multiplicative inverse).
 
 | Structure | Addition | Multiplication | Example |
 |-----------|----------|----------------|---------|
@@ -20,7 +20,7 @@ In $\mathbb{Z}_6$: $2 \cdot 3 \equiv 0$. Two nonzero elements multiply to zero.
 
 This breaks everything: if $ab = 0$ and $a \neq 0$, we can't "divide by $a$" — the cancellation law fails.
 
-:::matrix { cols="50/50" height="65%"}
+:::matrix { cols="50/50" gap="20pt"}
 
 [[0, 0]]
 <div class="cayley-table-wrapper">
@@ -51,7 +51,7 @@ This breaks everything: if $ab = 0$ and $a \neq 0$, we can't "divide by $a$" —
 
 :::
 
-$\mathbb{Z}_6$: zeros appear in the table body (zero divisors). $\mathbb{Z}_5$: every row is a permutation of $\{0,1,2,3,4\}$ — no zero divisors. **$\mathbb{Z}_n$ is a field $\iff$ $n$ is prime.**
+$\mathbb{Z}_6$: zeros appear in the table body (zero divisors). $\mathbb{Z}_5$: every row is a permutation of $\\{0,1,2,3,4\\}$ — no zero divisors. **$\mathbb{Z}_n$ is a field $\iff$ $n$ is prime.**
 
 ---
 
@@ -59,7 +59,7 @@ $\mathbb{Z}_6$: zeros appear in the table body (zero divisors). $\mathbb{Z}_5$: 
 
 An **ideal** $I \subseteq R$ is a subgroup of $(R, +)$ that absorbs multiplication: $r \cdot I \subseteq I$ for all $r \in R$.
 
-The **quotient ring** $R/I$ has elements $\{a + I\}$ with operations $(a+I) + (b+I) = (a+b)+I$ and $(a+I)(b+I) = ab + I$.
+The **quotient ring** $R/I$ has elements $\\{a + I\\}$ with operations $(a+I) + (b+I) = (a+b)+I$ and $(a+I)(b+I) = ab + I$.
 
 **Example:** $\mathbb{Z}/n\mathbb{Z} \cong \mathbb{Z}_n$, where $I = \langle n \rangle = n\mathbb{Z}$.
 
@@ -153,7 +153,7 @@ $GF(4) = GF(2)[x] / \langle x^2 + x + 1 \rangle$. Let $\alpha$ be a root, so $\a
 
 [[0, 0]]
 
-The multiplicative group $GF(4)^* = \{1, \alpha, \alpha+1\}$ is cyclic of order $3$.
+The multiplicative group $GF(4)^* = \\{1, \alpha, \alpha+1\\}$ is cyclic of order $3$.
 
 | Element | Poly | Power |
 |---------|------|-------|
@@ -203,7 +203,7 @@ Multiplicative inverses via log/exp: $\alpha^{-1} = \alpha^{3-1} = \alpha^2 = \a
 
 An irreducible polynomial is **primitive** if its root $\alpha$ generates the entire multiplicative group $GF(p^n)^*$.
 
-$$GF(p^n)^* = \{\alpha^0, \alpha^1, \alpha^2, \ldots, \alpha^{p^n-2}\} \cong \mathbb{Z}_{p^n - 1}$$
+$$GF(p^n)^* = \\{\alpha^0, \alpha^1, \alpha^2, \ldots, \alpha^{p^n-2}\\} \cong \mathbb{Z}_{p^n - 1}$$
 
 **Test for primitivity:** $P(x)$ is primitive iff:
 1. $x^{p^n - 1} \equiv 1 \pmod{P(x)}$

@@ -12,7 +12,7 @@ If $a \cdot b = b \cdot a$ for all $a$, $b$, the group is **abelian** (commutati
 
 # $\mathbb{Z}_n$: Integers modulo $n$
 
-The simplest group: $\{0, 1, \ldots, n-1\}$ under addition mod $n$.
+The simplest group: $\\{0, 1, \ldots, n-1\\}$ under addition mod $n$.
 
 :::matrix { cols="50/50" rows="100" height="85%"}
 
@@ -39,14 +39,14 @@ $\text{inv}(4) = 6 - 4 = 2$
 
 # $U(n)$: the multiplicative group
 
-$U(n) = \{a \in \mathbb{Z}_n \mid \gcd(a, n) = 1\}$ under multiplication mod $n$.
+$U(n) = \\{a \in \mathbb{Z}_n \mid \gcd(a, n) = 1\\}$ under multiplication mod $n$.
 
 These are exactly the elements of $\mathbb{Z}_n$ that have multiplicative inverses.
 
 ![](./assets/un_comparison.png){width=80% center}
 
 
-When $p$ is prime, $U(p) = \{1, 2, \ldots, p-1\}$ is always cyclic. A generator is called a **primitive root**.
+When $p$ is prime, $U(p) = \\{1, 2, \ldots, p-1\\}$ is always cyclic. A generator is called a **primitive root**.
 
 This is the multiplicative group of the field $GF(p)$ — the starting point for all finite field constructions.
 
@@ -68,8 +68,8 @@ A group $G$ is **cyclic** if there exists $g \in G$ such that $G = \\{g^0, g^1, 
 
 The symmetries of a regular $n$-gon form the **dihedral group** $D_n$ of order $2n$.
 
-- **Rotations** $\{e, r, r^2, \ldots, r^{n-1}\}$ form a cyclic normal subgroup $\langle r \rangle \cong \mathbb{Z}_n$
-- **Reflections** $\{s, sr, sr^2, \ldots, sr^{n-1}\}$ form a coset
+- **Rotations** $\\{e, r, r^2, \ldots, r^{n-1}\\}$ form a cyclic normal subgroup $\langle r \rangle \cong \mathbb{Z}_n$
+- **Reflections** $\\{s, sr, sr^2, \ldots, sr^{n-1}\\}$ form a coset
 
 **Key relation:** $srs^{-1} = r^{-1}$ — conjugating a rotation by a reflection *reverses* it. This is why $D_n$ is non-abelian for $n \geq 3$.
 
@@ -211,7 +211,7 @@ Equivalently: left cosets = right cosets, so $gN = Ng$.
 
 **Examples:**
 - Every subgroup of an abelian group is normal
-- The **center** $Z(G) = \{z \in G \mid zg = gz \ \forall g\}$ is always normal
+- The **center** $Z(G) = \\{z \in G \mid zg = gz \\, \forall g\\}$ is always normal
 - The **commutator subgroup** $[G,G] = \langle aba^{-1}b^{-1} \rangle$ is always normal
 - $G/[G,G]$ is always abelian — the "abelianization" of $G$
 :::
