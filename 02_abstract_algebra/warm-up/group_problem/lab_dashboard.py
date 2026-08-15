@@ -57,8 +57,27 @@ class LabDashboard(tk.Tk):
                       font=("Arial", 9), anchor=tk.W,
                       command=lambda c=cls: self.load_level(c)).pack(fill=tk.X, padx=2, pady=1)
 
+        tk.Button(self.nav_frame, text="🔄 Reload Code", bg="#d32f2f", fg="white",
+                  font=("Arial", 9, "bold"),
+                  command=self.reload_code).pack(fill=tk.X, padx=2, pady=(10, 2))
+
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.load_level(Level1Axioms)
+
+    def reload_code(self):
+        import importlib
+        try:
+            if 'implementation_tasks' in sys.modules:
+                importlib.reload(sys.modules['implementation_tasks'])
+            else:
+                import implementation_tasks
+                
+            if self.current_level:
+                cls = self.current_level.__class__
+                self.load_level(cls)
+        except Exception as e:
+            import tkinter.messagebox as mb
+            mb.showerror("Reload Error", f"Error reloading code:\n{e}")
 
     def load_level(self, level_class):
         if self.current_level:

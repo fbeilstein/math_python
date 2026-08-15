@@ -74,7 +74,7 @@ class PermutationElement(GroupElement):
         return self._value
         
     def __mul__(self, other):  #contains solution
-        """Compose self * other (apply other first, then self)."""
+        """Compose self * other"""
         n = len(self._value)
         return PermutationElement([self._value[other._value[i]] for i in range(n)])
         
