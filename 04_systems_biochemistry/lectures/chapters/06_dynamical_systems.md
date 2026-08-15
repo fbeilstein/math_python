@@ -189,7 +189,7 @@ $$ \mathbf{J}(k) = \mathbf{J}_0 - k^2 \mathbf{D} = \begin{pmatrix} f_u - D_u k^2
 
 If $\sigma(k) > 0$ for some band of wavenumbers $k$, spatial patterns grow spontaneously from noise.
 
-<iframe src="./demos/turing_patterns.html" width="100%" height="460px" style="border:1px solid #ccc; border-radius: 8px;"></iframe>
+<iframe src="./demos/turing_patterns.html" width="100%" height="430px" style="border:1px solid #ccc; border-radius: 8px;"></iframe>
 :::
 
 ---
