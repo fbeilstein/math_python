@@ -1,3 +1,10 @@
+:::titlepage
+[[title]]
+Chapter 3: Enzyme Kinetics & Inhibition
+:::
+
+---
+
 # Michaelis–Menten model
 
 :::matrix {cols="50/50"}
@@ -365,33 +372,3 @@ $$
 ## Inorganic chemical reactions may exhibit complicated dynamic behaviour as well.
 
 ![youtube](XU2AV5SSi6g) {width="80%" left="10%"}
-
----
-
-# Reversible Covalent Modification & Ultrasensitivity
-
-Covalent modification (e.g., phosphorylation by kinases and dephosphorylation by phosphatases) provides rapid post-translational signaling.
-
-:::matrix {cols="50/50"}
-[[0,0]]
-### Kinase–Phosphatase Reaction Cycle
-$$
-\begin{aligned}
-\text{Kinase }(E\_1): \quad P + E\_1 &\rightleftharpoons E\_1 P \xrightarrow{V\_1} P^* + E_1 \\\\[4pt]
-\text{Phosphatase }(E_2): \quad P^* + E\_2 &\rightleftharpoons E\_2 P^* \xrightarrow{V\_2} P + E\_2
-\end{aligned}
-$$
-At steady state, modification rate equals dephosphorylation rate:
-$$
-V_1 \frac{1 - y}{K_1 + 1 - y} = V_2 \frac{y}{K_2 + y}, \quad y = \frac{P^*}{P_{tot}}
-$$
-
-[[0,1]]
-### Goldbeter–Koshland Zero-Order Limit
-In the zero-order saturated regime ($K_1, K_2 \ll 1$), enzymes are fully saturated with substrate:
-$$
-y = G(v_1, v_2, K_1, K_2) = \frac{2 v_1 K_2}{B + \sqrt{B^2 - 4(v_2 - v_1)v_1 K_2}}
-$$
-where $B = v_2 - v_1 + v_1 K_2 + v_2 K_1$. 
-As $K \to 0$, the response derivative $dy/d(v_1/v_2) \to \infty$ produces an **infinitely sharp ultrasensitive step-switch**.
-:::

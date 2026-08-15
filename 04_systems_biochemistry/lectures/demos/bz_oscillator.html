@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Belousov-Zhabotinsky Oregonator</title>
+    <style>
+        body { margin: 0; padding: 0; background: #080c13; color: #fff; font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        header { padding: 15px 30px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        h1 { margin: 0; font-size: 20px; font-weight: 500; letter-spacing: 0.5px; }
+        .subtitle { color: #8b949e; font-size: 14px; margin-top: 4px; }
+        
+        .controls { padding: 15px 30px; display: flex; gap: 30px; background: #0d121c; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .control-group { display: flex; align-items: center; gap: 12px; }
+        .control-group label { color: #8b949e; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        input[type=range] { width: 150px; cursor: pointer; accent-color: #00f0ff; }
+        .val-display { font-family: monospace; font-size: 14px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color: #00f0ff; min-width: 40px; text-align: center; }
+
+        .dashboard { flex: 1; display: flex; padding: 20px; gap: 20px; flex-wrap: wrap; }
+        @media (max-width: 800px) { .dashboard { flex-direction: column; } }
+        .panel { flex: 1; min-width: 300px; background: #111824; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
+        .panel-title { padding: 15px 20px; font-size: 14px; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; }
+        .panel-hint { font-size: 12px; color: #00f0ff; text-transform: none; font-weight: 400; opacity: 0.8; }
+        
+        .canvas-container { flex: 1; position: relative; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        
+        .legend { position: absolute; top: 15px; right: 20px; display: flex; gap: 15px; font-size: 13px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot.x { background: #00f0ff; box-shadow: 0 0 10px #00f0ff; }
+        .dot.z { background: #ff0055; box-shadow: 0 0 10px #ff0055; }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>Belousov-Zhabotinsky Oscillator</h1>
+            <div class="subtitle">Oregonator Two-Variable Model Limit Cycle</div>
+        </div>
+    </header>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label>Stoichiometric Factor (f):</label>
+            <input type="range" id="sliderF" min="0.5" max="2.5" step="0.1" value="1.0">
+            <div class="val-display" id="valF">1.0</div>
+        </div>
+        <div class="control-group">
+            <label>Parameter (q):</label>
+            <input type="range" id="sliderQ" min="0.001" max="0.010" step="0.001" value="0.002">
+            <div class="val-display" id="valQ">0.002</div>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <!-- Phase Portrait Panel -->
+        <div class="panel">
+            <div class="panel-title">
+                Phase Portrait (Z vs X)
+                <span class="panel-hint">Click & Drag to Perturb State</span>
+            </div>
+            <div class="canvas-container">
+                <canvas id="phaseCanvas" style="cursor: crosshair;"></canvas>
+            </div>
+        </div>
+        
+        <!-- Time Series Panel -->
+        <div class="panel">
+            <div class="panel-title">Time Series (Scrolling)</div>
+            <div class="legend">
+                <div class="legend-item"><div class="dot x"></div> X Species</div>
+                <div class="legend-item"><div class="dot z"></div> Z Species</div>
+            </div>
+            <div class="canvas-container">
+                <canvas id="timeCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const phaseCanvas = document.getElementById('phaseCanvas');
+        const timeCanvas = document.getElementById('timeCanvas');
+        const phaseCtx = phaseCanvas.getContext('2d');
+        const timeCtx = timeCanvas.getContext('2d');
+
+        function resize() {
+            const phaseRect = phaseCanvas.parentElement.getBoundingClientRect();
+            const timeRect = timeCanvas.parentElement.getBoundingClientRect();
+            
+            const dpr = window.devicePixelRatio || 1;
+            
+            phaseCanvas.width = phaseRect.width * dpr;
+            phaseCanvas.height = phaseRect.height * dpr;
+            phaseCtx.scale(dpr, dpr);
+            phaseCanvas.style.width = phaseRect.width + 'px';
+            phaseCanvas.style.height = phaseRect.height + 'px';
+            
+            timeCanvas.width = timeRect.width * dpr;
+            timeCanvas.height = timeRect.height * dpr;
+            timeCtx.scale(dpr, dpr);
+            timeCanvas.style.width = timeRect.width + 'px';
+            timeCanvas.style.height = timeRect.height + 'px';
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Oregonator Constants & State
+        let x = 0.1, z = 0.1;
+        const e = 0.05;
+        let q = 0.002, f = 1.0;
+        const dt = 0.001; // Increased dt
+
+        // UI Controls
+        const sliderF = document.getElementById('sliderF');
+        const valF = document.getElementById('valF');
+        sliderF.addEventListener('input', (ev) => {
+            f = parseFloat(ev.target.value);
+            valF.innerText = f.toFixed(1);
+        });
+
+        const sliderQ = document.getElementById('sliderQ');
+        const valQ = document.getElementById('valQ');
+        sliderQ.addEventListener('input', (ev) => {
+            q = parseFloat(ev.target.value);
+            valQ.innerText = q.toFixed(3);
+        });
+
+        // Perturbation Interaction
+        let isDragging = false;
+        function perturbState(ev) {
+            const rect = phaseCanvas.getBoundingClientRect();
+            const px = ev.clientX - rect.left;
+            const py = ev.clientY - rect.top;
+            
+            const w = phaseCanvas.offsetWidth;
+            const h = phaseCanvas.offsetHeight;
+            
+            // Inverse mapping of mapX and mapZ
+            const newX = ((px - 20) / (w - 40)) * 1.0;
+            const newZ = (h - 20 - py) / (h - 40) * 0.35;
+            
+            x = Math.max(1e-6, Math.min(1.0, newX));
+            z = Math.max(1e-6, Math.min(0.35, newZ));
+        }
+
+        phaseCanvas.addEventListener('mousedown', (ev) => {
+            isDragging = true;
+            perturbState(ev);
+        });
+        window.addEventListener('mousemove', (ev) => {
+            if (isDragging && ev.target === phaseCanvas) perturbState(ev);
+        });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        let history = [];
+        const MAX_HISTORY = 1000; // Limits the tail length
+
+        function updateMath() {
+            // Speed up simulation: 100 steps per frame (previously 30)
+            for(let i=0; i<100; i++) {
+                let dx = (x * (1 - x) - f * z * (x - q) / (x + q)) / e;
+                let dz = x - z;
+                
+                x = Math.max(1e-6, x + dx * dt);
+                z = Math.max(1e-6, z + dz * dt);
+                
+                // Sample every 5th step
+                if (i % 5 === 0) {
+                    history.push({x, z});
+                }
+            }
+            while (history.length > MAX_HISTORY) {
+                history.shift();
+            }
+        }
+
+        function drawGrid(ctx, w, h) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for(let i = 0; i <= 10; i++) {
+                ctx.moveTo(w * (i/10), 0); ctx.lineTo(w * (i/10), h);
+                ctx.moveTo(0, h * (i/10)); ctx.lineTo(w, h * (i/10));
+            }
+            ctx.stroke();
+        }
+
+        function drawPhasePortrait() {
+            const w = phaseCanvas.offsetWidth;
+            const h = phaseCanvas.offsetHeight;
+            
+            phaseCtx.clearRect(0, 0, w, h);
+            drawGrid(phaseCtx, w, h);
+
+            if(history.length < 2) return;
+
+            const mapX = (val) => 20 + (val / 1.0) * (w - 40);
+            const mapZ = (val) => h - 20 - (val / 0.35) * (h - 40);
+
+            phaseCtx.lineCap = 'round';
+            phaseCtx.lineJoin = 'round';
+            
+            for(let i=1; i<history.length; i++) {
+                const opacity = i / history.length;
+                phaseCtx.beginPath();
+                phaseCtx.moveTo(mapX(history[i-1].x), mapZ(history[i-1].z));
+                phaseCtx.lineTo(mapX(history[i].x), mapZ(history[i].z));
+                
+                phaseCtx.strokeStyle = `rgba(0, 240, 255, ${opacity * 0.8})`;
+                phaseCtx.lineWidth = 2 + (opacity * 2);
+                
+                if (i > history.length - 10) {
+                    phaseCtx.shadowBlur = 10;
+                    phaseCtx.shadowColor = '#00f0ff';
+                } else {
+                    phaseCtx.shadowBlur = 0;
+                }
+                
+                phaseCtx.stroke();
+            }
+            phaseCtx.shadowBlur = 0;
+            
+            const current = history[history.length - 1];
+            phaseCtx.beginPath();
+            phaseCtx.arc(mapX(current.x), mapZ(current.z), 6, 0, Math.PI*2);
+            phaseCtx.fillStyle = '#fff';
+            phaseCtx.shadowBlur = 15;
+            phaseCtx.shadowColor = '#00f0ff';
+            phaseCtx.fill();
+            phaseCtx.shadowBlur = 0;
+        }
+
+        function drawTimeSeries() {
+            const w = timeCanvas.offsetWidth;
+            const h = timeCanvas.offsetHeight;
+            
+            timeCtx.clearRect(0, 0, w, h);
+            drawGrid(timeCtx, w, h);
+
+            if(history.length < 2) return;
+
+            const mapY = (val, max) => h - 20 - (val / max) * (h - 40);
+            const maxX = 1.0;
+            const maxZ = 0.35;
+
+            // Draw Z line
+            timeCtx.beginPath();
+            for(let i=0; i<history.length; i++) {
+                const px = (i / MAX_HISTORY) * w;
+                const py = mapY(history[i].z, maxZ);
+                if(i === 0) timeCtx.moveTo(px, py);
+                else timeCtx.lineTo(px, py);
+            }
+            timeCtx.strokeStyle = '#ff0055';
+            timeCtx.lineWidth = 2.5;
+            timeCtx.shadowBlur = 8;
+            timeCtx.shadowColor = '#ff0055';
+            timeCtx.stroke();
+            timeCtx.shadowBlur = 0;
+
+            // Draw X line
+            timeCtx.beginPath();
+            for(let i=0; i<history.length; i++) {
+                const px = (i / MAX_HISTORY) * w;
+                const py = mapY(history[i].x, maxX);
+                if(i === 0) timeCtx.moveTo(px, py);
+                else timeCtx.lineTo(px, py);
+            }
+            timeCtx.strokeStyle = '#00f0ff';
+            timeCtx.lineWidth = 2.5;
+            timeCtx.shadowBlur = 8;
+            timeCtx.shadowColor = '#00f0ff';
+            timeCtx.stroke();
+            timeCtx.shadowBlur = 0;
+        }
+
+        function animate() {
+            updateMath();
+            drawPhasePortrait();
+            drawTimeSeries();
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+    </script>
+</body>
+</html>

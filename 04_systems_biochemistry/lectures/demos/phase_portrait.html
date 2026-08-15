@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phase Portrait Explorer</title>
+    <style>
+        body { margin: 0; padding: 10px; font-family: 'Inter', sans-serif; background: #fff; color: #333; display: flex; flex-direction: column; align-items: center; }
+        canvas { border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; cursor: crosshair; }
+        .controls { width: 100%; max-width: 600px; display: flex; justify-content: space-between; padding-top: 10px; }
+        .slider-group { display: flex; flex-direction: column; width: 45%; }
+        label { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        input[type=range] { width: 100%; }
+        .info { text-align: center; font-size: 16px; font-weight: bold; margin-top: 10px; padding: 10px; background: #e3f2fd; border-radius: 4px; width: 100%; max-width: 600px; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="600" height="300"></canvas>
+    <div class="controls">
+        <div class="slider-group">
+            <label id="tr-label">Trace (τ): 0</label>
+            <input type="range" id="tr-slider" min="-5" max="5" step="0.1" value="-1">
+        </div>
+        <div class="slider-group">
+            <label id="det-label">Determinant (Δ): 1</label>
+            <input type="range" id="det-slider" min="-5" max="5" step="0.1" value="1">
+        </div>
+    </div>
+    <div class="info" id="status">Stable Spiral</div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const trSlider = document.getElementById('tr-slider');
+        const detSlider = document.getElementById('det-slider');
+        const trLabel = document.getElementById('tr-label');
+        const detLabel = document.getElementById('det-label');
+        const status = document.getElementById('status');
+
+        let particles = [];
+        const numParticles = 100;
+        const dt = 0.05;
+        
+        // Convert Trace/Det to matrix A = [[tr/2, -k], [k, tr/2]] where k = sqrt(|(tr^2/4) - det|)
+        function getMatrix(tr, det) {
+            let a11 = tr / 2;
+            let a22 = tr / 2;
+            let disc = (tr * tr / 4) - det;
+            let a12, a21;
+            if (disc < 0) {
+                // Complex eigenvalues
+                let k = Math.sqrt(-disc);
+                a12 = -k;
+                a21 = k;
+            } else {
+                // Real eigenvalues
+                let k = Math.sqrt(disc);
+                a12 = k;
+                a21 = k; // symmetric-ish for saddle/nodes
+                // Actually to make a saddle:
+                if (det < 0) {
+                    a11 = tr/2 + Math.sqrt(disc);
+                    a22 = tr/2 - Math.sqrt(disc);
+                    a12 = 0; a21 = 0;
+                } else {
+                    a11 = tr/2 + Math.sqrt(disc);
+                    a22 = tr/2 - Math.sqrt(disc);
+                    a12 = 0; a21 = 0;
+                }
+            }
+            return {a11, a12, a21, a22};
+        }
+
+        function initParticles() {
+            particles = [];
+            for(let i=0; i<numParticles; i++) {
+                particles.push({
+                    x: (Math.random() - 0.5) * 20,
+                    y: (Math.random() - 0.5) * 20,
+                    life: Math.random() * 100
+                });
+            }
+        }
+
+        function drawField(tr, det) {
+            const m = getMatrix(tr, det);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            ctx.strokeStyle = '#eee';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height);
+            ctx.moveTo(0, canvas.height/2); ctx.lineTo(canvas.width, canvas.height/2);
+            ctx.stroke();
+
+            // Draw vector field
+            ctx.strokeStyle = 'rgba(100, 150, 200, 0.4)';
+            for(let x=-10; x<=10; x+=2) {
+                for(let y=-10; y<=10; y+=2) {
+                    let dx = m.a11 * x + m.a12 * y;
+                    let dy = m.a21 * x + m.a22 * y;
+                    let len = Math.sqrt(dx*dx + dy*dy);
+                    if(len > 0) { dx /= len; dy /= len; }
+                    
+                    let px = canvas.width/2 + x * 20;
+                    let py = canvas.height/2 - y * 20;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(px, py);
+                    ctx.lineTo(px + dx*10, py - dy*10);
+                    ctx.stroke();
+                    ctx.fillRect(px + dx*10 - 1, py - dy*10 - 1, 2, 2);
+                }
+            }
+
+            // Draw particles
+            ctx.fillStyle = 'rgba(211, 47, 47, 0.6)';
+            for(let p of particles) {
+                let dx = m.a11 * p.x + m.a12 * p.y;
+                let dy = m.a21 * p.x + m.a22 * p.y;
+                
+                p.x += dx * dt;
+                p.y += dy * dt;
+                p.life--;
+                
+                if(p.life <= 0 || Math.abs(p.x) > 20 || Math.abs(p.y) > 20) {
+                    p.x = (Math.random() - 0.5) * 20;
+                    p.y = (Math.random() - 0.5) * 20;
+                    p.life = 100;
+                }
+                
+                let px = canvas.width/2 + p.x * 20;
+                let py = canvas.height/2 - p.y * 20;
+                ctx.beginPath();
+                ctx.arc(px, py, 2, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+
+        function update() {
+            const tr = parseFloat(trSlider.value);
+            const det = parseFloat(detSlider.value);
+            trLabel.textContent = `Trace (τ): ${tr.toFixed(1)}`;
+            detLabel.textContent = `Determinant (Δ): ${det.toFixed(1)}`;
+            
+            if (det < 0) {
+                status.textContent = "Saddle Point (Unstable)";
+                status.style.background = "#ffebee";
+                status.style.color = "#c62828";
+            } else if (tr > 0) {
+                if (tr*tr - 4*det < 0) status.textContent = "Unstable Spiral";
+                else status.textContent = "Unstable Node";
+                status.style.background = "#fff3e0";
+                status.style.color = "#ef6c00";
+            } else if (tr < 0) {
+                if (tr*tr - 4*det < 0) status.textContent = "Stable Spiral";
+                else status.textContent = "Stable Node";
+                status.style.background = "#e8f5e9";
+                status.style.color = "#2e7d32";
+            } else {
+                status.textContent = "Center (Neutrally Stable)";
+                status.style.background = "#e3f2fd";
+                status.style.color = "#1565c0";
+            }
+
+            drawField(tr, det);
+            requestAnimationFrame(update);
+        }
+
+        initParticles();
+        update();
+    </script>
+</body>
+</html>

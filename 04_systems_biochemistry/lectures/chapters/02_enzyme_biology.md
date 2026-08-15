@@ -1,3 +1,9 @@
+:::titlepage
+[[title]]
+Chapter 2: Enzyme Biology & Catalysis
+:::
+
+---
 
 :::matrix {cols="30/30/40" }
 [[0,0]]

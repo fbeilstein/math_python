@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The Cusp Catastrophe & Synergetics</title>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        #plot3d { flex: 1; height: 100%; border-right: 2px solid #ddd; }
+        #panel2d { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; }
+        canvas { border: 1px solid #ccc; background: white; cursor: crosshair; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; color: #333; }
+        p { color: #666; font-size: 14px; max-width: 500px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div id="plot3d"></div>
+    <div id="panel2d">
+        <h2>2D Control Plane</h2>
+        <p>Click and drag on the plane to move the system state. <br>The red zone represents the bistable region (hysteresis).</p>
+        <canvas id="plot2d" width="500" height="500"></canvas>
+    </div>
+
+    <script>
+        // 1. Generate 3D Manifold with Triangulation
+        let a_flat = [], b_flat = [], x_flat = [];
+        let idx_map = {}; 
+        let current_idx = 0;
+
+        let grid_a = 50, grid_x = 50;
+        let a_min = -5, a_max = 5;
+        let x_min = -4.5, x_max = 4.5;
+
+        for(let i=0; i<grid_a; i++) {
+            for(let j=0; j<grid_x; j++) {
+                let a = a_min + (a_max - a_min) * (i / (grid_a - 1));
+                let x = x_min + (x_max - x_min) * (j / (grid_x - 1));
+                let b = -Math.pow(x, 3) - a * x;
+                if (Math.abs(b) <= 15) {
+                    a_flat.push(a);
+                    b_flat.push(b);
+                    x_flat.push(x);
+                    idx_map[`${i},${j}`] = current_idx++;
+                }
+            }
+        }
+
+        let i_arr = [], j_arr = [], k_arr = [];
+        for(let i=0; i<grid_a-1; i++) {
+            for(let j=0; j<grid_x-1; j++) {
+                let p1 = idx_map[`${i},${j}`];
+                let p2 = idx_map[`${i+1},${j}`];
+                let p3 = idx_map[`${i+1},${j+1}`];
+                let p4 = idx_map[`${i},${j+1}`];
+                
+                if (p1 !== undefined && p2 !== undefined && p3 !== undefined && p4 !== undefined) {
+                    i_arr.push(p1); j_arr.push(p2); k_arr.push(p3);
+                    i_arr.push(p1); j_arr.push(p3); k_arr.push(p4);
+                }
+            }
+        }
+
+        var mesh = {
+            type: 'mesh3d',
+            x: a_flat, y: b_flat, z: x_flat,
+            i: i_arr, j: j_arr, k: k_arr,
+            intensity: x_flat,
+            colorscale: 'RdBu',
+            opacity: 0.8
+        };
+        var marker3d = {
+            type: 'scatter3d',
+            mode: 'markers',
+            x: [0], y: [0], z: [0],
+            marker: { size: 6, color: 'black' }
+        };
+        var trail3d = {
+            type: 'scatter3d',
+            mode: 'lines',
+            x: [], y: [], z: [],
+            line: { color: 'black', width: 4 }
+        };
+
+        var layout = {
+            title: '3D State Manifold',
+            scene: { 
+                xaxis: { title: 'a (Splitting)', range: [-5, 5] }, 
+                yaxis: { title: 'b (Normal)', range: [-15, 15] }, 
+                zaxis: { title: 'State (x)', range: [-3.5, 3.5] },
+                aspectratio: { x: 1, y: 1, z: 0.4 },
+                camera: { eye: { x: 1.5, y: -1.5, z: 0.5 } }
+            },
+            margin: { l: 0, r: 0, b: 0, t: 40 }
+        };
+
+        Plotly.newPlot('plot3d', [mesh, marker3d, trail3d], layout);
+
+        // 2. Interactive 2D Plane
+        const canvas = document.getElementById('plot2d');
+        const ctx = canvas.getContext('2d');
+        
+        function a2px(a) { return (a + 5) / 10 * 500; }
+        function b2py(b) { return (15 - b) / 30 * 500; }
+        function px2a(px) { return px / 500 * 10 - 5; }
+        function py2b(py) { return 15 - py / 500 * 30; }
+
+        function draw2D(a_cur, b_cur) {
+            ctx.clearRect(0, 0, 500, 500);
+            
+            // Grid
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.beginPath();
+            for(let i=0; i<=10; i++) {
+                ctx.moveTo(i*50, 0); ctx.lineTo(i*50, 500);
+                ctx.moveTo(0, i*50); ctx.lineTo(500, i*50);
+            }
+            ctx.stroke();
+
+            // Axes
+            ctx.strokeStyle = '#aaa';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(a2px(0), 0); ctx.lineTo(a2px(0), 500);
+            ctx.moveTo(0, b2py(0)); ctx.lineTo(500, b2py(0));
+            ctx.stroke();
+
+            // Bifurcation lines
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = 'rgba(255, 75, 75, 0.15)';
+            ctx.beginPath();
+            let pos_pts = [], neg_pts = [];
+            for(let a = -5; a <= 0; a += 0.05) {
+                let b = Math.sqrt(-4 * Math.pow(a, 3) / 27);
+                pos_pts.push({x: a2px(a), y: b2py(b)});
+                neg_pts.push({x: a2px(a), y: b2py(-b)});
+            }
+            
+            ctx.beginPath();
+            pos_pts.forEach((p, i) => i==0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+            neg_pts.slice().reverse().forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.fill();
+
+            ctx.beginPath();
+            pos_pts.forEach((p, i) => i==0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+            ctx.stroke();
+            ctx.beginPath();
+            neg_pts.forEach((p, i) => i==0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText('a (Splitting)', 250, 490);
+            ctx.save();
+            ctx.translate(15, 250);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText('b (Normal)', 0, 0);
+            ctx.restore();
+
+            // Marker
+            if (a_cur !== undefined) {
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(a2px(a_cur), b2py(b_cur), 6, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        draw2D(0, 0);
+
+        // 3. Logic & State Hysteresis
+        let current_x = 0;
+        let history_a = [], history_b = [], history_x = [];
+
+        function getRoots(a, b) {
+            let p = a, q = b;
+            let delta = (q*q)/4 + (p*p*p)/27;
+            if (delta > 0) {
+                let u = Math.cbrt(-q/2 + Math.sqrt(delta));
+                let v = Math.cbrt(-q/2 - Math.sqrt(delta));
+                return [u + v];
+            } else {
+                if (p >= 0) return [0];
+                let r = 2 * Math.sqrt(-p/3);
+                let arg = (3*q)/(2*p) * Math.sqrt(-3/p);
+                arg = Math.max(-1, Math.min(1, arg));
+                let theta = Math.acos(arg);
+                return [
+                    r * Math.cos(theta/3),
+                    r * Math.cos(theta/3 - 2*Math.PI/3),
+                    r * Math.cos(theta/3 - 4*Math.PI/3)
+                ];
+            }
+        }
+
+        let isPressed = false;
+        let pendingUpdate = false;
+
+        function updateSystem(a, b) {
+            let roots = getRoots(a, b);
+            let best_root = roots[0];
+            let min_dist = Infinity;
+            for (let r of roots) {
+                let d = Math.abs(r - current_x);
+                if (d < min_dist) {
+                    min_dist = d;
+                    best_root = r;
+                }
+            }
+            current_x = best_root;
+            
+            history_a.push(a);
+            history_b.push(b);
+            history_x.push(current_x);
+            if(history_a.length > 60) {
+                history_a.shift(); history_b.shift(); history_x.shift();
+            }
+            
+            draw2D(a, b);
+
+            // Throttle Plotly updates
+            if(!pendingUpdate) {
+                pendingUpdate = true;
+                requestAnimationFrame(() => {
+                    Plotly.restyle('plot3d', { x: [[a]], y: [[b]], z: [[current_x]] }, [1]);
+                    Plotly.restyle('plot3d', { x: [history_a], y: [history_b], z: [history_x] }, [2]);
+                    pendingUpdate = false;
+                });
+            }
+        }
+
+        canvas.addEventListener('mousedown', e => {
+            isPressed = true;
+            history_a = []; history_b = []; history_x = [];
+            let r = canvas.getBoundingClientRect();
+            updateSystem(px2a(e.clientX - r.left), py2b(e.clientY - r.top));
+        });
+        canvas.addEventListener('mousemove', e => {
+            if (isPressed) {
+                let r = canvas.getBoundingClientRect();
+                updateSystem(px2a(e.clientX - r.left), py2b(e.clientY - r.top));
+            }
+        });
+        window.addEventListener('mouseup', () => isPressed = false);
+    </script>
+</body>
+</html>

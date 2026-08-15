@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 180" style="font-family:Arial,sans-serif;background:transparent;">
+<defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#333"/>
+    </marker>
+    <marker id="activate" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#388e3c"/>
+    </marker>
+    <marker id="inhibit" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+        <line x1="9" y1="0" x2="9" y2="10" stroke="#d32f2f" stroke-width="2.5"/>
+    </marker>
+</defs>
+<circle cx="60" cy="90" r="22" fill="#e0e0e0" stroke="#333" stroke-width="2"/><text x="60" y="95" font-size="15" font-weight="bold" text-anchor="middle">W</text><line x1="90" y1="80" x2="155" y2="80" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/><text x="122" y="68" font-size="13" fill="#555" text-anchor="middle">v₁</text><line x1="155" y1="100" x2="90" y2="100" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/><text x="122" y="118" font-size="13" fill="#555" text-anchor="middle">v₂</text><circle cx="185" cy="90" r="22" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/><text x="185" y="95" font-size="15" font-weight="bold" text-anchor="middle">W*</text><circle cx="122" cy="30" r="18" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/><text x="122" y="35" font-size="13" font-weight="bold" text-anchor="middle">K</text><line x1="122" y1="48" x2="122" y2="68" stroke="#388e3c" stroke-width="2" marker-end="url(#activate)" stroke-dasharray="6,4"/><circle cx="122" cy="150" r="18" fill="#fce4ec" stroke="#c62828" stroke-width="2"/><text x="122" y="155" font-size="13" font-weight="bold" text-anchor="middle">P</text><line x1="122" y1="132" x2="122" y2="112" stroke="#388e3c" stroke-width="2" marker-end="url(#activate)" stroke-dasharray="6,4"/>
+</svg>

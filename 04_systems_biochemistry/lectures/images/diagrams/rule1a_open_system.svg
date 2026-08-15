@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 120" style="font-family:Arial,sans-serif;background:transparent;">
+<defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#333"/>
+    </marker>
+    <marker id="activate" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#388e3c"/>
+    </marker>
+    <marker id="inhibit" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+        <line x1="9" y1="0" x2="9" y2="10" stroke="#d32f2f" stroke-width="2.5"/>
+    </marker>
+</defs>
+<text x="30" y="80" font-size="20" fill="#555" text-anchor="middle">∅</text><line x1="48" y1="75" x2="75" y2="75" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/><text x="62" y="62" font-size="13" fill="#555" text-anchor="middle">V_in</text><circle cx="100" cy="75" r="22" fill="#e0e0e0" stroke="#333" stroke-width="2"/><text x="100" y="80" font-size="15" font-weight="bold" text-anchor="middle">X</text><line x1="125" y1="75" x2="168" y2="75" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/><text x="147" y="62" font-size="13" fill="#555" text-anchor="middle">k_out</text><text x="190" y="80" font-size="20" fill="#555" text-anchor="middle">∅</text>
+</svg>

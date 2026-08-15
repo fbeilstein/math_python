@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hopf Bifurcation</title>
+    <style>
+        body { margin: 0; padding: 10px; font-family: 'Inter', sans-serif; background: #fff; color: #333; display: flex; flex-direction: column; align-items: center; }
+        canvas { border: 1px solid #ddd; border-radius: 8px; background: #222; }
+        .controls { width: 100%; max-width: 600px; display: flex; flex-direction: column; padding-top: 10px; }
+        label { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #555; }
+        input[type=range] { width: 100%; }
+        .info { text-align: center; font-size: 14px; margin-top: 5px; color: #d32f2f; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="600" height="300"></canvas>
+    <div class="controls">
+        <label id="param-label">Bifurcation Parameter (μ): -1.0</label>
+        <input type="range" id="param-slider" min="-2" max="2" step="0.05" value="-1">
+        <div class="info" id="status">Stable Spiral (Fixed Point)</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const slider = document.getElementById('param-slider');
+        const label = document.getElementById('param-label');
+        const status = document.getElementById('status');
+
+        let x = 0.1, y = 0.1;
+        const dt = 0.05;
+        let trail = [];
+
+        function update() {
+            const mu = parseFloat(slider.value);
+            label.textContent = `Bifurcation Parameter (μ): ${mu.toFixed(2)}`;
+            
+            if (mu < 0) {
+                status.textContent = "Stable Spiral (Attracting Fixed Point)";
+                status.style.color = "#1976d2";
+            } else {
+                status.textContent = "Limit Cycle (Supercritical Hopf)";
+                status.style.color = "#d32f2f";
+            }
+
+            // Normal form of Hopf Bifurcation: 
+            // dx/dt = mu*x - y - x*(x^2 + y^2)
+            // dy/dt = x + mu*y - y*(x^2 + y^2)
+            
+            // Advance system a few steps per frame
+            for(let i=0; i<3; i++) {
+                let r2 = x*x + y*y;
+                let dx = mu*x - y - x*r2;
+                let dy = x + mu*y - y*r2;
+                x += dx * dt;
+                y += dy * dt;
+                trail.push({x, y});
+            }
+            if (trail.length > 200) trail.splice(0, trail.length - 200);
+
+            // Draw
+            ctx.fillStyle = '#222';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Axes
+            ctx.strokeStyle = '#444';
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height);
+            ctx.moveTo(0, canvas.height/2); ctx.lineTo(canvas.width, canvas.height/2);
+            ctx.stroke();
+
+            // Trail
+            ctx.strokeStyle = mu < 0 ? '#64b5f6' : '#ef5350';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for(let i=0; i<trail.length; i++) {
+                let px = canvas.width/2 + trail[i].x * 100;
+                let py = canvas.height/2 - trail[i].y * 100;
+                if(i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            // Current point
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(canvas.width/2 + x * 100, canvas.height/2 - y * 100, 4, 0, Math.PI*2);
+            ctx.fill();
+
+            // Interactivity: clicking resets position
+            requestAnimationFrame(update);
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            x = (e.clientX - rect.left - canvas.width/2) / 100;
+            y = -(e.clientY - rect.top - canvas.height/2) / 100;
+            trail = [];
+        });
+
+        update();
+    </script>
+</body>
+</html>

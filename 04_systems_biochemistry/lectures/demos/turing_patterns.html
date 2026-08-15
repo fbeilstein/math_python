@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Turing Patterns</title>
+    <style>
+        body { margin: 0; padding: 10px; font-family: 'Inter', sans-serif; background: #fff; color: #333; display: flex; flex-direction: column; align-items: center; }
+        canvas { border: 1px solid #ddd; border-radius: 8px; image-rendering: pixelated; }
+        .controls { width: 100%; max-width: 600px; display: flex; justify-content: center; padding-top: 10px; }
+        button { padding: 8px 16px; background: #1976d2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1565c0; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="200" height="200" style="width:400px; height:400px;"></canvas>
+    <div class="controls">
+        <button onclick="init()">Perturb / Reset</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        let A = new Float32Array(w * h);
+        let B = new Float32Array(w * h);
+        let nextA = new Float32Array(w * h);
+        let nextB = new Float32Array(w * h);
+
+        // Gray-Scott parameters for spots/stripes
+        const Da = 1.0;
+        const Db = 0.5;
+        const feed = 0.055;
+        const k = 0.062;
+        const dt = 0.2;
+
+        function init() {
+            for(let i=0; i<w*h; i++) {
+                A[i] = 1.0;
+                B[i] = 0.0;
+            }
+            // Seed perturbation
+            for(let y=h/2 - 10; y<h/2 + 10; y++) {
+                for(let x=w/2 - 10; x<w/2 + 10; x++) {
+                    B[y*w + x] = 1.0;
+                }
+            }
+            // Add some random noise
+            for(let i=0; i<w*h; i++) {
+                if(Math.random() < 0.01) B[i] = 1.0;
+            }
+        }
+
+        function laplace(arr, x, y) {
+            let sum = 0;
+            sum += arr[y*w + x] * -4;
+            sum += arr[y*w + ((x-1+w)%w)] * 1;
+            sum += arr[y*w + ((x+1)%w)] * 1;
+            sum += arr[((y-1+h)%h)*w + x] * 1;
+            sum += arr[((y+1)%h)*w + x] * 1;
+            return sum;
+        }
+
+        function update() {
+            for(let step=0; step<40; step++) {
+                for(let y=0; y<h; y++) {
+                    for(let x=0; x<w; x++) {
+                        let i = y*w + x;
+                        let a = A[i];
+                        let b = B[i];
+                        let abb = a * b * b;
+                        nextA[i] = a + (Da * laplace(A, x, y) - abb + feed * (1 - a)) * dt;
+                        nextB[i] = b + (Db * laplace(B, x, y) + abb - (k + feed) * b) * dt;
+                    }
+                }
+                // Swap
+                let tempA = A; A = nextA; nextA = tempA;
+                let tempB = B; B = nextB; nextB = tempB;
+            }
+
+            const imgData = ctx.createImageData(w, h);
+            for(let i=0; i<w*h; i++) {
+                let c = Math.floor(A[i] * 255);
+                let idx = i * 4;
+                imgData.data[idx] = c;
+                imgData.data[idx+1] = c;
+                imgData.data[idx+2] = c;
+                imgData.data[idx+3] = 255;
+            }
+            ctx.putImageData(imgData, 0, 0);
+
+            requestAnimationFrame(update);
+        }
+
+        init();
+        update();
+    </script>
+</body>
+</html>
