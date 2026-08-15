@@ -61,7 +61,39 @@ Welcome to the computational group theory laboratory. This lab bridges abstract 
 \vspace{0.5cm}
 \noindent Now proceed with the following problems. For each problem, first recall or find the mathematical definitions in any standard abstract algebra textbook. Then, carefully implement the algorithm. Finally, launch the dashboard, navigate to the respective level tab, and use the UI to verify your logic visually.
 
-\newpage
+\subsubsection*{Group Engine API Reference}
+You will be provided with helper classes \lstinline|Group| and \lstinline|GroupElement| to interact with the algebraic structures. Before diving into the implementations, you must understand how to use them:
+
+\textbf{The \lstinline|GroupElement| Object}\\
+Elements of a group are represented as abstract objects. You do not need to know their internal mathematical representation. You only need to use the overloaded Python operators:
+\begin{itemize}
+    \item \textbf{Multiplication:} \lstinline|a * b| returns a new \lstinline|GroupElement| representing $a \cdot b$.
+    \item \textbf{Inversion:} \lstinline|~a| returns a new \lstinline|GroupElement| representing $a^{-1}$.
+    \item \textbf{Equality:} \lstinline|a == b| returns \lstinline|True| if the elements are identical.
+\end{itemize}
+\textit{Note: \lstinline|GroupElement| objects are fully hashable and can be safely used as keys in dictionaries or stored in sets.}
+
+\textbf{The \lstinline|Group| Object}\\
+The \lstinline|Group| object represents a mathematical group (or subgroup). It acts like a Python container:
+\begin{itemize}
+    \item \textbf{Iteration:} \lstinline|for g in group:| iterates over all elements in the group.
+    \item \textbf{Membership:} \lstinline|g in group| returns \lstinline|True| if the element $g$ is in the group.
+    \item \textbf{Identity:} \lstinline|group.identity_element| returns the identity $e \in G$.
+    \item \textbf{Elements:} \lstinline|group.elements| returns a raw Python list of all elements.
+\end{itemize}
+
+\textbf{Constructing Subgroups dynamically:}\\
+When algorithms (like \lstinline|generate_group|) require you to build a new group from scratch, you can instantiate and populate a \lstinline|Group| object manually:
+\begin{lstlisting}[language=Python]
+# Create a new group starting with just the identity
+H = Group(elements=[identity_element])
+
+# Add a single element
+H.add(new_element)
+
+# Add a list of elements
+H.add_elements([e1, e2, e3])
+\end{lstlisting}
 
 \section*{Problem 1: Multiplication Table Axioms (Level 1)}
 
