@@ -57,6 +57,16 @@ class Level4Subgroups(TabbedLevel):
         
         self.find_subgroups()
 
+    def on_node_click(self, node_id, sg_list):
+        sg = sg_list[node_id]
+        self.selected_elements.clear()
+        for elem in self.element_buttons:
+            self.element_buttons[elem].config(bg="#2d2d30")
+            if elem in sg.elements and elem != self._group.identity_element:
+                self.selected_elements.add(elem)
+                self.element_buttons[elem].config(bg="#58a6ff")
+        self.find_subgroups()
+
     def find_subgroups(self):
         if self._group is None:
             self.show_error("Load a group first")
@@ -83,7 +93,7 @@ class Level4Subgroups(TabbedLevel):
                 self.show_error(str(e))
                 return
         else:
-            generated_sg = {self._group.identity_element}
+            generated_sg = tasks.Group(elements=[self._group.identity_element])
             
         highlight_idx = -1
         for i, sg in enumerate(sg_list):
@@ -120,45 +130,63 @@ class Level4Subgroups(TabbedLevel):
                     if is_maximal:
                         H.add_edge(i, j)
 
-        # Layout: group by order
+        # Compute topological layers for proper Hasse diagram height
+        node_layers = {}
+        for node in nx.topological_sort(H):
+            preds = list(H.predecessors(node))
+            if not preds:
+                node_layers[node] = 0
+            else:
+                node_layers[node] = 1 + max(node_layers[p] for p in preds)
+
         levels = {}
-        for i, sg in enumerate(sg_list):
-            sz = len(sg)
-            levels.setdefault(sz, []).append(i)
+        for node, layer in node_layers.items():
+            levels.setdefault(layer, []).append(node)
 
         pos = {}
-        sorted_sizes = sorted(levels.keys())
-        for y_idx, sz in enumerate(sorted_sizes):
-            nodes_at_level = levels[sz]
+        sorted_layers = sorted(levels.keys())
+        for y_idx in sorted_layers:
+            nodes_at_level = levels[y_idx]
             for x_idx, node in enumerate(nodes_at_level):
                 x = (x_idx + 0.5) / max(len(nodes_at_level), 1)
-                y = y_idx / max(len(sorted_sizes) - 1, 1)
+                y = y_idx / max(len(sorted_layers) - 1, 1)
                 pos[node] = (x, y)
 
-        colors = []
-        edge_colors = []
-        for i in range(len(sg_list)):
-            if i == highlight_idx:
-                colors.append('#7ee787') # highlighted subgroup
-            elif len(sg_list[i]) == 1:
-                colors.append('#ffd700')
-            elif len(sg_list[i]) == len(self._group.elements):
-                colors.append('#ff7b72')
-            else:
-                colors.append('#58a6ff')
-                
-        nx.draw_networkx_nodes(H, pos, ax=self.ax, node_color=colors,
-                               node_size=600 if i == highlight_idx else 500, 
-                               edgecolors='white', linewidths=1.5)
-        labels = {i: f"|{len(sg_list[i])}|" for i in range(len(sg_list))}
-        nx.draw_networkx_labels(H, pos, labels=labels, ax=self.ax,
-                                font_size=10, font_color='black', 
-                                font_weight='bold')
-        nx.draw_networkx_edges(H, pos, ax=self.ax, edge_color='#484f58',
-                               arrows=True, arrowsize=12, width=1.5)
+        def draw_callback(draw_pos):
+            self.ax.clear()
+            artists = {'nodes': [], 'labels': None, 'edges': []}
+            
+            colors = []
+            sizes = []
+            for i in range(len(sg_list)):
+                sizes.append(600 if i == highlight_idx else 500)
+                if i == highlight_idx:
+                    colors.append('#7ee787') # highlighted subgroup
+                elif len(sg_list[i]) == 1:
+                    colors.append('#ffd700')
+                elif len(sg_list[i]) == len(self._group.elements):
+                    colors.append('#ff7b72')
+                else:
+                    colors.append('#58a6ff')
+                    
+            path_col = nx.draw_networkx_nodes(H, draw_pos, ax=self.ax, node_color=colors,
+                                   node_size=sizes, edgecolors='white', linewidths=1.5)
+            artists['nodes'].append((list(H.nodes()), path_col))
+            
+            labels = {i: f"|{len(sg_list[i])}|" for i in range(len(sg_list))}
+            artists['labels'] = nx.draw_networkx_labels(H, draw_pos, labels=labels, ax=self.ax,
+                                    font_size=10, font_color='black', font_weight='bold')
+                                    
+            patches = nx.draw_networkx_edges(H, draw_pos, ax=self.ax, edge_color='#484f58',
+                                   arrows=True, arrowsize=12, width=1.5)
+            if patches:
+                for patch, (u, v) in zip(patches, H.edges()):
+                    artists['edges'].append((u, v, patch))
 
-        divides = all(len(self._group.elements) % len(sg) == 0 for sg in sg_list)
-        msg = f"Lagrange verified: all {len(sg_list)} subgroup sizes divide {len(self._group.elements)}" if divides else "Lagrange violation!"
-        self.ax.set_title(msg, color='#7ee787' if divides else '#ff7b72', fontsize=12)
-        self.ax.axis('off')
-        self.canvas.draw()
+            divides = all(len(self._group.elements) % len(sg) == 0 for sg in sg_list)
+            msg = f"Lagrange verified: all {len(sg_list)} subgroup sizes divide {len(self._group.elements)}" if divides else "Lagrange violation!"
+            self.ax.set_title(msg, color='#7ee787' if divides else '#ff7b72', fontsize=12)
+            self.ax.axis('off')
+            return artists
+
+        self.update_graph(H, pos, draw_callback, on_node_click=lambda node: self.on_node_click(node, sg_list), draggable=False)

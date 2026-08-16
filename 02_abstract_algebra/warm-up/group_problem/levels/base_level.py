@@ -177,7 +177,7 @@ class TabbedLevel(BaseLevel):
     def on_group_loaded(self, group):
         """Override in subclass to handle group loading."""
         pass
-    def update_graph(self, G, pos, draw_callback, title=None, on_node_click=None):
+    def update_graph(self, G, pos, draw_callback, title=None, on_node_click=None, draggable=True):
         # Apply a good spring layout once to uncrowd the graph
         import networkx as nx
         if pos is None:
@@ -186,23 +186,25 @@ class TabbedLevel(BaseLevel):
         artists = draw_callback(pos)
         
         if not hasattr(self, 'graph_manager') or self.graph_manager is None:
-            self.graph_manager = DraggableGraphManager(self.canvas, self.ax, G, pos, artists, on_node_click)
+            self.graph_manager = DraggableGraphManager(self.canvas, self.ax, G, pos, artists, on_node_click, draggable)
         else:
             self.graph_manager.G = G
             self.graph_manager.pos = pos
             self.graph_manager.artists = artists
             self.graph_manager.on_node_click = on_node_click
+            self.graph_manager.draggable = draggable
         self.canvas.draw_idle()
 
 
 class DraggableGraphManager:
-    def __init__(self, canvas, ax, G, pos, artists, on_node_click=None):
+    def __init__(self, canvas, ax, G, pos, artists, on_node_click=None, draggable=True):
         self.canvas = canvas
         self.ax = ax
         self.G = G
         self.pos = pos
         self.artists = artists
         self.on_node_click = on_node_click
+        self.draggable = draggable
         self.dragging_node = None
         self.has_moved = False
         
@@ -251,6 +253,7 @@ class DraggableGraphManager:
         if self.dragging_node is None: return
         if event.inaxes != self.ax: return
         if self.canvas.toolbar and self.canvas.toolbar.mode != '': return
+        if not self.draggable: return
         
         if not self.has_moved:
             dist = (event.xdata - self.press_x)**2 + (event.ydata - self.press_y)**2

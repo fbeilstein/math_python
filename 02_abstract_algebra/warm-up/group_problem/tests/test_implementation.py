@@ -15,7 +15,7 @@ class TestLevel1Axioms(unittest.TestCase):
         self.assertTrue(tasks.check_inverses(G.elements, G.identity_element))
 
     def test_broken_table_closure(self):
-        class MockElem(ge.GroupElement):
+        class MockElem(ge.Group.Element):
             def __init__(self, v): self.idx = v
             def __mul__(self, o): return MockElem(5)
             def __invert__(self): return self
@@ -26,7 +26,7 @@ class TestLevel1Axioms(unittest.TestCase):
         self.assertFalse(tasks.check_closure(elements))
 
     def test_z6_mul_no_inverses(self):
-        class MockZ6(ge.GroupElement):
+        class MockZ6(ge.Group.Element):
             def __init__(self, v): self.idx = v
             def __mul__(self, o): return MockZ6((self.idx * o.idx) % 6)
             def __invert__(self): return MockZ6(1) # fake inverse

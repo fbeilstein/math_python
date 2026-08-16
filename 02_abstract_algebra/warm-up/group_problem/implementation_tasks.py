@@ -158,9 +158,9 @@ def generate_cayley_graph(group, generators):  #contains solution
 
     Args:
         group: abstract Group object forming G.
-        generators: list of abstract GroupElement objects.
+        generators: list of abstract Group.Element objects.
     Returns:
-        tuple (nodes, edges) where nodes is a list of GroupElements and 
+        tuple (nodes, edges) where nodes is a list of Group.Element objects and 
         edges is a list of tuples (source, generator, target).
     """
     visited = set()
@@ -301,7 +301,7 @@ def compute_center(group):  #contains solution
     Args:
         group: abstract Group object forming G.
     Returns:
-        set of GroupElement: elements that commute with all other elements.
+        set of Group.Element: elements that commute with all other elements.
     """
     center = set()
     for z in group:
@@ -447,7 +447,7 @@ def compute_kernel(group_G, group_H, phi):  #contains solution
         group_H: abstract Group object forming H.
         phi: dict, the homomorphism.
     Returns:
-        set of GroupElement: elements in G that map to the identity of H.
+        set of Group.Element: elements in G that map to the identity of H.
     """
     e_H = group_H.identity_element
     return {g for g in group_G if g in phi and phi[g] == e_H}
@@ -461,6 +461,6 @@ def compute_image(group_G, group_H, phi):  #contains solution
         group_H: abstract Group object forming H.
         phi: dict, the homomorphism.
     Returns:
-        set of GroupElement: elements in H that are in the image.
+        set of Group.Element: elements in H that are in the image.
     """
     return {phi[g] for g in group_G if g in phi}

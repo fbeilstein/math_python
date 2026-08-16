@@ -81,7 +81,9 @@ class DnGroup(Group):
     def multiply(self, left, right):
         a = left.value
         b = right.value
-        k = (a[0] + ((-b[0]) if a[1] else b[0])) % self.n
+        # Elements are represented as (k, f) meaning s^f r^k
+        # (s^f1 r^k1) * (s^f2 r^k2) = s^(f1^f2) * r^(k2 + (-1)^f2 * k1)
+        k = (b[0] - a[0]) % self.n if b[1] else (b[0] + a[0]) % self.n
         f = a[1] ^ b[1]
         return self._elements[self.idx[(k, f)]]
         

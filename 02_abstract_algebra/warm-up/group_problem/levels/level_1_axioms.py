@@ -246,7 +246,7 @@ class Level1Axioms(BaseLevel):
             tk.Label(self.error_frame, text=f"✗ {msg}", font=("Arial", 14, "bold"), fg="#ff7b72", bg="#2d2d30").pack(pady=4)
 
         # Build mock GridElements
-        class GridElement(tasks.GroupElement):
+        class GridElement(tasks.Group.Element):
             def __init__(self, idx, table_ref):
                 self.idx = idx
                 self.table_ref = table_ref
