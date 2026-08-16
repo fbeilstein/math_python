@@ -62,16 +62,16 @@ Welcome to the computational group theory laboratory. This lab bridges abstract 
 \noindent Now proceed with the following problems. For each problem, first recall or find the mathematical definitions in any standard abstract algebra textbook. Then, carefully implement the algorithm. Finally, launch the dashboard, navigate to the respective level tab, and use the UI to verify your logic visually.
 
 \subsubsection*{Group Engine API Reference}
-You will be provided with helper classes \lstinline|Group| and \lstinline|GroupElement| to interact with the algebraic structures. Before diving into the implementations, you must understand how to use them:
+You will be provided with a helper class \lstinline|Group| and its inner nested class \lstinline|Group.Element| to interact with the algebraic structures. Before diving into the implementations, you must understand how to use them:
 
-\textbf{The \lstinline|GroupElement| Object}\\
+\textbf{The \lstinline|Group.Element| Object}\\
 Elements of a group are represented as abstract objects. You do not need to know their internal mathematical representation. You only need to use the overloaded Python operators:
 \begin{itemize}
-    \item \textbf{Multiplication:} \lstinline|a * b| returns a new \lstinline|GroupElement| representing $a \cdot b$.
-    \item \textbf{Inversion:} \lstinline|~a| returns a new \lstinline|GroupElement| representing $a^{-1}$.
+    \item \textbf{Multiplication:} \lstinline|a * b| returns a new \lstinline|Group.Element| representing $a \cdot b$.
+    \item \textbf{Inversion:} \lstinline|~a| returns a new \lstinline|Group.Element| representing $a^{-1}$.
     \item \textbf{Equality:} \lstinline|a == b| returns \lstinline|True| if the elements are identical.
 \end{itemize}
-\textit{Note: \lstinline|GroupElement| objects are fully hashable and can be safely used as keys in dictionaries or stored in sets.}
+\textit{Note: \lstinline|Group.Element| objects are fully hashable and can be safely used as keys in dictionaries or stored in sets.}
 
 \textbf{The \lstinline|Group| Object}\\
 The \lstinline|Group| object represents a mathematical group (or subgroup). It acts like a Python container:
@@ -117,7 +117,7 @@ class PermutationGroup(Group):
 
 \subsubsection*{Implementation part}
 \textbf{Task:} Implement the four foundational axiom checks. 
-\textbf{Details:} In this lab, we use a pure Object-Oriented API. You must use python's overloaded multiplication operator (\lstinline|a * b|) and evaluate the following logic:
+\textbf{Details:} In this lab, we use a pure Object-Oriented API. The \lstinline|elements| arguments are provided as a list of \lstinline|Group.Element| objects. You must use python's overloaded multiplication operator (\lstinline|a * b|) and evaluate the following logic:
 \begin{itemize}
     \item \lstinline|check_closure|: Iterate all pairs $a, b \in G$. Return false if $a \cdot b \notin G$.
     \item \lstinline|check_associativity|: Iterate all triplets $a, b, c \in G$. Return false if $(a \cdot b) \cdot c \neq a \cdot (b \cdot c)$.
@@ -125,23 +125,13 @@ class PermutationGroup(Group):
     \item \lstinline|check_inverses|: Given $e$, iterate all $a \in G$ and ensure there exists some $b \in G$ where $a \cdot b = b \cdot a = e$.
 \end{itemize}
 
-\textbf{Reminder:}\\
-When implementing \lstinline|multiply| or \lstinline|inverse| inside a custom group subclass, you must return a new element that belongs to the group. Do this by using the \lstinline|self.Element(self, value)| factory method:
-\begin{lstlisting}[language=Python]
-class PermutationGroup(Group):
-    def multiply(self, left, right):
-        new_value = ... # compute the new tuple
-        return self.Element(self, new_value)
-\end{lstlisting}
-
-
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
 \begin{tabular}{r | c | c | c | c }
 \toprule
 \textbf{Function} & \lstinline|check_closure| & \lstinline|check_associativity| & \lstinline|find_identity| & \lstinline|check_inverses| \\ \midrule
 \textbf{Arguments} & \lstinline|elements| & \lstinline|elements| & \lstinline|elements| & \lstinline|elements, identity| \\ \midrule
-\textbf{Return Type} & \lstinline|bool| & \lstinline|bool| & \lstinline|GroupElement| & \lstinline|bool| \\
+\textbf{Return Type} & \lstinline|bool| & \lstinline|bool| & \lstinline|Group.Element| & \lstinline|bool| \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -160,7 +150,7 @@ class PermutationGroup(Group):
 \subsubsection*{Implementation part}
 \textbf{Task:} Implement mechanics for the \lstinline|PermutationGroup| subclass, and implement general order and generator functions.
 
-\textbf{Details:} A permutation on $n$ elements is a bijective function on the set $\{0, 1, \dots, n-1\}$. In the code, a \lstinline|PermutationGroup.Element| stores this function as a tuple called \lstinline|value| (accessible via \lstinline|element.value|). The value at \lstinline|value[i]| represents the output of the function when given input $i$.
+\textbf{Details:} A permutation on $n$ elements is a bijective function on the set $\{0, 1, \dots, n-1\}$. In the code, a \lstinline|Group.Element| belonging to a \lstinline|PermutationGroup| stores this function as a tuple called \lstinline|value| (accessible via \lstinline|element.value|). The value at \lstinline|value[i]| represents the output of the function when given input $i$.
 
 \begin{itemize}
     \item \lstinline|PermutationGroup.multiply|: Compose permutations $f$ and $g$ to get $f \star g$ via function composition $(f \circ g)(x) = f(g(x))$.
@@ -169,13 +159,23 @@ class PermutationGroup(Group):
     \item \lstinline|generate_group|: Use a set to track discovered elements. Start with the generators and iteratively apply closure ($a \cdot b$) until no new elements are found. Return the \lstinline|Group| object.
 \end{itemize}
 
+
+\textbf{Reminder:}\\
+When implementing \lstinline|multiply| or \lstinline|inverse| inside a custom group subclass, you must return a new element that belongs to the group. Do this by using the \lstinline|self.Element(self, value)| factory method:
+\begin{lstlisting}[language=Python]
+class PermutationGroup(Group):
+    def multiply(self, left, right):
+        new_value = ... # compute the new tuple
+        return self.Element(self, new_value)
+\end{lstlisting}
+
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
 \begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
 \toprule
 Function / Method & Arguments & Returns \\ \midrule
-PermutationGroup.multiply & \lstinline|self, left, right| & \lstinline|Group.Element| \\
-PermutationGroup.inverse & \lstinline|self, element| & \lstinline|Group.Element| \\
+PermutationGroup.multiply & \lstinline|self, left: Group.Element, right: Group.Element| & \lstinline|Group.Element| \\
+PermutationGroup.inverse & \lstinline|self, element: Group.Element| & \lstinline|Group.Element| \\
 element\_order & \lstinline|group: Group, g: Group.Element| & \lstinline|int| \\
 generate\_group & \lstinline|generators: list[Group.Element]| & \lstinline|Group| \\
 \bottomrule

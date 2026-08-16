@@ -8,7 +8,7 @@ Each function has a docstring specifying the expected behavior.
 """
 import numpy as np
 from itertools import product
-from group_engine import GroupElement, Group
+from group_engine import Group
 
 
 # ════════════════════════════════════════════════════════════
@@ -19,7 +19,7 @@ def check_closure(elements):  #contains solution
     """Check if the set of elements is closed under multiplication.
 
     Args:
-        elements: list or set of abstract GroupElement objects.
+        elements (list[Group.Element] | set[Group.Element]): A collection of group elements to test.
     Returns:
         bool: True if closed, False otherwise.
     """
@@ -30,7 +30,7 @@ def check_associativity(elements):  #contains solution
     """Check if the multiplication operation is associative.
 
     Args:
-        elements: list or set of abstract GroupElement objects.
+        elements (list[Group.Element] | set[Group.Element]): A collection of group elements to test.
     Returns:
         bool: True if associative, False otherwise.
     """
@@ -41,9 +41,9 @@ def find_identity(elements):  #contains solution
     """Find the identity element.
 
     Args:
-        elements: list or set of abstract GroupElement objects.
+        elements (list[Group.Element] | set[Group.Element]): A collection of group elements to test.
     Returns:
-        GroupElement or None: the identity element, or None if none exists.
+        Group.Element or None: the identity element, or None if none exists.
     """
     return next((e for e in elements if all(e * a == a and a * e == a for a in elements)), None)
 
@@ -52,8 +52,8 @@ def check_inverses(elements, identity):  #contains solution
     """Check if every element has an inverse.
 
     Args:
-        elements: list or set of abstract GroupElement objects.
-        identity: the identity GroupElement.
+        elements (list[Group.Element] | set[Group.Element]): A collection of group elements to test.
+        identity (Group.Element): the identity element.
     Returns:
         bool: True if every element has an inverse, False otherwise.
     """
@@ -68,9 +68,16 @@ class PermutationGroup(Group):
     """Level 2 Task: Implement permutation multiplication and inversion."""
     
     def multiply(self, left, right):  #contains solution
-        """Compose two permutations (left.value and right.value are tuples).
-        Note: You MUST return a new Element that belongs to this group.
-        Use `self.Element(self, new_value)` to construct and return it.
+        """Compose two permutations.
+        
+        Args:
+            left (Group.Element): The first permutation element. 
+                `left.value` is a tuple representing its one-line notation.
+            right (Group.Element): The second permutation element.
+                `right.value` is a tuple representing its one-line notation.
+        Returns:
+            Group.Element: A new Element that belongs to this group.
+            Note: Use `self.Element(self, new_value)` to construct and return it.
         """
         n = len(left.value)
         new_mapping = [left.value[right.value[i]] for i in range(n)]
@@ -78,8 +85,13 @@ class PermutationGroup(Group):
         
     def inverse(self, element):  #contains solution
         """Find the inverse permutation.
-        Note: You MUST return a new Element that belongs to this group.
-        Use `self.Element(self, new_value)` to construct and return it.
+        
+        Args:
+            element (Group.Element): The permutation to invert. 
+                `element.value` is a tuple representing its one-line notation.
+        Returns:
+            Group.Element: A new Element that belongs to this group.
+            Note: Use `self.Element(self, new_value)` to construct and return it.
         """
         n = len(element.value)
         inv = [0] * n
@@ -92,8 +104,8 @@ def element_order(group, g):  #contains solution
     """Return the order of any abstract group element g.
 
     Args:
-        group: an object of type Group.
-        g: an abstract GroupElement inside the group.
+        group (Group): an object of type Group.
+        g (Group.Element): an abstract element inside the group.
     Returns:
         int: the order of the element.
     """
