@@ -60,31 +60,22 @@ def check_inverses(elements, identity):  #contains solution
     return all(any(a * b == identity and b * a == identity for b in elements) for a in elements)
 
 
-class PermutationElement(GroupElement):
-    """A permutation element that implements GroupElement abstract methods."""
-    def __init__(self, mapping):
-        """
-        Args:
-            mapping: iterable of length n, a permutation of {0,...,n-1}.
-        """
-        super().__init__(tuple(mapping))
+class PermutationGroup(Group):
+    """Level 2 Task: Implement permutation multiplication and inversion."""
+    
+    def multiply(self, left, right):  #contains solution
+        """Compose two permutations (left.value and right.value are tuples)."""
+        n = len(left.value)
+        new_mapping = tuple(left.value[right.value[i]] for i in range(n))
+        return self.Element(self, new_mapping)
         
-    @property
-    def mapping(self):
-        return self._value
-        
-    def __mul__(self, other):  #contains solution
-        """Compose self * other"""
-        n = len(self._value)
-        return PermutationElement([self._value[other._value[i]] for i in range(n)])
-        
-    def __invert__(self):  #contains solution
-        """Return the inverse permutation."""
-        n = len(self._value)
+    def inverse(self, element):  #contains solution
+        """Find the inverse permutation."""
+        n = len(element.value)
         inv = [0] * n
         for i in range(n):
-            inv[self._value[i]] = i
-        return PermutationElement(inv)
+            inv[element.value[i]] = i
+        return self.Element(self, tuple(inv))
 
 
 def element_order(group, g):  #contains solution

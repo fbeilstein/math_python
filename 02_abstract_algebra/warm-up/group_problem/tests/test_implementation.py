@@ -39,32 +39,35 @@ class TestLevel1Axioms(unittest.TestCase):
         self.assertFalse(tasks.check_inverses(elements, identity))
 
 class TestLevel2Permutations(unittest.TestCase):
+    def setUp(self):
+        self.pg = tasks.PermutationGroup()
+
     def test_compose(self):
-        p = tasks.PermutationElement([1, 2, 0])
-        q = tasks.PermutationElement([1, 0, 2])
+        p = self.pg.Element(self.pg, (1, 2, 0))
+        q = self.pg.Element(self.pg, (1, 0, 2))
         r = p * q
-        self.assertEqual(r.mapping, (2, 1, 0))
+        self.assertEqual(r.value, (2, 1, 0))
 
     def test_inverse(self):
-        p = tasks.PermutationElement([1, 2, 0])
+        p = self.pg.Element(self.pg, (1, 2, 0))
         inv = ~p
         identity = p * inv
-        self.assertEqual(identity.mapping, (0, 1, 2))
+        self.assertEqual(identity.value, (0, 1, 2))
 
     def test_order(self):
-        p = tasks.PermutationElement([1, 2, 0])
-        elements = [tasks.PermutationElement([0, 1, 2]), p, tasks.PermutationElement([2, 0, 1])]
+        p = self.pg.Element(self.pg, (1, 2, 0))
+        elements = [self.pg.Element(self.pg, (0, 1, 2)), p, self.pg.Element(self.pg, (2, 0, 1))]
         
         group = ge.Group(elements=elements)
         self.assertEqual(tasks.element_order(group, p), 3)
 
     def test_generate_group_cyclic(self):
-        gens = [tasks.PermutationElement([1, 2, 0])]
+        gens = [self.pg.Element(self.pg, (1, 2, 0))]
         group = tasks.generate_group(gens)
         self.assertEqual(len(group), 3)
 
     def test_generate_group_s3(self):
-        gens = [tasks.PermutationElement([1, 2, 0]), tasks.PermutationElement([1, 0, 2])]
+        gens = [self.pg.Element(self.pg, (1, 2, 0)), self.pg.Element(self.pg, (1, 0, 2))]
         group = tasks.generate_group(gens)
         self.assertEqual(len(group), 6)
 

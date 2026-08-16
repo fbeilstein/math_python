@@ -150,10 +150,11 @@ def draw_perm_stack(canvas, perms, n, x0, y0, w, h,
     # Check if mul works
     mul_works = True
     try:
-        id_list = list(range(n))
-        p1 = tasks.PermutationElement(id_list)
-        p2 = tasks.PermutationElement(id_list)
-        res = (p1 * p2).mapping
+        id_list = tuple(range(n))
+        pg = tasks.PermutationGroup()
+        p1 = pg.Element(pg, id_list)
+        p2 = pg.Element(pg, id_list)
+        res = (p1 * p2).value
         if res is None:
             mul_works = False
     except Exception:
@@ -194,9 +195,10 @@ def draw_perm_stack(canvas, perms, n, x0, y0, w, h,
                                
         if mul_works:
             try:
-                state = list(range(n))
+                state = tuple(range(n))
+                pg = tasks.PermutationGroup()
                 for p in perms[:layer+1]:
-                    state = (tasks.PermutationElement(p) * tasks.PermutationElement(state)).mapping
+                    state = (pg.Element(pg, tuple(p)) * pg.Element(pg, state)).value
                 
                 next_elements = [None] * n
                 for orig in range(n):

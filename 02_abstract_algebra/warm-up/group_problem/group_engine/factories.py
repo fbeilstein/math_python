@@ -1,137 +1,188 @@
 import numpy as np
 from math import gcd
 from itertools import product
-from .core import Group, GroupElement, ConcreteGroupElement
+from .core import Group
 
 # ────────────────────────────────────────────────────────────
-# Factory methods: build ConcreteGroup from various sources
+# Native Subclasses for Standard Groups
 # ────────────────────────────────────────────────────────────
-
-def from_Zn(n):
-    """Cyclic group Z_n under addition mod n."""
-    labels = [str(i) for i in range(n)]
-    table = [[(i + j) % n for j in range(n)] for i in range(n)]
-    return Group(labels, table, identity=0, generators=[1 if n > 1 else 0])
-
-
-def from_Un(n):
-    """Multiplicative group U(n) = units of Z_n."""
-    elems = [k for k in range(1, n) if gcd(k, n) == 1]
-    idx = {e: i for i, e in enumerate(elems)}
-    labels = [str(e) for e in elems]
-    m = len(elems)
-    table = [[idx[(elems[i] * elems[j]) % n] for j in range(m)] for i in range(m)]
-    gen_idx = []
-    generated = {1}
-    for e in elems:
-        if len(generated) == m: break
-        if e not in generated:
-            gen_idx.append(idx[e])
-            # closure with new generator
-            new_gen = set(generated)
-            q = list(new_gen)
-            while q:
-                c = q.pop(0)
-                for g_idx in gen_idx:
-                    nxt = (c * elems[g_idx]) % n
-                    if nxt not in new_gen:
-                        new_gen.add(nxt)
-                        q.append(nxt)
-            generated = new_gen
-            
-    return Group(labels, table, identity=idx[1], generators=gen_idx)
-
 
 def _sup(k):
     """Unicode superscript for small integers."""
     s = '⁰¹²³⁴⁵⁶⁷⁸⁹'
     return ''.join(s[int(c)] for c in str(k))
 
+class ZnGroup(Group):
+    def __init__(self, n):
+        super().__init__()
+        self.n = n
+        self._elements = [self.Element(self, i) for i in range(n)]
+        self.generators = [self._elements[1 if n > 1 else 0]]
+        
+    def multiply(self, left, right):
+        return self._elements[(left.value + right.value) % self.n]
+        
+    def inverse(self, element):
+        return self._elements[(-element.value) % self.n]
 
-def from_Dn(n):
-    """Dihedral group D_n of order 2n.
-    Elements: (k, f) where k in [0,n), f in {0,1}.
-    r = rotation, s = reflection.
-    """
-    elems = []
-    labels = []
-    for f in range(2):
-        for k in range(n):
-            elems.append((k, f))
+class UnGroup(Group):
+    def __init__(self, n):
+        super().__init__()
+        self.n = n
+        self.elems = [k for k in range(1, n) if gcd(k, n) == 1]
+        self.idx = {e: i for i, e in enumerate(self.elems)}
+        self._elements = [self.Element(self, e) for e in self.elems]
+        
+        gen_idx = []
+        generated = {1}
+        for e in self.elems:
+            if len(generated) == len(self.elems): break
+            if e not in generated:
+                gen_idx.append(self.idx[e])
+                new_gen = set(generated)
+                q = list(new_gen)
+                while q:
+                    c = q.pop(0)
+                    for g_idx in gen_idx:
+                        nxt = (c * self.elems[g_idx]) % n
+                        if nxt not in new_gen:
+                            new_gen.add(nxt)
+                            q.append(nxt)
+                generated = new_gen
+        self.generators = [self._elements[i] for i in gen_idx]
+        
+    def multiply(self, left, right):
+        return self._elements[self.idx[(left.value * right.value) % self.n]]
+        
+    def inverse(self, element):
+        # Python 3.8+ modular inverse
+        return self._elements[self.idx[pow(element.value, -1, self.n)]]
+
+class DnGroup(Group):
+    def __init__(self, n):
+        super().__init__()
+        self.n = n
+        self.elems = []
+        for f in range(2):
+            for k in range(n):
+                self.elems.append((k, f))
+                
+        self.idx = {e: i for i, e in enumerate(self.elems)}
+        
+        def label(k, f):
             if f == 0:
-                labels.append('e' if k == 0 else ('r' if k == 1 else f'r{_sup(k)}'))
+                return 'e' if k == 0 else ('r' if k == 1 else f'r{_sup(k)}')
             else:
-                labels.append('s' if k == 0 else ('sr' if k == 1 else f'sr{_sup(k)}'))
-
-    def mul(a, b):
-        k = (a[0] + ((-b[0]) if a[1] else b[0])) % n
+                return 's' if k == 0 else ('sr' if k == 1 else f'sr{_sup(k)}')
+                
+        self._elements = [self.Element(self, e, label=label(e[0], e[1])) for e in self.elems]
+        self.generators = [self._elements[self.idx[(1, 0)]], self._elements[self.idx[(0, 1)]]]
+        
+    def multiply(self, left, right):
+        a = left.value
+        b = right.value
+        k = (a[0] + ((-b[0]) if a[1] else b[0])) % self.n
         f = a[1] ^ b[1]
-        return (k, f)
+        return self._elements[self.idx[(k, f)]]
+        
+    def inverse(self, element):
+        a = element.value
+        if a[1] == 1:
+            return element
+        else:
+            return self._elements[self.idx[((-a[0]) % self.n, 0)]]
 
-    idx = {e: i for i, e in enumerate(elems)}
-    m = len(elems)
-    table = [[idx[mul(elems[i], elems[j])] for j in range(m)] for i in range(m)]
-    return Group(labels, table, identity=idx[(0, 0)], generators=[idx[(1, 0)], idx[(0, 1)]])
-
-
-def from_Sn(n):
-    """Symmetric group S_n (all permutations of {0,...,n-1})."""
-    from itertools import permutations as perm_iter
-    perms = list(perm_iter(range(n)))
-    idx = {p: i for i, p in enumerate(perms)}
-    identity = tuple(range(n))
-
-    def compose(p, q):
-        return tuple(q[p[i]] for i in range(n))
-
-    def perm_label(p):
-        if p == identity:
-            return 'e'
-        visited = [False] * n
-        cycles = []
-        for i in range(n):
-            if visited[i] or p[i] == i:
-                continue
-            cycle = []
-            j = i
-            while not visited[j]:
-                visited[j] = True
-                cycle.append(str(j))
-                j = p[j]
-            cycles.append('(' + ' '.join(cycle) + ')')
-        return ''.join(cycles) or 'e'
-
-    labels = [perm_label(p) for p in perms]
-    m = len(perms)
-    table = [[idx[compose(perms[i], perms[j])] for j in range(m)] for i in range(m)]
-    
-    gen_idx = []
-    if n > 1:
-        gen1 = tuple([1, 0] + list(range(2, n)))
-        gen2 = tuple(list(range(1, n)) + [0])
-        gen_idx.append(idx[gen1])
-        if gen2 != gen1:
-            gen_idx.append(idx[gen2])
+class SnGroup(Group):
+    def __init__(self, n):
+        super().__init__()
+        self.n = n
+        from itertools import permutations as perm_iter
+        self.perms = list(perm_iter(range(n)))
+        self.idx = {p: i for i, p in enumerate(self.perms)}
+        self.identity_tuple = tuple(range(n))
+        
+        def perm_label(p):
+            if p == self.identity_tuple:
+                return 'e'
+            visited = [False] * n
+            cycles = []
+            for i in range(n):
+                if visited[i] or p[i] == i:
+                    continue
+                cycle = []
+                j = i
+                while not visited[j]:
+                    visited[j] = True
+                    cycle.append(str(j))
+                    j = p[j]
+                cycles.append('(' + ' '.join(cycle) + ')')
+            return ''.join(cycles) or 'e'
             
-    return Group(labels, table, identity=idx[identity], generators=gen_idx)
+        self._elements = [self.Element(self, p, label=perm_label(p)) for p in self.perms]
+        
+        gen_idx = []
+        if n > 1:
+            gen1 = tuple([1, 0] + list(range(2, n)))
+            gen2 = tuple(list(range(1, n)) + [0])
+            gen_idx.append(self.idx[gen1])
+            if gen2 != gen1:
+                gen_idx.append(self.idx[gen2])
+        self.generators = [self._elements[i] for i in gen_idx]
+        
+    def multiply(self, left, right):
+        p = left.value
+        q = right.value
+        new_val = tuple(q[p[i]] for i in range(self.n))
+        return self._elements[self.idx[new_val]]
+        
+    def inverse(self, element):
+        p = element.value
+        inv = [0] * self.n
+        for i, v in enumerate(p):
+            inv[v] = i
+        return self._elements[self.idx[tuple(inv)]]
 
+class TableGroup(Group):
+    """Reserved for dynamically generated tables (matrices, presentations, UI experiments)."""
+    def __init__(self, labels, table, generators=None):
+        super().__init__()
+        self.table = table
+        self._elements = [self.Element(self, i, label=labels[i]) for i in range(len(labels))]
+        if generators:
+            self.generators = [self._elements[g] for g in generators if g is not None]
+
+    def multiply(self, left, right):
+        return self._elements[int(self.table[left.value][right.value])]
+        
+    def inverse(self, element):
+        # Uses student's find_identity via identity_element
+        ident = self.identity_element
+        for e in self._elements:
+            if self.multiply(element, e) == ident:
+                return e
+        raise ValueError("Inverse not found in table.")
+
+
+# ────────────────────────────────────────────────────────────
+# Factory methods
+# ────────────────────────────────────────────────────────────
+
+def from_Zn(n): return ZnGroup(n)
+def from_Un(n): return UnGroup(n)
+def from_Dn(n): return DnGroup(n)
+def from_Sn(n): return SnGroup(n)
 
 def from_table(table_2d):
-    """Build a group from a raw 2D multiplication table (list of lists).
-    Labels are just integers 0..n-1.
-    """
     n = len(table_2d)
-    labels = [str(i) for i in range(n)]
-    return Group(labels, table_2d)
-
+    return TableGroup([str(i) for i in range(n)], table_2d)
 
 def from_permutation_generators(generators, n):
-    """Build a group by closure from permutation generators.
+    def _perm_compose(p, q, n): return tuple(q[p[i]] for i in range(n))
+    def _perm_inv(p, n):
+        inv = [0] * n
+        for i, v in enumerate(p): inv[v] = i
+        return tuple(inv)
 
-    generators: list of tuples, each a permutation of {0,...,n-1}
-    n: permutation degree
-    Returns: ConcreteGroup
-    """
     identity = tuple(range(n))
     elements = {identity}
     queue = [identity] + list(generators)
@@ -153,13 +204,11 @@ def from_permutation_generators(generators, n):
     idx = {e: i for i, e in enumerate(elements)}
 
     def perm_label(p):
-        if p == identity:
-            return 'e'
+        if p == identity: return 'e'
         visited = [False] * n
         cycles = []
         for i in range(n):
-            if visited[i] or p[i] == i:
-                continue
+            if visited[i] or p[i] == i: continue
             cycle = []
             j = i
             while not visited[j]:
@@ -172,47 +221,15 @@ def from_permutation_generators(generators, n):
     labels = [perm_label(p) for p in elements]
     m = len(elements)
     table = [[idx[_perm_compose(elements[i], elements[j], n)] for j in range(m)] for i in range(m)]
-    
     gen_indices = [idx[g] for g in generators if g in idx]
-    return Group(labels, table, identity=idx[identity], generators=gen_indices)
-
+    return TableGroup(labels, table, generators=gen_indices)
 
 def from_matrix_generators(generators, p):
-    """Build a group by closure from matrix generators over Z_p.
-
-    generators: list of 2D numpy arrays (square matrices)
-    p: prime modulus
-    Returns: ConcreteGroup
-    """
     size = generators[0].shape[0]
     identity = np.eye(size, dtype=int)
 
-    def mat_key(m):
-        return tuple(m.flatten())
-
-    def mat_mul(a, b):
-        return (a @ b) % p
-
-    def mat_inv(m):
-        # Invert via Gauss-Jordan over Z_p
-        n = m.shape[0]
-        aug = np.hstack([m.copy(), np.eye(n, dtype=int)]) % p
-        for i in range(n):
-            # Find pivot
-            pivot = -1
-            for r in range(i, n):
-                if aug[r, i] % p != 0:
-                    pivot = r
-                    break
-            if pivot < 0:
-                raise ValueError("Matrix not invertible")
-            aug[[i, pivot]] = aug[[pivot, i]]
-            inv_val = pow(int(aug[i, i]), p - 2, p)
-            aug[i] = (aug[i] * inv_val) % p
-            for r in range(n):
-                if r != i and aug[r, i] != 0:
-                    aug[r] = (aug[r] - aug[r, i] * aug[i]) % p
-        return aug[:, n:] % p
+    def mat_key(m): return tuple(m.flatten())
+    def mat_mul(a, b): return (a @ b) % p
 
     elements = {mat_key(identity): identity.copy()}
     queue = [identity.copy()]
@@ -238,34 +255,15 @@ def from_matrix_generators(generators, p):
     mat_list = [elements[k] for k in elem_list]
 
     def mat_label(m):
-        if np.array_equal(m, identity):
-            return 'I'
+        if np.array_equal(m, identity): return 'I'
         rows = [','.join(str(v) for v in row) for row in m]
         return '[' + '|'.join(rows) + ']'
 
     labels = [mat_label(m) for m in mat_list]
     m_count = len(elem_list)
     table = [[idx[mat_key(mat_mul(mat_list[i], mat_list[j]))] for j in range(m_count)] for i in range(m_count)]
-    
     gen_indices = [idx[mat_key(g)] for g in generators if mat_key(g) in idx]
-    return Group(labels, table, identity=idx[mat_key(identity)], generators=gen_indices)
-
-
-# ── Helpers ──
-
-def _perm_compose(p, q, n):
-    return tuple(q[p[i]] for i in range(n))
-
-def _perm_inv(p, n):
-    inv = [0] * n
-    for i, v in enumerate(p):
-        inv[v] = i
-    return tuple(inv)
-
-
-# ────────────────────────────────────────────────────────────
-# Catalog: named groups with descriptions
-# ────────────────────────────────────────────────────────────
+    return TableGroup(labels, table, generators=gen_indices)
 
 def from_presentation(generators, relations_str_list):
     import sympy
@@ -274,8 +272,7 @@ def from_presentation(generators, relations_str_list):
     
     gen_str = ", ".join(generators)
     free_g, *gens = free_group(gen_str)
-    if len(generators) == 1:
-        gens = [gens[0]]
+    if len(generators) == 1: gens = [gens[0]]
         
     gen_dict = {}
     for g in free_g.generators:
@@ -284,11 +281,9 @@ def from_presentation(generators, relations_str_list):
         
     def _parse_word(w):
         res = free_g.identity
-        if w == "e" or w == "":
-            return res
+        if w == "e" or w == "": return res
         for c in w:
-            if c not in gen_dict:
-                raise ValueError(f"Unknown generator character: {c}")
+            if c not in gen_dict: raise ValueError(f"Unknown generator character: {c}")
             res = res * gen_dict[c]
         return res
 
@@ -297,8 +292,7 @@ def from_presentation(generators, relations_str_list):
         w_lhs = _parse_word(lhs)
         w_rhs = _parse_word(rhs)
         rel = w_lhs * w_rhs**-1
-        if not rel.is_identity:
-            sympy_rels.append(rel)
+        if not rel.is_identity: sympy_rels.append(rel)
             
     fp_group = FpGroup(free_g, sympy_rels)
     
@@ -308,24 +302,18 @@ def from_presentation(generators, relations_str_list):
     
     def check_order():
         nonlocal ord_val, err
-        try:
-            ord_val = fp_group.order()
-        except Exception as e:
-            err = e
+        try: ord_val = fp_group.order()
+        except Exception as e: err = e
             
     t = threading.Thread(target=check_order, daemon=True)
     t.start()
     t.join(timeout=2.0)
     
-    if t.is_alive():
-        raise ValueError("Group is infinite or too complex (Todd-Coxeter timeout).")
-    if err:
-        raise err
+    if t.is_alive(): raise ValueError("Group is infinite or too complex (Todd-Coxeter timeout).")
+    if err: raise err
         
-    if ord_val == sympy.oo:
-        raise ValueError("The provided presentation defines an infinite group.")
-    if ord_val > 1000:
-        raise ValueError(f"Group is too large (order {ord_val}). Max allowed is 1000.")
+    if ord_val == sympy.oo: raise ValueError("The provided presentation defines an infinite group.")
+    if ord_val > 1000: raise ValueError(f"Group is too large (order {ord_val}). Max allowed is 1000.")
 
     elements = list(fp_group.elements)
     
@@ -334,10 +322,8 @@ def from_presentation(generators, relations_str_list):
         letters = []
         for gen, power in e.array_form:
             g_str = str(gen)
-            if power > 0:
-                letters.append(g_str * power)
-            elif power < 0:
-                letters.append(g_str.upper() * (-power))
+            if power > 0: letters.append(g_str * power)
+            elif power < 0: letters.append(g_str.upper() * (-power))
         return "".join(letters)
 
     labels = [elem_to_str(e) for e in elements]
@@ -354,20 +340,16 @@ def from_presentation(generators, relations_str_list):
                     table[i][j] = k
                     found = True
                     break
-            if not found:
-                raise ValueError("Product not found in elements list!")
+            if not found: raise ValueError("Product not found in elements list!")
                 
-    # Identify the indices of the original generators
     gen_indices = []
     for g in free_g.generators:
-        # Find which element is this generator
         for i, e in enumerate(elements):
             if fp_group.reduce(e * g**-1).is_identity:
                 gen_indices.append(i)
                 break
                 
-    return Group(labels, table, generators=gen_indices)
-
+    return TableGroup(labels, table, generators=gen_indices)
 
 CATALOG = [
     ("Z_3", "ℤ₃ — cyclic, order 3, abelian", lambda: from_Zn(3)),

@@ -103,7 +103,8 @@ class Level2Permutations(BaseLevel):
         if not self.pool:
             return
         n = len(self.pool[0])
-        generators = [tasks.PermutationElement(list(p)) for p in self.pool]
+        pg = tasks.PermutationGroup()
+        generators = [pg.Element(pg, tuple(p)) for p in self.pool]
         result = tasks.generate_group(generators)
         if result is None:
             c = self.pool_canvas
@@ -112,7 +113,7 @@ class Level2Permutations(BaseLevel):
                           text="generate_group not implemented",
                           fill="#ff7b72", font=("Arial", 12))
             return
-        self.pool = [tuple(p.mapping) for p in result]
+        self.pool = [tuple(p.value) for p in result]
         self._redraw_pool()
 
     # ─── Card layout & Drag ───
@@ -212,7 +213,8 @@ class Level2Permutations(BaseLevel):
             sel_perm = list(self.pool[self.selected_idx])
             try:
                 if mode == "inverse":
-                    inv = tuple((~tasks.PermutationElement(sel_perm)).mapping)
+                    pg = tasks.PermutationGroup()
+                    inv = (~pg.Element(pg, tuple(sel_perm))).value
                     for i, p in enumerate(self.pool):
                         if p == inv:
                             highlight[i] = "#ff7b72"
@@ -224,7 +226,8 @@ class Level2Permutations(BaseLevel):
                         for i, p in enumerate(self.pool):
                             if p == tuple(current):
                                 highlight[i] = PERM_COLORS[k % len(PERM_COLORS)]
-                        current = (tasks.PermutationElement(sel_perm) * tasks.PermutationElement(current)).mapping
+                        pg = tasks.PermutationGroup()
+                        current = (pg.Element(pg, tuple(sel_perm)) * pg.Element(pg, tuple(current))).value
                         k += 1
                         if tuple(current) == tuple(sel_perm):
                             break
@@ -284,8 +287,9 @@ class Level2Permutations(BaseLevel):
 
         # Check if __mul__ is implemented before attempting to draw the braid
         try:
-            id_el = tasks.PermutationElement(list(range(n)))
-            res = (id_el * id_el).mapping
+            pg = tasks.PermutationGroup()
+            id_el = pg.Element(pg, tuple(range(n)))
+            res = (id_el * id_el).value
             if res is None:
                 raise NotImplementedError
         except Exception:
@@ -318,7 +322,8 @@ class Level2Permutations(BaseLevel):
         # Compose result
         result = list(range(n))
         for p in self.comp_stack:
-            result = (tasks.PermutationElement(p) * tasks.PermutationElement(result)).mapping
+            pg = tasks.PermutationGroup()
+            result = (pg.Element(pg, tuple(p)) * pg.Element(pg, tuple(result))).value
 
         # Result label
         res_y = 40 + stack_h + 20
