@@ -12,8 +12,8 @@ class Group:
         """A generic element that proxies operations to its parent group."""
         def __init__(self, group, value, label=None):
             self.group = group
-            self.value = value
-            self.label = label if label is not None else str(value)
+            self.value = tuple(value) if isinstance(value, list) else value
+            self.label = label if label is not None else str(self.value)
             
         def __mul__(self, other):
             if not isinstance(other, type(self)) or self.group is not other.group:

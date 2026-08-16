@@ -60,22 +60,32 @@ def check_inverses(elements, identity):  #contains solution
     return all(any(a * b == identity and b * a == identity for b in elements) for a in elements)
 
 
+# ════════════════════════════════════════════════════════════
+# Level 2: Permutation Group
+# ════════════════════════════════════════════════════════════
+
 class PermutationGroup(Group):
     """Level 2 Task: Implement permutation multiplication and inversion."""
     
     def multiply(self, left, right):  #contains solution
-        """Compose two permutations (left.value and right.value are tuples)."""
+        """Compose two permutations (left.value and right.value are tuples).
+        Note: You MUST return a new Element that belongs to this group.
+        Use `self.Element(self, new_value)` to construct and return it.
+        """
         n = len(left.value)
-        new_mapping = tuple(left.value[right.value[i]] for i in range(n))
+        new_mapping = [left.value[right.value[i]] for i in range(n)]
         return self.Element(self, new_mapping)
         
     def inverse(self, element):  #contains solution
-        """Find the inverse permutation."""
+        """Find the inverse permutation.
+        Note: You MUST return a new Element that belongs to this group.
+        Use `self.Element(self, new_value)` to construct and return it.
+        """
         n = len(element.value)
         inv = [0] * n
         for i in range(n):
             inv[element.value[i]] = i
-        return self.Element(self, tuple(inv))
+        return self.Element(self, inv)
 
 
 def element_order(group, g):  #contains solution
@@ -100,9 +110,12 @@ def generate_group(generators):  #contains solution
     """Generate all elements in ⟨generators⟩ by closure.
 
     Args:
-        generators: list of abstract GroupElement objects.
+        generators: list of abstract Group.Element objects.
     Returns:
         Group: the group object.
+        
+    Note: To create a new generic subgroup from scratch, use `Group(elements=[...])`.
+    You can then use `group.add(element)` to add newly generated elements to it.
     """
     if not generators:
         return Group(elements=[])
@@ -125,7 +138,7 @@ def generate_group(generators):  #contains solution
 
 
 # ════════════════════════════════════════════════════════════
-# Level 3: Cayley Graph (BFS)
+# Level 3: Cayley Graph
 # ════════════════════════════════════════════════════════════
 
 def generate_cayley_graph(group, generators):  #contains solution

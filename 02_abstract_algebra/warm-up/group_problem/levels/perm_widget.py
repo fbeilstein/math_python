@@ -32,11 +32,14 @@ def one_line_to_cycles(perm):
 
 def cycles_to_one_line(cycles, n):
     """Convert cycle notation to one-line notation.
+    Evaluates composition right-to-left.
     """
     perm = list(range(n))
-    for cycle in cycles:
+    for cycle in reversed(cycles):
+        c_perm = list(range(n))
         for i in range(len(cycle)):
-            perm[cycle[i]] = cycle[(i + 1) % len(cycle)]
+            c_perm[cycle[i]] = cycle[(i + 1) % len(cycle)]
+        perm = [c_perm[perm[i]] for i in range(n)]
     return perm
 
 
@@ -355,8 +358,16 @@ class PermutationInput(tk.LabelFrame):
             import re
             cycles = []
             for m in re.finditer(r'\(([^)]+)\)', text):
-                cycles.append([int(x) for x in m.group(1).split()])
-            perm = tasks.cycles_to_one_line(cycles, self._n)
+                tokens = re.split(r'[,\s]+', m.group(1).strip())
+                if tokens and all(t.isdigit() for t in tokens):
+                    cycles.append([int(x) for x in tokens])
+            if not cycles and text != "":
+                return
+            if text == "":
+                perm = list(range(self._n))
+            else:
+                perm = cycles_to_one_line(cycles, self._n)
+            
             if sorted(perm) == list(range(self._n)):
                 self._perm = perm
                 self._syncing = True

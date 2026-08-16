@@ -95,6 +95,15 @@ H.add(new_element)
 H.add_elements([e1, e2, e3])
 \end{lstlisting}
 
+\textbf{Constructing New Elements:}\\
+When implementing \lstinline|multiply| or \lstinline|inverse| inside a custom group subclass, you must return a new element that belongs to the group. Do this by using the \lstinline|self.Element(self, value)| factory method:
+\begin{lstlisting}[language=Python]
+class PermutationGroup(Group):
+    def multiply(self, left, right):
+        new_value = ... # compute the new tuple
+        return self.Element(self, new_value)
+\end{lstlisting}
+
 \section*{Problem 1: Multiplication Table Axioms (Level 1)}
 
 \subsubsection*{Mathematical part}
@@ -115,6 +124,16 @@ H.add_elements([e1, e2, e3])
     \item \lstinline|find_identity|: Find the element $e$ where $e \cdot a = a \cdot e = a$ for all $a \in G$. Return it.
     \item \lstinline|check_inverses|: Given $e$, iterate all $a \in G$ and ensure there exists some $b \in G$ where $a \cdot b = b \cdot a = e$.
 \end{itemize}
+
+\textbf{Reminder:}\\
+When implementing \lstinline|multiply| or \lstinline|inverse| inside a custom group subclass, you must return a new element that belongs to the group. Do this by using the \lstinline|self.Element(self, value)| factory method:
+\begin{lstlisting}[language=Python]
+class PermutationGroup(Group):
+    def multiply(self, left, right):
+        new_value = ... # compute the new tuple
+        return self.Element(self, new_value)
+\end{lstlisting}
+
 
 \begin{center}
 \renewcommand{\arraystretch}{1.5}

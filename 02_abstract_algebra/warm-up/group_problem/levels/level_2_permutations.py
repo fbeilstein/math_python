@@ -68,7 +68,7 @@ class Level2Permutations(BaseLevel):
         # ── Right panel: pool + composition ──
         
         # Composition canvas at right
-        self.comp_frame = tk.Frame(self.right_panel, bg="#1a1a1a", width=280)
+        self.comp_frame = tk.Frame(self.right_panel, bg="#1a1a1a", width=340)
         self.comp_frame.pack(fill=tk.Y, side=tk.RIGHT)
         self.comp_frame.pack_propagate(False)
         self.comp_canvas = tk.Canvas(self.comp_frame, bg="#1a1a1a",
@@ -78,7 +78,12 @@ class Level2Permutations(BaseLevel):
 
         self.pool_canvas = tk.Canvas(self.right_panel, bg="#2d2d30",
                                       highlightthickness=0)
+        
+        self.pool_scrollbar = tk.Scrollbar(self.right_panel, orient="vertical", command=self.pool_canvas.yview)
+        self.pool_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.pool_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.pool_canvas.configure(yscrollcommand=self.pool_scrollbar.set)
+        
         self.pool_canvas.bind('<Button-1>', self._on_pool_click)
         self.pool_canvas.bind('<B1-Motion>', self._on_pool_motion)
         self.pool_canvas.bind('<ButtonRelease-1>', self._on_pool_release)
@@ -87,6 +92,8 @@ class Level2Permutations(BaseLevel):
     # ─── Pool management ───
 
     def _add_to_pool(self, perm):
+        if self.pool and len(perm) != len(self.pool[0]):
+            self._clear_pool()
         t = tuple(perm)
         if t not in self.pool:
             self.pool.append(t)
@@ -111,6 +118,13 @@ class Level2Permutations(BaseLevel):
             c.delete("all")
             c.create_text(c.winfo_width() // 2, c.winfo_height() // 2,
                           text="generate_group not implemented",
+                          fill="#ff7b72", font=("Arial", 12))
+            return
+        if len(result.elements) > 150:
+            c = self.pool_canvas
+            c.delete("all")
+            c.create_text(c.winfo_width() // 2, c.winfo_height() // 2,
+                          text=f"Group too large to display ({len(result.elements)} elements)",
                           fill="#ff7b72", font=("Arial", 12))
             return
         self.pool = [tuple(p.value) for p in result]
@@ -138,7 +152,9 @@ class Level2Permutations(BaseLevel):
         return None
 
     def _on_pool_click(self, ev):
-        idx = self._idx_at(ev.x, ev.y)
+        ex = self.pool_canvas.canvasx(ev.x)
+        ey = self.pool_canvas.canvasy(ev.y)
+        idx = self._idx_at(ex, ey)
         if idx is not None:
             self.selected_idx = idx
             self._drag_data = {
@@ -250,7 +266,7 @@ class Level2Permutations(BaseLevel):
 
             draw_perm_diagram(c, list(perm), n, x + 2, y + 2,
                               CARD_W - 4, CARD_H - 4,
-                              show_labels=(n <= 6), lw=1.5,
+                              show_labels=(n <= 12), lw=1.5,
                               tag=f"card_{idx}")
 
             label = perm_to_cycle_str(list(perm))
@@ -304,7 +320,7 @@ class Level2Permutations(BaseLevel):
         
         # Convert tuples to lists for draw_perm_stack
         perms_list = [list(p) for p in self.comp_stack]
-        draw_perm_stack(c, perms_list, n, 10, 40, cw - 20, stack_h,
+        draw_perm_stack(c, perms_list, n, 80, 40, cw - 90, stack_h,
                         lw=2, tag="stack")
 
         # Labels next to the rows. Show at most first few and last few if too many.
@@ -316,8 +332,8 @@ class Level2Permutations(BaseLevel):
             num_rows = len(perms_list) + 1
             row_spacing = (stack_h - 2 * pad_y) / max(num_rows - 1, 1)
             y_center = 40 + pad_y + layer * row_spacing + (row_spacing / 2)
-            c.create_text(cw // 2, y_center, text=perm_to_cycle_str(perm),
-                          fill="#c9d1d9", font=("Courier", 8))
+            c.create_text(10, y_center, text=perm_to_cycle_str(perm),
+                          fill="#c9d1d9", font=("Courier", 10, "bold"), anchor=tk.W)
 
         # Compose result
         result = list(range(n))
