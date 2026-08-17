@@ -271,6 +271,13 @@ class Level7Homomorphisms(TabbedLevel):
                                           facecolor=h_colors[current_target], alpha=0.3, edgecolor='none')
             self.ax.add_patch(rect)
 
+        def get_order(group, elem):
+            try:
+                res = tasks.element_order(group, elem)
+                return str(res) if res else "?"
+            except Exception:
+                return "?"
+
         # Draw G nodes
         for i, g in enumerate(g_elements):
             y = g_y_start - i * g_spacing
@@ -286,7 +293,8 @@ class Level7Homomorphisms(TabbedLevel):
                 c = '#ffd700' # Yellow when selected
                 marker = '●'
                 
-            self.ax.text(x_g, y, f"{marker} {str(g)}", ha='center', va='center',
+            ord_g = get_order(self._group_G, g)
+            self.ax.text(x_g, y, f"{marker} {str(g)} (ord {ord_g})", ha='center', va='center',
                         fontsize=10, color=c, fontweight=fontw)
 
             # Draw arrow
@@ -302,7 +310,9 @@ class Level7Homomorphisms(TabbedLevel):
             c = h_colors[h]
             in_img = image is not None and h in image
             marker = '■' if in_img else '□'
-            self.ax.text(x_h, y, f"{str(h)} {marker}", ha='center', va='center',
+            
+            ord_h = get_order(self._group_H, h)
+            self.ax.text(x_h, y, f"{str(h)} (ord {ord_h}) {marker}", ha='center', va='center',
                         fontsize=11, color=c, fontweight='bold')
 
         # Labels
