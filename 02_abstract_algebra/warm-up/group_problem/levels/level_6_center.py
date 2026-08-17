@@ -18,42 +18,44 @@ class Level6Center(TabbedLevel):
         self.toggle_btn = tk.Button(self.left_panel, text="View Abelianization G/[G,G]", 
                                     bg="#238636", fg="white", font=("Arial", 10, "bold"), 
                                     command=self.toggle_view)
-        self.toggle_btn.pack(pady=8, fill=tk.X, padx=4)
+        self.toggle_btn.pack(pady=4, fill=tk.X, padx=4)
+
+        # Highlight modes
+        self.highlight_mode = tk.StringVar(value="conjugacy")
+        modes_frame = tk.Frame(self.left_panel, bg="#1e1e1e")
+        modes_frame.pack(fill=tk.X, pady=4)
+        tk.Radiobutton(modes_frame, text="Interactive Conjugacy/Centralizer", variable=self.highlight_mode, 
+                       value="conjugacy", bg="#1e1e1e", fg="white", selectcolor="#2d2d30", 
+                       command=self.update_view).pack(anchor="w")
+        tk.Radiobutton(modes_frame, text="Highlight Center Z(G) [Squares]", variable=self.highlight_mode, 
+                       value="center", bg="#1e1e1e", fg="white", selectcolor="#2d2d30", 
+                       command=self.update_view).pack(anchor="w")
+        tk.Radiobutton(modes_frame, text="Highlight Commutator [G,G] [Diamonds]", variable=self.highlight_mode, 
+                       value="commutator", bg="#1e1e1e", fg="white", selectcolor="#2d2d30", 
+                       command=self.update_view).pack(anchor="w")
 
         self.info_label = tk.Label(self.left_panel, text="", font=("Courier", 9),
                                    bg="#1e1e1e", fg="#c9d1d9", wraplength=280, justify=tk.LEFT)
         self.info_label.pack(padx=4, fill=tk.X, pady=4)
 
         self.setup_matplotlib(figsize=(6, 5))
+        self._node_pos = None
 
     def on_group_loaded(self, group):
         self.selected_elements.clear()
+        self._node_pos = None
         self.view_mode = "conjugacy"
         self.toggle_btn.config(text="View Abelianization G/[G,G]")
-        
-        # Bind canvas click
-        if not hasattr(self, '_click_cid'):
-            self._click_cid = self.canvas.mpl_connect('button_press_event', self.on_click)
-            
         self.update_view()
 
-    def on_click(self, event):
-        if self.view_mode != "conjugacy" or not event.inaxes: return
-        if not hasattr(self, '_node_pos'): return
+    def on_node_click(self, node):
+        if self.view_mode != "conjugacy": return
         
-        min_dist = float('inf')
-        closest_node = None
-        for node, (nx, ny) in self._node_pos.items():
-            dist = (nx - event.xdata)**2 + (ny - event.ydata)**2
-            if dist < min_dist:
-                min_dist = dist
-                closest_node = node
-                
-        if min_dist < 0.05: # threshold
-            if closest_node in self.selected_elements:
-                self.selected_elements.remove(closest_node)
+        if self.highlight_mode.get() == "conjugacy":
+            if node in self.selected_elements:
+                self.selected_elements.remove(node)
             else:
-                self.selected_elements.add(closest_node)
+                self.selected_elements.add(node)
             self.update_view()
 
     def toggle_view(self):
@@ -63,6 +65,7 @@ class Level6Center(TabbedLevel):
         else:
             self.view_mode = "conjugacy"
             self.toggle_btn.config(text="View Abelianization G/[G,G]")
+            self._node_pos = None # Force layout reset when coming back
         self.update_view()
 
     def update_view(self):
@@ -125,26 +128,28 @@ class Level6Center(TabbedLevel):
             self._draw_abelianization_table(commutator)
 
     def _draw_conjugacy_partition(self, conj_classes):
-        self.ax.clear()
         import networkx as nx
         
-        # Sort classes by size, then min element
-        sorted_classes = sorted(list(conj_classes), key=lambda s: (len(s), min(str(x) for x in s)))
-        k = len(sorted_classes)
-        
-        # Calculate cluster positions (circle of circles)
-        self._node_pos = {}
-        R = 1.0 if k > 1 else 0.0
-        for i, cls in enumerate(sorted_classes):
-            theta = 2 * np.pi * i / k
-            cx, cy = R * np.cos(theta), R * np.sin(theta)
-            r = 0.2 + 0.05 * len(cls)
-            for j, e in enumerate(sorted(cls, key=str)):
-                if len(cls) == 1:
-                    self._node_pos[e] = (cx, cy)
-                else:
-                    phi = 2 * np.pi * j / len(cls)
-                    self._node_pos[e] = (cx + r * np.cos(phi), cy + r * np.sin(phi))
+        # Calculate cluster positions (circle of circles) if not already placed
+        if self._node_pos is None:
+            sorted_classes = sorted(list(conj_classes), key=lambda s: (len(s), min(str(x) for x in s)))
+            k = len(sorted_classes)
+            self._node_pos = {}
+            R = 1.0 if k > 1 else 0.0
+            for i, cls in enumerate(sorted_classes):
+                theta = 2 * np.pi * i / k
+                cx, cy = R * np.cos(theta), R * np.sin(theta)
+                r = 0.2 + 0.05 * len(cls)
+                for j, e in enumerate(sorted(cls, key=str)):
+                    if len(cls) == 1:
+                        self._node_pos[e] = (cx, cy)
+                    else:
+                        phi = 2 * np.pi * j / len(cls)
+                        self._node_pos[e] = (cx + r * np.cos(phi), cy + r * np.sin(phi))
+
+        mode = self.highlight_mode.get()
+        center = tasks.compute_center(self._group)
+        commutator = tasks.compute_commutator_subgroup(self._group)
 
         # Re-compute sets for coloring
         centralizer = set(self._group.elements) if self.selected_elements else set()
@@ -161,55 +166,100 @@ class Level6Center(TabbedLevel):
 
         H = nx.Graph()
         H.add_nodes_from(self._group.elements)
-        
-        # Color nodes
-        node_colors = []
-        edge_colors = []
-        line_widths = []
-        for node in H.nodes():
-            if node in self.selected_elements:
-                node_colors.append('#ffd700') # Yellow
-                edge_colors.append('white')
-                line_widths.append(2.0)
-            elif node in union_classes and node in centralizer:
-                node_colors.append('#1f6feb') # Blue (centralizer)
-                edge_colors.append('#7ee787') # Green border (class)
-                line_widths.append(2.5)
-            elif node in union_classes:
-                node_colors.append('#7ee787') # Green
-                edge_colors.append('white')
-                line_widths.append(1.0)
-            elif node in centralizer:
-                node_colors.append('#1f6feb') # Blue
-                edge_colors.append('white')
-                line_widths.append(1.0)
+
+        def draw_callback(pos):
+            self.ax.clear()
+            artists = {'nodes': [], 'labels': {}}
+            
+            # Color nodes and determine shapes
+            node_shapes = {'o': [], 's': [], 'd': []}
+            node_colors = {'o': [], 's': [], 'd': []}
+            edge_colors = {'o': [], 's': [], 'd': []}
+            line_widths = {'o': [], 's': [], 'd': []}
+            labels = {}
+            label_colors = {}
+            
+            for node in H.nodes():
+                labels[node] = str(node)
+                
+                # Determine Shape (Orthogonal to Color)
+                shape = 'o'
+                if mode == "center" and node in center:
+                    shape = 's'
+                elif mode == "commutator" and node in commutator:
+                    shape = 'd'
+
+                # Determine Color (Interactive Conjugacy)
+                bg_color = '#2d2d30'
+                fg_color = 'white'
+                border = '#484f58'
+                lw = 1.0
+
+                if node in self.selected_elements:
+                    bg_color = '#ffd700' # Yellow
+                    border = 'white'
+                    lw = 2.0
+                    fg_color = 'black'
+                elif node in union_classes and node in centralizer:
+                    bg_color = '#1f6feb' # Blue (centralizer)
+                    border = '#7ee787' # Green border (class)
+                    lw = 2.5
+                    fg_color = 'white'
+                elif node in union_classes:
+                    bg_color = '#7ee787' # Green
+                    border = 'white'
+                    fg_color = 'black'
+                elif node in centralizer:
+                    bg_color = '#1f6feb' # Blue
+                    border = 'white'
+                    
+                # If a structural mode is active, slightly tint the border of structural nodes if they aren't highlighted
+                if (mode == "center" and node in center) or (mode == "commutator" and node in commutator):
+                    if not self.selected_elements:
+                        border = '#d2a8ff' if mode == "center" else '#ff7b72'
+                        lw = 2.0
+
+                node_shapes[shape].append(node)
+                node_colors[shape].append(bg_color)
+                edge_colors[shape].append(border)
+                line_widths[shape].append(lw)
+                label_colors[node] = fg_color
+
+            for shape, nodes in node_shapes.items():
+                if not nodes: continue
+                path_col = nx.draw_networkx_nodes(H, pos, nodelist=nodes, ax=self.ax, 
+                                       node_shape=shape, node_color=node_colors[shape], 
+                                       edgecolors=edge_colors[shape], linewidths=line_widths[shape], 
+                                       node_size=600)
+                artists['nodes'].append((nodes, path_col))
+            
+            for node in H.nodes():
+                x, y = pos[node]
+                text = self.ax.text(x, y, labels[node], color=label_colors[node],
+                             fontsize=10, fontweight='bold', ha='center', va='center')
+                artists['labels'][node] = text
+
+            if mode == "center":
+                title = "Center Z(G) (Squares)"
+            elif mode == "commutator":
+                title = "Commutator [G,G] (Diamonds)"
             else:
-                node_colors.append('#2d2d30') # Dark gray
-                edge_colors.append('#484f58')
-                line_widths.append(1.0)
+                title = "Click nodes: Yellow=Selected, Green=Class, Blue=Centralizer"
+                
+            self.ax.set_title(title, color='#58a6ff', fontsize=11, pad=10)
+            
+            # Calculate limits with margin
+            xs = [p[0] for p in pos.values()]
+            ys = [p[1] for p in pos.values()]
+            margin = 0.5
+            if xs: self.ax.set_xlim(min(xs) - margin, max(xs) + margin)
+            if ys: self.ax.set_ylim(min(ys) - margin, max(ys) + margin)
+            
+            self.ax.axis('off')
+            return artists
 
-        nx.draw_networkx_nodes(H, self._node_pos, ax=self.ax, node_color=node_colors, 
-                               edgecolors=edge_colors, linewidths=line_widths, node_size=600)
-        
-        labels = {i: str(i) for i in H.nodes()}
-        label_colors = {i: 'black' if (i in self.selected_elements or i in union_classes) else 'white' for i in H.nodes()}
-        
-        for node, (x, y) in self._node_pos.items():
-            self.ax.text(x, y, labels[node], color=label_colors[node],
-                         fontsize=10, fontweight='bold', ha='center', va='center')
-
-        self.ax.set_title("Click nodes: Yellow=Selected, Green=Class, Blue=Centralizer", 
-                          color='#58a6ff', fontsize=11, pad=10)
-        
-        # Calculate limits with margin
-        xs = [p[0] for p in self._node_pos.values()]
-        ys = [p[1] for p in self._node_pos.values()]
-        margin = 0.5
-        if xs: self.ax.set_xlim(min(xs) - margin, max(xs) + margin)
-        if ys: self.ax.set_ylim(min(ys) - margin, max(ys) + margin)
-        
-        self.ax.axis('off')
-        self.canvas.draw()
+        # Use DraggableGraphManager
+        self.update_graph(H, self._node_pos, draw_callback, on_node_click=self.on_node_click, draggable=True)
 
     def _draw_abelianization_table(self, commutator):
         self.ax.clear()
