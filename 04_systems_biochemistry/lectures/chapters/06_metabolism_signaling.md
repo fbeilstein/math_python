@@ -1,7 +1,6 @@
 :::titlepage
 [[title]]
-Chapter 4: Metabolism & Signaling
-
+Chapter 6: Metabolism & Signaling
 [[top]]
 PLACEHOLDER
 :::

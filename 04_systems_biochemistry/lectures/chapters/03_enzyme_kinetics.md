@@ -355,20 +355,3 @@ $$
 * Tyson, John J., Katherine C. Chen, and Bela Novak. "Sniffers, buzzers, toggles and blinkers: dynamics of regulatory and signaling pathways in the cell." Current opinion in cell biology 15, no. 2 (2003): 221-231.
 
 <iframe src="./demos/bio_switch.html" width="100%" height="400px" style="border: none;"></iframe>
-
----
-
-
-# Briggs–Rauscher
-
-## Inorganic chemical reactions may exhibit complicated dynamic behaviour as well.
-
-![youtube](oBGSMiHhdWw) {width="80%" left="10%"}
-
----
-
-# Belousov-Zhabotinsky
-
-## Inorganic chemical reactions may exhibit complicated dynamic behaviour as well.
-
-![youtube](XU2AV5SSi6g) {width="80%" left="10%"}

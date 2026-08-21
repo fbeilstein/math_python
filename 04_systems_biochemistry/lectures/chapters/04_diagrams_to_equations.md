@@ -1,8 +1,7 @@
 
 :::titlepage
-
 [[title]]
-Chapter 5: Translating Network Diagrams to ODEs
+Chapter 4: Translating Network Diagrams to ODEs
 :::
 
 ---

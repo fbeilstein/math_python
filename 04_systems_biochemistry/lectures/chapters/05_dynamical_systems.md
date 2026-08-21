@@ -2,7 +2,7 @@
 
 :::titlepage
 [[title]]
-Chapter 6: Dynamical Systems, Synergetics & Catastrophe Theory
+Chapter 5: Dynamical Systems, Synergetics & Catastrophe Theory
 :::
 ---
 

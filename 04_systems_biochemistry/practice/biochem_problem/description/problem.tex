@@ -68,7 +68,13 @@ Now proceed with the following problems. First solve the math part so you get th
 \section*{Problem 1: Henderson-Hasselbalch \& pH Titration}
 
 \subsubsection*{Mathematical part}
-Start with the weak acid equilibrium $\ce{HA <=> H+ + A-}$. Derive the Henderson-Hasselbalch equation $\text{pH} = \text{p}K_a + \log\frac{[\ce{A-}]}{[\ce{HA}]}$. Given an initial buffer composition (concentrations of weak acid $C_{acid}$ and its conjugate base $C_{base}$), and a volume $V_{add}$ of a strong titrant (concentration $C_{titrant}$), derive the exact equation for the pH of the resulting mixture. Note whether the titrant is a strong acid or strong base.
+Start with the weak acid equilibrium \ce{HA <=>[k_1][k_2] H+ + A-}.
+Write down the equilibrium condition as $K_a = k_1/k_2 = \text{ something}$.
+Using definitions $\text{pH} = -\log[\ce{H+}]$ and $\text{p}Ka = -\log K_a$ derive the equation for $\text{pH}$.
+
+
+Given an initial buffer composition (concentrations of weak acid $C_{acid}$ and its conjugate base $C_{base}$), and a volume $V_{add}$ of a strong titrant (concentration $C_{titrant}$), derive expressions for $[\ce{A-}]$ and $[\ce{HA}]$, note whether the titrant is a strong acid or strong base.
+Use Henderson-Hasselbalch to find the pH.
 
 \subsubsection*{Implementation part}
 \textbf{Implement:} a function \lstinline|calculate_pH(pKa, C_acid_init, C_base_init, V_add, C_titrant, is_acid)| that calculates the resulting pH.
