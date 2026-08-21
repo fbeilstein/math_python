@@ -123,8 +123,8 @@ $$
 *   If $Q > K$, then the reaction will **move to the left**.
 *   If $Q = K$, then the reaction is at equilibrium
 [[0,1]]
-![](./images/slide_18_img_47.png){ width=80 }
-![](./images/slide_18_img_51.png){ width=80 }
+![](./images/ph/slide_18_img_47.png){ width=80 }
+![](./images/ph/slide_18_img_51.png){ width=80 }
 :::
 ---
 
@@ -157,15 +157,15 @@ $$
 **HOW IT HAPPENS**<br>
 **Perspective of Stat.mechanics**
 [[2,1]]
-![](./images/slide_19_img_54.png){width=60}
+![](./images/ph/slide_19_img_54.png){width=60}
 :::
 :::matrix{cols="50/50"}
 [[0,0]]
 **evaporation ↔ condensation**
-![](./images/slide_19_img_52.png){width="40%"}
+![](./images/ph/slide_19_img_52.png){width="40%"}
 [[0,1]]
 **reversible chemical reactions**
-![](./images/slide_19_img_53.png){width="70%"}
+![](./images/ph/slide_19_img_53.png){width="70%"}
 :::
 ![rect](40 32 60 25){color=red width=4px}
 
@@ -185,7 +185,7 @@ $$
 :::matrix {cols="50/50" gap="30px"}
 [[0,0]]
 If the equilibrium of a system is disturbed by a change in one or more of the determining factors (as temperature, pressure, or concentration) the system tends to adjust itself to a new equilibrium by **counteracting** as far as possible the effect of the change.
-![](./images/slide_22_img_58.png)
+![](./images/ph/slide_22_img_58.png)
 [[0,1]]
 Discovered in 1884 by extending the reasoning from the **Van't Hoff relation**:
 $$
@@ -239,7 +239,7 @@ $$
 \text{pH} = -\log[\ce{H3O+}]
 $$
 [[0,1]]
-![](./images/slide_7_img_11.png){width=90}
+![](./images/ph/slide_7_img_11.png){width=90}
 
 ---
 
@@ -252,9 +252,9 @@ $$
 
 :::matrix{cols="50/50"}
 [[0,0]]
-![](./images/slide_8_img_13.png){width=70}
+![](./images/ph/slide_8_img_13.png){width=70}
 [[0,1]]
-![](./images/slide_8_img_16.png){width=50}
+![](./images/ph/slide_8_img_16.png){width=50}
 
 ## Dynamic equilibrium:
 
@@ -305,9 +305,9 @@ where $\ce{AH}$ is an acid and $\ce{A-}$ is its conjugate base and $\ce{B}$ is a
 
 :::matrix{cols="50/50"}
 [[0,0]]
-![](./images/slide_13_img_25.png){width=70}
+![](./images/ph/slide_13_img_25.png){width=70}
 [[0,1]]
-![](./images/slide_13_img_26.png){width=70}
+![](./images/ph/slide_13_img_26.png){width=70}
 :::
 
 * Water can act both as acid and base
@@ -373,11 +373,11 @@ $$
 [[0:2,0]]
 * Most cases weak acid and a salt are used. 
 * Most practical cases salt is considered as fully dissociated, $[\ce{H+}]$ from water and $[\ce{A-}]$ from acid neglected
-![](./images/slide_26_img_46.png){width=90}
+![](./images/ph/slide_26_img_46.png){width=90}
 [[0,1]]
-![](./images/slide_26_img_47.png){width=80}
+![](./images/ph/slide_26_img_47.png){width=80}
 [[1,1]]
-![](./images/slide_26_img_48.png){width=150}
+![](./images/ph/slide_26_img_48.png){width=150}
 :::
 
 ---
