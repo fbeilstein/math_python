@@ -39,7 +39,7 @@ Schedule: TBA
 ### Module 4: Systems Biochemistry
 - **Lecture:** [Systems Biochemistry](https://fbeilstein.github.io/math_python/04_systems_biochemistry/lectures/systems_biochemistry.html)
 - **Warm-up:** [Explore Differential Equation Stability](https://github.com/fbeilstein/math_python/releases/download/stability_v0/stability_problem.zip)
-- **Practice:** [Systems Biochemistry](https://github.com/fbeilstein/math_python/releases/download/bio_v1/biochem_problem.zip)
+- **Practice:** [Systems Biochemistry](https://github.com/fbeilstein/math_python/releases/download/bio_v2/biochem_problem.zip)
 
 ---
 
