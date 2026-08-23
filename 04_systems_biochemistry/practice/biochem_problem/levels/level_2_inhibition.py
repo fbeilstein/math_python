@@ -92,23 +92,23 @@ class Level2Inhibition:
         self.ax2.plot(1/S_array, 1/V_with_inh_noisy, 'ro', label='+ Inh Data')
         
         try:
-            res = implementation_tasks.analyze_inhibition(S_array, V_no_inh_noisy, V_with_inh_noisy, Ki)
+            res = implementation_tasks.analyze_inhibition(S_array, V_no_inh_noisy, V_with_inh_noisy, true_I)
             if res is not None:
-                calc_Km, calc_Vmax, calc_type, calc_I = res
+                calc_Km, calc_Vmax, calc_type, calc_Ki = res
                 
                 # Reconstruct fits
                 S_smooth = np.linspace(0, 25, 100)
                 v_no_fit = (calc_Vmax * S_smooth) / (calc_Km + S_smooth)
                 
                 if calc_type == 'competitive':
-                    cKm = calc_Km * (1 + calc_I/Ki)
+                    cKm = calc_Km * (1 + true_I/calc_Ki)
                     cVmax = calc_Vmax
                 elif calc_type == 'uncompetitive':
-                    cKm = calc_Km / (1 + calc_I/Ki)
-                    cVmax = calc_Vmax / (1 + calc_I/Ki)
+                    cKm = calc_Km / (1 + true_I/calc_Ki)
+                    cVmax = calc_Vmax / (1 + true_I/calc_Ki)
                 else:
                     cKm = calc_Km
-                    cVmax = calc_Vmax / (1 + calc_I/Ki)
+                    cVmax = calc_Vmax / (1 + true_I/calc_Ki)
                     
                 v_with_fit = (cVmax * S_smooth) / (cKm + S_smooth)
                 
@@ -121,8 +121,8 @@ class Level2Inhibition:
                 self.ax2.plot(X_plot, (cKm/cVmax)*X_plot + 1.0/cVmax, 'r--')
                 self.ax2.set_xlim(-0.6, 2.5)
                 
-                self.dashboard.log(f"Student predicted type: {calc_type}, I = {calc_I:.2f}")
-                self.result_text.set_text(f"Your [I] = {calc_I:.2f}")
+                self.dashboard.log(f"Student predicted type: {calc_type}, Ki = {calc_Ki:.2f}")
+                self.result_text.set_text(f"Your Ki = {calc_Ki:.2f}  (true Ki = {Ki:.2f})")
         except Exception as e:
             self.dashboard.log(f"Error in analyze_inhibition: {e}", color="#f44747")
             self.result_text.set_text("")

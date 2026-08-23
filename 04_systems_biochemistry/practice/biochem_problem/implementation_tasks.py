@@ -41,7 +41,7 @@ def calculate_pH(pKa: float, C_acid_init: float, C_base_init: float, V_add: floa
         
     return pKa + np.log10(n_base / n_acid)
 
-def analyze_inhibition(S_array: np.ndarray, V_no_inh: np.ndarray, V_with_inh: np.ndarray, Ki: float) -> tuple: #contains solution
+def analyze_inhibition(S_array: np.ndarray, V_no_inh: np.ndarray, V_with_inh: np.ndarray, I_conc: float) -> tuple[float, float, str, float]: #contains solution
     """
     Problem 2: Analyze enzyme inhibition using Lineweaver-Burk.
     
@@ -49,14 +49,14 @@ def analyze_inhibition(S_array: np.ndarray, V_no_inh: np.ndarray, V_with_inh: np
     - S_array (np.ndarray): Substrate concentrations.
     - V_no_inh (np.ndarray): Velocities without inhibitor.
     - V_with_inh (np.ndarray): Velocities with inhibitor.
-    - Ki (float): The inhibition constant.
+    - I_conc (float): The inhibitor concentration.
     
     Returns:
-    - (Km_true, Vmax_true, type_str, calc_I) (tuple): 
+    - (Km_true, Vmax_true, type_str, calc_Ki) (tuple): 
         - Km_true (float): True Km.
         - Vmax_true (float): True Vmax.
         - type_str (str): 'competitive', 'uncompetitive', or 'noncompetitive'.
-        - calc_I (float): Calculated inhibitor concentration.
+        - calc_Ki (float): Calculated inhibition constant.
     """
     inv_S = 1.0 / S_array
     inv_V_no = 1.0 / V_no_inh
@@ -73,15 +73,15 @@ def analyze_inhibition(S_array: np.ndarray, V_no_inh: np.ndarray, V_with_inh: np
     tol = 1e-3
     if abs(c_no - c_with) < tol:
         type_str = 'competitive'
-        calc_I = Ki * (Km_app / Km_true - 1.0)
+        calc_Ki = I_conc / (Km_app / Km_true - 1.0)
     elif abs(m_no - m_with) < tol:
         type_str = 'uncompetitive'
-        calc_I = Ki * (Vmax_true / Vmax_app - 1.0)
+        calc_Ki = I_conc / (Vmax_true / Vmax_app - 1.0)
     else:
         type_str = 'noncompetitive'
-        calc_I = Ki * (Vmax_true / Vmax_app - 1.0)
+        calc_Ki = I_conc / (Vmax_true / Vmax_app - 1.0)
         
-    return Km_true, Vmax_true, type_str, calc_I
+    return Km_true, Vmax_true, type_str, calc_Ki
 
 def frz_pathway_rhs(state: list, t: float, external_signal: float) -> list: #contains solution
     """

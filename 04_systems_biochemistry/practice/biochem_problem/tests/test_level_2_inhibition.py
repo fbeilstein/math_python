@@ -18,12 +18,12 @@ class TestLevel2Inhibition(unittest.TestCase):
         v_no = Vmax * S / (Km + S)
         v_with = Vmax * S / (6.0 + S)
         
-        km_calc, vmax_calc, t, I_calc = tasks.analyze_inhibition(S, v_no, v_with, Ki)
+        km_calc, vmax_calc, t, Ki_calc = tasks.analyze_inhibition(S, v_no, v_with, I)
         
         self.assertAlmostEqual(km_calc, Km, places=3)
         self.assertAlmostEqual(vmax_calc, Vmax, places=3)
         self.assertEqual(t, 'competitive')
-        self.assertAlmostEqual(I_calc, I, places=3)
+        self.assertAlmostEqual(Ki_calc, Ki, places=3)
 
     def test_noncompetitive(self):
         S = np.array([1, 2, 5, 10, 20])
@@ -34,10 +34,10 @@ class TestLevel2Inhibition(unittest.TestCase):
         v_no = Vmax * S / (Km + S)
         v_with = 5.0 * S / (Km + S)
         
-        km_calc, vmax_calc, t, I_calc = tasks.analyze_inhibition(S, v_no, v_with, Ki)
+        km_calc, vmax_calc, t, Ki_calc = tasks.analyze_inhibition(S, v_no, v_with, I)
         
         self.assertEqual(t, 'noncompetitive')
-        self.assertAlmostEqual(I_calc, I, places=3)
+        self.assertAlmostEqual(Ki_calc, Ki, places=3)
 
     def test_uncompetitive(self):
         S = np.array([1, 2, 5, 10, 20])
@@ -48,10 +48,10 @@ class TestLevel2Inhibition(unittest.TestCase):
         v_no = Vmax * S / (Km + S)
         v_with = 5.0 * S / (1.0 + S)
         
-        km_calc, vmax_calc, t, I_calc = tasks.analyze_inhibition(S, v_no, v_with, Ki)
+        km_calc, vmax_calc, t, Ki_calc = tasks.analyze_inhibition(S, v_no, v_with, I)
         
         self.assertEqual(t, 'uncompetitive')
-        self.assertAlmostEqual(I_calc, I, places=3)
+        self.assertAlmostEqual(Ki_calc, Ki, places=3)
 
 if __name__ == '__main__':
     unittest.main()

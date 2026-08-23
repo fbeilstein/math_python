@@ -47,9 +47,7 @@ Consider the files given.
 \multicolumn{2}{@{}l}{\textbf{Direct Interaction}} \\ \midrule
 \lstinline|implementation_tasks.py| & \textcolor{red}{Here you write your code.} Implement the math, derivatives, and integrators for Problems 1--6. You can add your own \lstinline|unittest.TestCase| classes at the bottom and run \lstinline|python implementation_tasks.py| to execute them. \\
 \lstinline|lab_dashboard.py| & \textcolor{red}{This file you run.} A dedicated educational sandbox for debugging individual physics levels through an interactive UI. \\
-\lstinline|levels/level_*.py| & Interactive visual sandbox for each problem. \textbf{Can be run standalone} with \lstinline|python levels/level_*.py| for visual debugging. \\ \midrule
-\multicolumn{2}{@{}l}{\textbf{Under the Hood}} \\ \midrule
-\lstinline|solution.py| & Used by the dashboard to draw theoretical curves. \\
+\lstinline|levels/level_*.py| & Interactive visual sandbox for each problem. \textbf{Can be run standalone} with \lstinline|python levels/level_*.py| for visual debugging. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -98,20 +96,20 @@ Use Henderson-Hasselbalch to find the pH.
 Use the Michaelis-Menten derivations to write down the Lineweaver-Burk equations for Competitive, Uncompetitive, and Noncompetitive inhibition. Show how the apparent $K_m^{app}$ and $V_{max}^{app}$ are modified by the inhibitor concentration $[I]$ and the inhibition constant $K_i$.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} a function \lstinline|analyze_inhibition(S_array, V_no_inh, V_with_inh, Ki)|. Perform linear regression on both datasets to find the true and apparent $K_m$ and $V_{max}$. Classify the inhibition type based on the slopes/intercepts, and back-calculate $[I]$.
+\textbf{Implement:} a function \lstinline|analyze_inhibition(S_array, V_no_inh, V_with_inh, I_conc)|. Perform linear regression on both datasets to find the true and apparent $K_m$ and $V_{max}$. Classify the inhibition type based on the slopes/intercepts, and back-calculate $K_i$.
 
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c | c | c}
+\begin{tabularx}{\textwidth}{r | >{\centering\arraybackslash}X | >{\centering\arraybackslash}X | >{\centering\arraybackslash}X | c | >{\centering\arraybackslash}X}
 \toprule
-\textbf{Symbol} & $[S]$ & $V_0$ & $V_i$ & $K_i$ & $K_m, V_{max}, \text{type}, [I]$ \\ \midrule
-\textbf{Argument} & \lstinline|S_array| & \lstinline|V_no_inh| & \lstinline|V_with_inh| & \lstinline|Ki| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|np.array| & \lstinline|np.array| & \lstinline|np.array| & \lstinline|float| & \lstinline|tuple| \\
+\textbf{Symbol} & $[S]$ & $V_0$ & $V_i$ & $[I]$ & $K_m, V_{max}, \text{type}, K_i$ \\ \midrule
+\textbf{Argument} & \lstinline|S_array| & \lstinline|V_no_inh| & \lstinline|V_with_inh| & \lstinline|I_conc| & \lstinline|return| \\ \midrule
+\textbf{Type} & \lstinline|np.ndarray[float]| & \lstinline|np.ndarray[float]| & \lstinline|np.ndarray[float]| & \lstinline|float| & \lstinline|tuple[float, float, str, float]| \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{center}
 
-\textbf{Test:} Press ``L2 Enzyme Inhibition'' button. Check if the type text matches and your $[I]$ matches the true value.
+\textbf{Test:} Press ``L2 Enzyme Inhibition'' button. Check if the type text matches and your $K_i$ matches the true value.
 
 \section*{Problem 3: Myxococcus xanthus C-signal pathway}
 
@@ -133,7 +131,7 @@ Include the \lstinline|external_signal| parameter as an additive modifier to $\b
 \toprule
 \textbf{Symbol} & $[Frz, FrzCD, FrzE]$ & $t$ & $S$ & $[dFrz, dFrzCD, dFrzE]$ \\ \midrule
 \textbf{Argument} & \lstinline|state| & \lstinline|t| & \lstinline|external_signal| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list| & \lstinline|float| & \lstinline|float| & \lstinline|list| \\
+\textbf{Type} & \lstinline|list[float]| & \lstinline|float| & \lstinline|float| & \lstinline|list[float]| \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -159,25 +157,24 @@ The reaction network consists of three processes:
 \textbf{Hint:} The feedback arrow from ATP to the PFK reaction means that ATP is both a \emph{substrate} (consumed) and a \emph{product} (produced) of that reaction step. This autocatalytic feedback is what generates the oscillations.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} functions \lstinline|glycolysis_rhs(state, t, Km)| and \lstinline|glycolysis_fixed_point(Km)|.
-
+\textbf{Implement:} functions \lstinline|glycolysis_rhs(state, t, Km)|
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
 \begin{tabular}{r | c | c | c | c}
 \toprule
 \textbf{Argument} & \lstinline|state| & \lstinline|t| & \lstinline|Km| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list| & \lstinline|float| & \lstinline|float| & \lstinline|list| \\
+\textbf{Type} & \lstinline|list[float]| & \lstinline|float| & \lstinline|float| & \lstinline|list[float]| \\
 \bottomrule
 \end{tabular}
 \end{center}
-
+and \lstinline|glycolysis_fixed_point(Km)|.
 \vspace{0.2cm}
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
 \begin{tabular}{r | c | c}
 \toprule
 \textbf{Argument} & \lstinline|Km| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|float| & \lstinline|tuple(float, float)| \\
+\textbf{Type} & \lstinline|float| & \lstinline|tuple[float, float]| \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -211,7 +208,7 @@ Because the Michaelis constants $K_0, K_1$ are extremely small compared to $E_{t
 \begin{tabular}{r | c | c | c | c}
 \toprule
 \textbf{Argument} & \lstinline|state| & \lstinline|t| & \lstinline|S| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list| & \lstinline|float| & \lstinline|float| & \lstinline|list| \\
+\textbf{Type} & \lstinline|list[float]| & \lstinline|float| & \lstinline|float| & \lstinline|list[float]| \\
 \bottomrule
 \end{tabular}
 \end{center}
