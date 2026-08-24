@@ -98,7 +98,7 @@ The regulatory enzymes or key enzymes of glycolysis are:
 * **Protein kinases** (PKs) add phosphate groups to specific residues of target proteins, while **protein phosphatases** remove phosphate groups from these residues.
 * The catalytic activity of all kinases is highly regulated; commonly it is modulated by the binding of other proteins to the kinase and by changes in the concentrations of various small intracellular signaling molecules and metabolites.
 [[0,1]] 
-![](./lecture_08_molecular_signaling/images/slide_14_img_12.png)
+![](./images/signaling/slide_14_img_12.png)
 :::
 
 ---
@@ -121,7 +121,7 @@ Receptors bind a single type of molecule or a group of closely related molecules
 
 # Generalized signal transduction pathway
 
-![](./lecture_08_molecular_signaling/images/slide_5_img_1.png){width=100}
+![](./images/signaling/slide_5_img_1.png){width=100}
 
 
 **Generalized signal transduction pathway.** 
@@ -150,14 +150,14 @@ $$
 The normal concentration of insulin in the blood is about $5\times 10^{-12} \text{M}$. 
 After the meal $2.5\times 10^{-11} \text{M}$.
 [[0,1]]
-![](./lecture_08_molecular_signaling/images/slide_17_img_18.png){width=100}
+![](./images/signaling/slide_17_img_18.png){width=100}
 :::
 
 ---
 
 # Receptor Types
 
-![](./lecture_08_molecular_signaling/images/slide_28_img_39.png){width=100}
+![](./images/signaling/slide_28_img_39.png){width=100}
 
 ---
 # The Four Main Types of Receptor
@@ -174,13 +174,13 @@ After the meal $2.5\times 10^{-11} \text{M}$.
 | Structure | Oligomeric assembly of subunits surrounding central pore | Monomeric or oligomeric assembly of subunits comprising seven transmembrane helices with intracellular G-protein-coupling domain | Single transmembrane helix linking extracellular receptor domain to intracellular kinase domain | Monomeric structure with separate receptor- and DNA-binding domains |
 
 [[1,0]]
-![](./lecture_08_molecular_signaling/images/slide_29_img_41.png)
+![](./images/signaling/slide_29_img_41.png)
 [[1,1]]
-![](./lecture_08_molecular_signaling/images/slide_29_img_42.png)
+![](./images/signaling/slide_29_img_42.png)
 [[1,2]]
-![](./lecture_08_molecular_signaling/images/slide_29_img_43.png)
+![](./images/signaling/slide_29_img_43.png)
 [[1,3]]
-![](./lecture_08_molecular_signaling/images/slide_29_img_44.png)
+![](./images/signaling/slide_29_img_44.png)
 :::
 
 ---
