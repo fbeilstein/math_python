@@ -91,6 +91,108 @@ The regulatory enzymes or key enzymes of glycolysis are:
 
 ---
 
+# Activity Regulation
+
+:::matrix{cols="50/50"}
+[[0,0]]
+* **Protein kinases** (PKs) add phosphate groups to specific residues of target proteins, while **protein phosphatases** remove phosphate groups from these residues.
+* The catalytic activity of all kinases is highly regulated; commonly it is modulated by the binding of other proteins to the kinase and by changes in the concentrations of various small intracellular signaling molecules and metabolites.
+[[0,1]] 
+![](./lecture_08_molecular_signaling/images/slide_14_img_12.png)
+:::
+
+---
+
+# No Cell Lives in Isolation
+
+* Many cells sense physical stimuli: mechanical pressure (touch), heat, light, variety of environmental chemicals, including nutrients such as sugars and amino acids as well as oxygen, toxic compounds, and diverse molecules that convey taste (tastants) and odor (odorants), levels of oxygen, etc.
+* Many types of cells release particular chemicals that can influence the behavior of another cell; these are often called **extracellular** signaling molecules, or simply **signals**. 
+You can think about signals in the brain or hormones.
+* In the vertebrate eye, light is transmitted through the transparent corneal tissue and focused by the lens tissue, eventually impinging on the neural retina. 
+The precise arrangement of tissues in the eye cannot be disturbed without impairing its function. 
+Such coordination in the construction of the lens and retina is accomplished by one group of cells communicating an organizing change in the behavior or developmental trajectory of an adjacent set of cells. This kind of interaction is known as an **induction**.
+* The cell that receives a signal — termed the **target cell** — must be able to detect the signaling molecule. 
+Typically, the signaling molecule binds noncovalently to a specific protein in the cell, typically called the **receptor**, that contains a binding site for the signaling molecule. 
+The signaling molecule that binds a receptor is often called the **ligand** of the receptor. 
+Receptors bind a single type of molecule or a group of closely related molecules.
+* The release and reception of such signals is a fundamental process, known as **cellular communication**, that shapes the development and function of every living organism.
+
+---
+
+# Generalized signal transduction pathway
+
+![](./lecture_08_molecular_signaling/images/slide_5_img_1.png){width=100}
+
+
+**Generalized signal transduction pathway.** 
+The series of steps leading from initial detection to the final **response** is termed a **signal transduction pathway**. 
+Signal transduction pathways ultimately lead to activation (or in some cases inhibition) of one or more **effector proteins** — often enzymes or transcription factors or cytoskeletal proteins — that lead directly to changes in cellular activities
+
+---
+
+# Receptor Kinetics
+
+:::matrix{cols="50/50"}
+[[0,0]]
+$$
+\mathrm{R} + \mathrm{L} \overset{k\_{\mathrm{off}}}{\underset{k\_{\mathrm{on}}}{\leftrightharpoons}} \mathrm{R} * \mathrm{L}
+$$
+$$
+[\mathrm{R}][\mathrm{L}] k\_{\mathrm{on}} = [\mathrm{R} * \mathrm{L}] k\_{\mathrm{off}}
+$$
+$$
+K_{\mathrm{d}} = \frac{[\mathrm{R}][\mathrm{L}]}{[\mathrm{R} * \mathrm{L}]}
+$$
+
+* Resembles Michaelis-Menten kinetics (think why).
+* $K_d$ (**dissociation constant**) is  the lower the ligand concentration required to bind $50\%$ of the cell-surface receptors.
+* Example (to feel the numbers): $K_d$ for insulin in liver $1.4\times 10^{-10} \text{M}$. 
+The normal concentration of insulin in the blood is about $5\times 10^{-12} \text{M}$. 
+After the meal $2.5\times 10^{-11} \text{M}$.
+[[0,1]]
+![](./lecture_08_molecular_signaling/images/slide_17_img_18.png){width=100}
+:::
+
+---
+
+# Receptor Types
+
+![](./lecture_08_molecular_signaling/images/slide_28_img_39.png){width=100}
+
+---
+# The Four Main Types of Receptor
+
+:::matrix{cols="25/25/25/25"}
+[[0,0:4]]
+
+|  | Type 1: ligand-gated ion channels | Type 2: G-protein-coupled receptors | Type 3: receptor kinases | Type 4: nuclear receptors |
+| --- | --- | --- | --- | --- |
+| Location | Membrane | Membrane | Membrane | Intracellular |
+| Effector | Ion channel | Channel or enzyme | Protein kinases | Gene transcription |
+| Coupling | Direct | G-protein | Direct | Via DNA |
+| Examples | Nicotinic acetylcholine receptor, GABAA receptor | Muscarinic acetylcholine receptor, adrenoceptors | Insulin, growth factors, cytokine receptors | Steroid receptors |
+| Structure | Oligomeric assembly of subunits surrounding central pore | Monomeric or oligomeric assembly of subunits comprising seven transmembrane helices with intracellular G-protein-coupling domain | Single transmembrane helix linking extracellular receptor domain to intracellular kinase domain | Monomeric structure with separate receptor- and DNA-binding domains |
+
+[[1,0]]
+![](./lecture_08_molecular_signaling/images/slide_29_img_41.png)
+[[1,1]]
+![](./lecture_08_molecular_signaling/images/slide_29_img_42.png)
+[[1,2]]
+![](./lecture_08_molecular_signaling/images/slide_29_img_43.png)
+[[1,3]]
+![](./lecture_08_molecular_signaling/images/slide_29_img_44.png)
+:::
+
+---
+
+# Signal Transduction
+
+**Receptor signals are transduced inside the cell in one of three ways to initiate actions inside the cell:**
+
+1. Exchange of GDP for GTP by GTP-binding proteins (G proteins) on the cytoplasmic side of the plasma membrane, which leads to generation of second messengers, including cAMP, phospholipid breakdown products, and Ca2+.
+2. Receptor-mediated activation of phosphorylation cascades that in turn trigger activation of various enzymes. This is the action of the receptor tyrosine kinases. Protein kinases and protein phosphatases act as
+effectors.
+3. Conformation changes that open ion channels or recruit proteins into nuclear transcription complexes.
 
 
 
