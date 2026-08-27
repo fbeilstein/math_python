@@ -46,7 +46,13 @@ class LevelUI(BaseLevelUI):
             if len(divisor) == 1 and divisor[0] == 0:
                 raise ValueError("Cannot divide by zero polynomial!")
             
-            q, r = tasks.gfp_poly_divide(dividend, divisor, p)
+            field = tasks.PrimeField(p)
+            div_poly = tasks.Polynomial([field(c) for c in dividend])
+            dsr_poly = tasks.Polynomial([field(c) for c in divisor])
+            q_poly, r_poly = divmod(div_poly, dsr_poly)
+            
+            q = [c.val for c in q_poly.coeffs]
+            r = [c.val for c in r_poly.coeffs]
             
             p_tex = poly_to_latex(dividend).strip('$')
             d_tex = poly_to_latex(divisor).strip('$')

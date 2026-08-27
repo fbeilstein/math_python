@@ -8,12 +8,13 @@ Instead of reducing integers modulo an integer, we reduce polynomials modulo a p
 Notice that the multiplication routine conceptually performs $(a \cdot b) \pmod m$. In a prime field, $a, b, m$ are integers. In an extension field, they are polynomials. Because of Python's dynamic typing (Duck Typing), the arithmetic operations implemented in \lstinline|GaloisFieldElement| do not need to change by a single line to support polynomials!
 
 \subsubsection*{Implementation part}
-\textbf{Task:} Complete the \lstinline|ExtensionField| constructor and the \lstinline|exp| method.
+\textbf{Task:} Complete the \lstinline|_initialize| setup method, the \lstinline|@property| fields, and the \lstinline|exp| method.
 
 \textbf{Details:} 
 \begin{itemize}
     \item We define $\alpha$ as the polynomial $x$, which is simply \lstinline|Polynomial([field.one, field.zero])|.
     \item \lstinline|exp(i)| computes $\alpha^i$. Because our \lstinline|GaloisFieldElement.__pow__| uses binary exponentiation and delegates to the underlying value type (which is a \lstinline|Polynomial| supporting \lstinline|__mod__|), this works seamlessly without generating giant precomputed $\log$/$\exp$ lookup tables!
+    \item You must provide \lstinline|@property| methods for \lstinline|p| (characteristic), \lstinline|n| (degree), \lstinline|size| ($p^n$), and the \lstinline|zero|/\lstinline|one| identities. This defines the strict API contract that the dashboard relies on.
 \end{itemize}
 
 \begin{center}
@@ -21,13 +22,15 @@ Notice that the multiplication routine conceptually performs $(a \cdot b) \pmod 
 \begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
 \toprule
 Method & Arguments & Returns \\ \midrule
-\_\_new\_\_ & \lstinline|cls, mod_poly: Polynomial| & \lstinline|ExtensionField| \\
+\_initialize & \lstinline|self, mod_poly: Polynomial| & \lstinline|None| \\
+p, n, size & \lstinline|self| (\texttt{@property}) & \lstinline|int| \\
+zero, one & \lstinline|self| (\texttt{@property}) & \lstinline|GaloisFieldElement| \\
 exp & \lstinline|self, i: int| & \lstinline|GaloisFieldElement| \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
 \subsubsection*{Experimentation part}
-\textbf{UI Guide:} Open \lstinline|qr_lab_dashboard.py|. Verify that the elements are now polynomials modulo the primitive polynomial you selected.
+\textbf{UI Guide:} Open \lstinline|lab_dashboard.py|. Verify that the elements are now polynomials modulo the primitive polynomial you selected.
 
 \vspace{1cm}

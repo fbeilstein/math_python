@@ -18,17 +18,18 @@ class QRDashboard(tk.Tk):
         self.levels_dir = os.path.join(base_dir, "levels")
         
         self.levels = [
-            ("level_1_gfp_math", "L1: GF(p) Math"),
-            ("level_2_primitive", "L2: Primitive Search"),
-            ("level_3_tables", "L3: GF(p^n) Tables"),
-            ("level_4_gfpn_math", "L4: GF(p^n) Math"),
+            ("level_1_prime_fields", "L1: Prime Fields"),
+            ("level_2_polynomials", "L2: Polynomial Math"),
+            ("level_3_primitive", "L3: Primitive Search"),
+            ("level_4_extension_fields", "L4: Extension Fields"),
+            ("level_4b_exponential_cycle", "L4b: Exp Cycle"),
             ("level_5_rs_encoding", "L5: RS Encoding"),
-            ("level_6_linear_decoding", "L6: Linear Decoding (PGZ)")
+            ("level_6_linear_decoding", "L6-8: RS Decoding")
         ]
         self.current_frame = None
         
         self.build_ui()
-        self.launch_level("level_1_gfp_math")
+        self.launch_level("level_1_prime_fields")
 
     def build_ui(self):
         self.sidebar = tk.Frame(self, width=250, bg="#2d2d30")

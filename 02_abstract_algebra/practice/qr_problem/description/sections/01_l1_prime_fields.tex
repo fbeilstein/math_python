@@ -20,8 +20,7 @@ Division requires finding the multiplicative inverse. Instead of searching for t
     \item Perform the integer arithmetic.
     \item Reduce the result modulo the field's modulus.
     \item Return a \textbf{new} \lstinline|GaloisFieldElement| instance.
-    \item Use binary exponentiation (exponentiation by squaring) for \lstinline|__pow__| to guarantee $O(\log n)$ complexity. Ensure $0^0 = 1$.
-    \item Implement \lstinline|__bool__| to return \lstinline|True| if the element is non-zero. This enables polymorphic truth-value testing (\lstinline|if element:|) across our entire backend without explicitly checking \lstinline|element != field.zero|.
+    \item Use binary exponentiation (exponentiation by squaring) for \lstinline|__pow__| to guarantee $O(\log n)$ complexity. Ensure $0^0 = 1$. You can assume the \lstinline|exponent| is always a non-negative integer.
 \end{itemize}
 
 \begin{center}
@@ -39,6 +38,6 @@ Method & Arguments & Returns \\ \midrule
 \end{center}
 
 \subsubsection*{Experimentation part}
-\textbf{UI Guide:} Open \lstinline|qr_lab_dashboard.py| and navigate to the early debugging tabs if you wish to see how field elements wrap around algebraically.
+\textbf{UI Guide:} Open \lstinline|lab_dashboard.py| and navigate to the early debugging tabs if you wish to see how field elements wrap around algebraically.
 
 \vspace{1cm}

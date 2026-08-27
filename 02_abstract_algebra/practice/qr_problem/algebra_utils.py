@@ -15,11 +15,11 @@ def int_to_ext(val, field):
 
 def ext_to_int(element):
     """Convert an ExtFieldElement to an integer."""
-    v = 0
+    val = 0
     p = element.field.p
     for c in element.val.coeffs:
-        v = v * p + c.val
-    return v
+        val = val * p + c.val
+    return val
 
 
 def solve_linear(A, b):

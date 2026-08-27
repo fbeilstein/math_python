@@ -70,6 +70,12 @@ class LevelUI(BaseLevelUI):
             a_tex = poly_to_latex(a_vals).strip('$')
             b_tex = poly_to_latex(b_vals).strip('$')
             
+            add_res = a + b
+            add_tex = poly_to_latex([utils.ext_to_int(c) for c in add_res.coeffs]).strip('$')
+            
+            sub_res = a - b
+            sub_tex = poly_to_latex([utils.ext_to_int(c) for c in sub_res.coeffs]).strip('$')
+            
             mul_res = a * b
             mul_tex = poly_to_latex([utils.ext_to_int(c) for c in mul_res.coeffs]).strip('$')
             
@@ -77,7 +83,7 @@ class LevelUI(BaseLevelUI):
                 q, rem_res = divmod(a, b)
                 rem_tex = poly_to_latex([utils.ext_to_int(c) for c in rem_res.coeffs]).strip('$')
             except ZeroDivisionError:
-                rem_tex = "\text{undefined}"
+                rem_tex = "\\mathrm{undefined}"
             
             def wrap(t):
                 if '+' in t or '-' in t or '\dots' in t: return f"({t})"
@@ -87,8 +93,10 @@ class LevelUI(BaseLevelUI):
             b_str = wrap(b_tex)
             
             text = f"GF(${p}^{{{n}}}$) Polynomial Arithmetic\n\n"
-            text += f"${a_str} \cdot {b_str} = {mul_tex}$\n\n"
-            text += f"${a_str} \text{{ mod }} {b_str} = {rem_tex}$\n"
+            text += f"${a_str} + {b_str} = {add_tex}$\n\n"
+            text += f"${a_str} - {b_str} = {sub_tex}$\n\n"
+            text += f"${a_str} \\cdot {b_str} = {mul_tex}$\n\n"
+            text += f"${a_str} \\ (\\mathrm{{mod}})\\ {b_str} = {rem_tex}$\n"
             
             self.ax.text(0.5, 0.5, text, fontsize=18, ha='center', va='center', color='white')
         except Exception as e:

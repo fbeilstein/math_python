@@ -145,6 +145,8 @@ class Polynomial:
     def __repr__(self): return f"Poly({self.coeffs})"
     def __hash__(self): return hash(tuple(self.coeffs))
 
+
+
 # ---------------------------------------------------------
 # L3: Primitive Polynomial Search
 # ---------------------------------------------------------
@@ -184,30 +186,44 @@ def is_primitive(poly): #contains solution
 class ExtensionField:
     _instances = {}
     def __new__(cls, mod_poly):
+        """Singeton pattern"""
         if mod_poly not in cls._instances:
             inst = super().__new__(cls)
-            inst.modulus = mod_poly
-            inst.n = len(mod_poly) - 1
-            inst.p = mod_poly.coeffs[0].field.p
-            inst.size = inst.p ** inst.n
-            inst._zero_gfp = mod_poly.coeffs[0].field.zero
-            inst._one_gfp = mod_poly.coeffs[0].field.one
-            inst.alpha = GaloisFieldElement(Polynomial([inst._one_gfp, inst._zero_gfp]), inst)
+            inst._initialize(mod_poly)
             cls._instances[mod_poly] = inst
         return cls._instances[mod_poly]
 
-    @property
-    def zero(self):
-        return GaloisFieldElement(Polynomial([self._zero_gfp]), self)
+    def _initialize(self, mod_poly): #contains solution
+        self.modulus = mod_poly
+        base_field = mod_poly.coeffs[0].field
+        self.alpha = GaloisFieldElement(Polynomial([base_field.one, base_field.zero]), self)
 
     @property
-    def one(self):
-        return GaloisFieldElement(Polynomial([self._one_gfp]), self)
+    def p(self): #contains solution
+        return self.modulus.coeffs[0].field.p
+
+    @property
+    def n(self): #contains solution
+        return len(self.modulus) - 1
+
+    @property
+    def size(self): #contains solution
+        return self.p ** self.n
+
+    @property
+    def zero(self): #contains solution
+        base_field = self.modulus.coeffs[0].field
+        return GaloisFieldElement(Polynomial([base_field.zero]), self)
+
+    @property
+    def one(self): #contains solution
+        base_field = self.modulus.coeffs[0].field
+        return GaloisFieldElement(Polynomial([base_field.one]), self)
         
     def __call__(self, val):
         return GaloisFieldElement(val, self)
 
-    def exp(self, i):
+    def exp(self, i): #contains solution
         """Compute α^i via binary exponentiation — no tables needed."""
         return self.alpha ** i
 
@@ -244,7 +260,7 @@ from algebra_utils import solve_linear
 
 
 def pgz_error_locator(syndromes, field): #contains solution
-    """L7.2: Find Error Locator Polynomial using PGZ algorithm."""
+    """L7: Find Error Locator Polynomial using PGZ algorithm."""
     max_t = len(syndromes) // 2
     for t in range(max_t, 0, -1):
         A = []

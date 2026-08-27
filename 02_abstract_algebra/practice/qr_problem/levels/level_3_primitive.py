@@ -121,7 +121,12 @@ class LevelUI(BaseLevelUI):
             
             def format_div(k, is_order):
                 dividend = [1] + [0]*k
-                q, r = tasks.gfp_poly_divide(dividend, poly, p)
+                field = tasks.PrimeField(p)
+                div_poly = tasks.Polynomial([field(c) for c in dividend])
+                dsr_poly = tasks.Polynomial([field(c) for c in poly])
+                q_poly, r_poly = divmod(div_poly, dsr_poly)
+                q = [c.val for c in q_poly.coeffs]
+                r = [c.val for c in r_poly.coeffs]
                 q_tex = poly_to_latex(q).strip('$')
                 if len(q) > 4: 
                     lead = q[0]

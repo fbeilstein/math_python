@@ -64,7 +64,8 @@ class LevelUI(BaseLevelUI):
             primitives = []
             for coefs in itertools.product(range(p), repeat=n):
                 poly = [1] + list(coefs)
-                if tasks.is_primitive(poly, p, n):
+                poly_obj = utils.make_poly(poly, p)
+                if tasks.is_primitive(poly_obj):
                     primitives.append(poly)
             
             self.primitives_list = primitives

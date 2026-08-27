@@ -15,9 +15,9 @@ class LevelUI(BaseLevelUI):
         f1 = tk.Frame(self.top_frame, bg="#1e1e1e")
         f1.pack(fill=tk.X, pady=2)
         
-        tk.Label(f1, text="Message (Hex):", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
+        tk.Label(f1, text="Message:", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
         self.ent_msg = tk.Entry(f1, width=30)
-        self.ent_msg.insert(0, "48 65 6c 6c 6f")
+        self.ent_msg.insert(0, "Hello")
         self.ent_msg.pack(side=tk.LEFT, padx=5)
         
         tk.Label(f1, text="EC Bytes:", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
@@ -33,13 +33,14 @@ class LevelUI(BaseLevelUI):
         self.ax.axis('off')
         
         try:
-            msg_hex = self.ent_msg.get().replace(",", " ").split()
-            msg = [int(x, 16) for x in msg_hex]
+            msg_str = self.ent_msg.get()
+            msg = [ord(c) for c in msg_str]
             ec = int(self.ent_ec.get())
             
             poly_obj = utils.make_poly([1, 0, 0, 0, 1, 1, 1, 0, 1], 2)
             gf = tasks.ExtensionField(poly_obj)
             gen = tasks.get_generator_poly(ec, gf)
+            if not gen: raise NotImplementedError("get_generator_poly not implemented")
             
             msg_poly = tasks.Polynomial([utils.int_to_ext(c, gf) for c in msg] + [gf.zero]*ec)
             q, rem = divmod(msg_poly, gen)
