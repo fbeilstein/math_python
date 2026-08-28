@@ -41,23 +41,61 @@ class GaloisFieldElement:
         self.val = val % field.modulus
 
     def __add__(self, other): #contains solution
-        """Adds two field elements."""
+        """Adds two field elements.
+
+        Args:
+            other (GaloisFieldElement): The element to add.
+
+        Returns:
+            GaloisFieldElement: The sum modulo p.
+        """
         return GaloisFieldElement((self.val + other.val) % self.field.modulus, self.field)
     def __sub__(self, other): #contains solution
-        """Subtracts one field element from another."""
+        """Subtracts one field element from another.
+
+        Args:
+            other (GaloisFieldElement): The element to subtract.
+
+        Returns:
+            GaloisFieldElement: The difference modulo p.
+        """
         return GaloisFieldElement((self.val - other.val) % self.field.modulus, self.field)
     def __mul__(self, other): #contains solution
-        """Multiplies two field elements."""
+        """Multiplies two field elements.
+
+        Args:
+            other (GaloisFieldElement): The element to multiply by.
+
+        Returns:
+            GaloisFieldElement: The product modulo p.
+        """
         return GaloisFieldElement((self.val * other.val) % self.field.modulus, self.field)
     def __truediv__(self, other): #contains solution
-        """Divides one field element by another using multiplicative inverse."""
+        """Divides this element by another using the multiplicative inverse.
+
+        Args:
+            other (GaloisFieldElement): The non-zero divisor element.
+
+        Returns:
+            GaloisFieldElement: The quotient modulo p.
+
+        Raises:
+            ZeroDivisionError: If the divisor is the zero element.
+        """
         if not other: raise ZeroDivisionError()
         return self * (other ** (self.field.size - 2))
     def __floordiv__(self, other):
         """Alias for division since finite field division is always exact."""
         return self.__truediv__(other)
     def __pow__(self, exponent): #contains solution
-        """Raises a field element to an integer power using binary exponentiation."""
+        """Raises the element to an integer power using binary exponentiation.
+
+        Args:
+            exponent (int): The power to raise the element to. Can be negative.
+
+        Returns:
+            GaloisFieldElement: The exponentiated result.
+        """
         if exponent == 0: return self.field.one
         result = self.field.one
         base = self
@@ -85,10 +123,10 @@ class GaloisFieldElement:
 class Polynomial:
     """A polynomial over a field. The internal representation is entirely up to you."""
     def __init__(self, coeffs): #contains solution
-        """
-        Initializes the polynomial.
-        coeffs: A list of coefficients from LOWEST to HIGHEST degree.
-        Example: [c_0, c_1, c_2] represents c_0 + c_1*x + c_2*x^2.
+        """Initializes the polynomial with a list of coefficients.
+
+        Args:
+            coeffs (list[FieldElement]): Coefficients in Low-to-High order (c_0, c_1, ..., c_n).
         """
         if not coeffs:
             raise ValueError("Cannot initialize Polynomial with empty coefficients.")
@@ -99,30 +137,62 @@ class Polynomial:
             self._internal_coeffs = [coeffs[0].field.zero]
 
     def degree(self): #contains solution
-        """Returns the degree of the polynomial."""
+        """Calculates the mathematical degree of the polynomial.
+
+        Returns:
+            int: The highest power of x with a non-zero coefficient. Returns 0 for the zero polynomial.
+        """
         return len(self._internal_coeffs) - 1
 
     def __getitem__(self, power): #contains solution
-        """Returns the coefficient of x^power. Should safely return 0 if power > degree."""
+        """Retrieves the coefficient for a specific power of x.
+
+        Args:
+            power (int): The power of x.
+
+        Returns:
+            FieldElement: The coefficient of x^power, or zero if power exceeds the degree.
+        """
         if power < 0: raise IndexError("Negative powers not supported.")
         if power > self.degree():
             return self._internal_coeffs[0].field.zero
         return self._internal_coeffs[power]
 
     def __add__(self, other): #contains solution
-        """Adds two polynomials."""
+        """Adds two polynomials.
+
+        Args:
+            other (Polynomial): The polynomial to add.
+
+        Returns:
+            Polynomial: A new polynomial representing the sum.
+        """
         max_deg = max(self.degree(), other.degree())
         res = [self[i] + other[i] for i in range(max_deg + 1)]
         return Polynomial(res)
 
     def __sub__(self, other): #contains solution
-        """Subtracts one polynomial from another."""
+        """Subtracts one polynomial from another.
+
+        Args:
+            other (Polynomial): The polynomial to subtract.
+
+        Returns:
+            Polynomial: A new polynomial representing the difference.
+        """
         max_deg = max(self.degree(), other.degree())
         res = [self[i] - other[i] for i in range(max_deg + 1)]
         return Polynomial(res)
 
     def __mul__(self, other): #contains solution
-        """Multiplies two polynomials."""
+        """Multiplies two polynomials using cross-multiplication.
+
+        Args:
+            other (Polynomial): The polynomial to multiply by.
+
+        Returns:
+            Polynomial: A new polynomial representing the product.
+        """
         res = [self[0].field.zero] * (self.degree() + other.degree() + 1)
         for i in range(self.degree() + 1):
             for j in range(other.degree() + 1):
@@ -130,7 +200,17 @@ class Polynomial:
         return Polynomial(res)
 
     def __divmod__(self, other): #contains solution
-        """Divides two polynomials, returning (quotient, remainder)."""
+        """Performs polynomial long division.
+
+        Args:
+            other (Polynomial): The divisor polynomial.
+
+        Returns:
+            tuple[Polynomial, Polynomial]: A tuple containing (quotient, remainder).
+
+        Raises:
+            ZeroDivisionError: If the divisor is the zero polynomial.
+        """
         if not other: raise ZeroDivisionError()
         dividend = [self[i] for i in range(self.degree() + 1)]
         divisor = [other[i] for i in range(other.degree() + 1)]
@@ -148,7 +228,14 @@ class Polynomial:
         return Polynomial(quotient), Polynomial(dividend)
 
     def __call__(self, x): #contains solution
-        """Evaluates the polynomial at a given value x."""
+        """Evaluates the polynomial at a given value using Horner's method.
+
+        Args:
+            x (FieldElement): The value to substitute for x.
+
+        Returns:
+            FieldElement: The evaluated result.
+        """
         val = self[self.degree()]
         for i in range(self.degree() - 1, -1, -1):
             val = val * x + self[i]
@@ -207,7 +294,6 @@ class Polynomial:
 # ---------------------------------------------------------
 
 def is_primitive(poly): #contains solution
-    """L3: Prove a polynomial of degree n is primitive over GF(p)."""
     n = poly.degree()
     p = poly.base_field.p
     
@@ -249,29 +335,59 @@ class ExtensionField:
         return cls._instances[mod_poly]
 
     def _initialize(self, mod_poly): #contains solution
+        """Initializes the extension field with a modulus polynomial.
+
+        Args:
+            mod_poly (Polynomial): The irreducible modulus polynomial generating the field.
+        """
         self.modulus = mod_poly
         base_field = mod_poly[0].field
         self.alpha = GaloisFieldElement(Polynomial([base_field.zero, base_field.one]), self) # Low-to-High: 0 + 1x
 
     @property
     def p(self): #contains solution
+        """Returns the characteristic of the base prime field.
+
+        Returns:
+            int: The prime number p.
+        """
         return self.modulus[0].field.p
 
     @property
     def n(self): #contains solution
+        """Returns the degree of the extension.
+
+        Returns:
+            int: The degree n of the modulus polynomial.
+        """
         return self.modulus.degree()
 
     @property
     def size(self): #contains solution
+        """Returns the total number of elements in the extension field.
+
+        Returns:
+            int: The size of the field (p^n).
+        """
         return self.p ** self.n
 
     @property
     def zero(self): #contains solution
+        """Returns the additive identity (zero) of the extension field.
+
+        Returns:
+            GaloisFieldElement: The zero element.
+        """
         base_field = self.modulus[0].field
         return GaloisFieldElement(Polynomial([base_field.zero]), self)
 
     @property
     def one(self): #contains solution
+        """Returns the multiplicative identity (one) of the extension field.
+
+        Returns:
+            GaloisFieldElement: The one element.
+        """
         base_field = self.modulus[0].field
         return GaloisFieldElement(Polynomial([base_field.one]), self)
         
@@ -279,7 +395,14 @@ class ExtensionField:
         return GaloisFieldElement(val, self)
 
     def exp(self, i): #contains solution
-        """Compute α^i via binary exponentiation — no tables needed."""
+        """Computes alpha^i using binary exponentiation, where alpha is the generator.
+
+        Args:
+            i (int): The exponent.
+
+        Returns:
+            GaloisFieldElement: The field element representing alpha^i.
+        """
         return self.alpha ** i
 
 
@@ -289,7 +412,6 @@ class ExtensionField:
 # ---------------------------------------------------------
 
 def get_generator_poly(num_ec_bytes, field): #contains solution
-    """L5: Calculate the Reed-Solomon Generator Polynomial."""
     gen = Polynomial([field.one])
     for i in range(num_ec_bytes):
         root = -field.exp(i)
@@ -302,7 +424,6 @@ def get_generator_poly(num_ec_bytes, field): #contains solution
 # ---------------------------------------------------------
 
 def calculate_syndromes(message_poly, num_ec, field): #contains solution
-    """L6: Evaluate the message at the roots of the generator polynomial."""
     return [message_poly(field.exp(i)) for i in range(num_ec)]
 
 # ---------------------------------------------------------
@@ -315,7 +436,6 @@ from algebra_utils import solve_linear
 
 
 def pgz_error_locator(syndromes, field): #contains solution
-    """L7: Find Error Locator Polynomial using PGZ algorithm."""
     max_t = len(syndromes) // 2
     for t in range(max_t, 0, -1):
         A = []
@@ -336,7 +456,6 @@ def pgz_error_locator(syndromes, field): #contains solution
 # ---------------------------------------------------------
 
 def chien_search(err_loc, msg_len, field): #contains solution
-    """L8.1: Find the roots of the Error Locator Polynomial."""
     err_pos = []
     for i in range(msg_len):
         root = field.exp((field.size - 1 - i) % (field.size - 1))
@@ -345,7 +464,6 @@ def chien_search(err_loc, msg_len, field): #contains solution
     return err_pos
 
 def linear_error_magnitudes(syndromes, err_pos, msg_len, field): #contains solution
-    """L8.2: Calculate the magnitude of each error using Linear Algebra."""
     t = len(err_pos)
     if t == 0: return {}
 
