@@ -52,12 +52,12 @@ class LevelUI(BaseLevelUI):
             gen = tasks.get_generator_poly(ec, gf)
             if not gen: raise NotImplementedError("get_generator_poly not implemented (L5)")
             
-            shift = tasks.Polynomial([gf.one] + [gf.zero] * ec)
+            shift = tasks.Polynomial([gf.zero] * ec + [gf.one])
             shifted = msg_poly * shift
             q, r = divmod(shifted, gen)
             
             codeword_poly = shifted - r
-            self.encoded_vals = [utils.ext_to_int(c) for c in codeword_poly.coeffs]
+            self.encoded_vals = [utils.ext_to_int(codeword_poly[i]) for i in range(codeword_poly.degree() + 1)]
             
             for widget in self.boxes_frame.winfo_children():
                 widget.destroy()
@@ -109,12 +109,12 @@ class LevelUI(BaseLevelUI):
                 text += "No errors detected!"
                 
                 msg_len = len(corrupted) - ec
-                decoded_chars = [chr(c) for c in corrupted[:msg_len]]
+                decoded_chars = [chr(c) for c in corrupted[ec:]]
                 text += f"\n\nDecoded Message: \"{''.join(decoded_chars)}\""
             else:
                 err_loc = tasks.pgz_error_locator(syn, gf)
                 if not err_loc: raise NotImplementedError("pgz_error_locator not implemented")
-                text += f"Error Locator $\Lambda(x) = {poly_to_latex([utils.ext_to_int(c) for c in err_loc.coeffs]).strip('$')}$\n\n"
+                text += f"Error Locator $\Lambda(x) = {poly_to_latex([utils.ext_to_int(err_loc[i]) for i in range(err_loc.degree() + 1)][::-1]).strip('$')}$\n\n"
                 
                 err_pos = tasks.chien_search(err_loc, len(corrupted), gf)
                 if err_pos is None: raise NotImplementedError("chien_search not implemented")
@@ -131,7 +131,7 @@ class LevelUI(BaseLevelUI):
                 text += f"Corrected: {corrupted}"
                 
                 msg_len = len(corrupted) - ec
-                decoded_chars = [chr(c) for c in corrupted[:msg_len]]
+                decoded_chars = [chr(c) for c in corrupted[ec:]]
                 text += f"\n\nRecovered Message: \"{''.join(decoded_chars)}\""
             
             self.ax.text(0.5, 0.5, text, fontsize=14, ha='center', va='center', color='white', wrap=True)

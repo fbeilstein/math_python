@@ -42,17 +42,17 @@ class LevelUI(BaseLevelUI):
             gen = tasks.get_generator_poly(ec, gf)
             if not gen: raise NotImplementedError("get_generator_poly not implemented")
             
-            msg_poly = tasks.Polynomial([utils.int_to_ext(c, gf) for c in msg] + [gf.zero]*ec)
+            msg_poly = tasks.Polynomial([gf.zero]*ec + [utils.int_to_ext(c, gf) for c in reversed(msg)])
             q, rem = divmod(msg_poly, gen)
             
-            diff = ec - len(rem.coeffs)
-            rem_padded = [gf.zero]*diff + rem.coeffs
-            encoded = msg + [utils.ext_to_int(c) for c in rem_padded]
+            diff = ec - (rem.degree() + 1)
+            rem_padded = [rem[i] for i in range(rem.degree() + 1)] + [gf.zero]*diff
+            encoded = [utils.ext_to_int(c) for c in rem_padded] + list(reversed(msg))
             
             text = "Reed-Solomon Encoding\n\n"
-            text += f"Generator $g(x) = {poly_to_latex([utils.ext_to_int(c) for c in gen.coeffs]).strip('$')}$\n\n"
+            text += f"Generator $g(x) = {poly_to_latex([utils.ext_to_int(gen[i]) for i in range(gen.degree() + 1)][::-1]).strip('$')}$\n\n"
             text += f"Message: {msg}\n"
-            text += f"Parity: {[utils.ext_to_int(c) for c in rem_padded]}\n"
+            text += f"Parity: {[utils.ext_to_int(c) for c in rem_padded][::-1]}\n"
             text += f"Encoded: {encoded}"
             
             self.ax.text(0.5, 0.5, text, fontsize=14, ha='center', va='center', color='white', wrap=True)

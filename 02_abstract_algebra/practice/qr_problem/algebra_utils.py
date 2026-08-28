@@ -11,14 +11,14 @@ def int_to_ext(val, field):
     for _ in range(field.n):
         cs.append(tasks.GaloisFieldElement(temp % field.p, tasks.PrimeField(field.p)))
         temp //= field.p
-    return tasks.GaloisFieldElement(tasks.Polynomial(cs[::-1]), field)
+    return tasks.GaloisFieldElement(tasks.Polynomial(cs), field)
 
 def ext_to_int(element):
     """Convert an ExtFieldElement to an integer."""
     val = 0
     p = element.field.p
-    for c in element.val.coeffs:
-        val = val * p + c.val
+    for i in range(element.val.degree() + 1):
+        val += element.val[i].val * (p ** i)
     return val
 
 

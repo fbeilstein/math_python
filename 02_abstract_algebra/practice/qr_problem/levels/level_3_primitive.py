@@ -125,8 +125,8 @@ class LevelUI(BaseLevelUI):
                 div_poly = tasks.Polynomial([field(c) for c in dividend])
                 dsr_poly = tasks.Polynomial([field(c) for c in poly])
                 q_poly, r_poly = divmod(div_poly, dsr_poly)
-                q = [c.val for c in q_poly.coeffs]
-                r = [c.val for c in r_poly.coeffs]
+                q = [q_poly[i].val for i in range(q_poly.degree() + 1)]
+                r = [r_poly[i].val for i in range(r_poly.degree() + 1)]
                 q_tex = poly_to_latex(q).strip('$')
                 if len(q) > 4: 
                     lead = q[0]

@@ -13,10 +13,10 @@ class TestLevel4(unittest.TestCase):
         poly = utils.make_poly([1, 0, 0, 0, 1, 1, 1, 0, 1], 2)
         gf = tasks.ExtensionField(poly)
 
-        a = tasks.Polynomial([utils.int_to_ext(2, gf), utils.int_to_ext(3, gf)])
+        a = tasks.Polynomial([utils.int_to_ext(3, gf), utils.int_to_ext(2, gf)])
         b = tasks.Polynomial([utils.int_to_ext(4, gf)])
         res = a * b
-        self.assertEqual([utils.ext_to_int(c) for c in res.coeffs], [8, 12])
+        self.assertEqual([utils.ext_to_int(res[i]) for i in range(res.degree() + 1)], [12, 8])
 
 if __name__ == '__main__':
     unittest.main()

@@ -8,6 +8,7 @@ from itertools import zip_longest
 # ---------------------------------------------------------
 
 class PrimeField:
+    """A finite field of prime order p."""
     _instances = {}
     def __new__(cls, p):
         if p not in cls._instances:
@@ -19,30 +20,44 @@ class PrimeField:
         return cls._instances[p]
 
     @property
-    def zero(self): return GaloisFieldElement(0, self)
+    def zero(self):
+        """Returns the additive identity (0) of the field."""
+        return GaloisFieldElement(0, self)
 
     @property
-    def one(self): return GaloisFieldElement(1, self)
+    def one(self):
+        """Returns the multiplicative identity (1) of the field."""
+        return GaloisFieldElement(1, self)
     
     def __call__(self, val):
+        """Creates a field element from an integer value."""
         return GaloisFieldElement(val, self)
 
 
 class GaloisFieldElement:
+    """An element of a Galois Field."""
     def __init__(self, val, field):
         self.field = field
         self.val = val % field.modulus
 
     def __add__(self, other): #contains solution
+        """Adds two field elements."""
         return GaloisFieldElement((self.val + other.val) % self.field.modulus, self.field)
     def __sub__(self, other): #contains solution
+        """Subtracts one field element from another."""
         return GaloisFieldElement((self.val - other.val) % self.field.modulus, self.field)
     def __mul__(self, other): #contains solution
+        """Multiplies two field elements."""
         return GaloisFieldElement((self.val * other.val) % self.field.modulus, self.field)
     def __truediv__(self, other): #contains solution
+        """Divides one field element by another using multiplicative inverse."""
         if not other: raise ZeroDivisionError()
         return self * (other ** (self.field.size - 2))
+    def __floordiv__(self, other):
+        """Alias for division since finite field division is always exact."""
+        return self.__truediv__(other)
     def __pow__(self, exponent): #contains solution
+        """Raises a field element to an integer power using binary exponentiation."""
         if exponent == 0: return self.field.one
         result = self.field.one
         base = self
@@ -51,9 +66,15 @@ class GaloisFieldElement:
             base = base * base
             exponent //= 2
         return result
-    def __neg__(self): return self.field.zero - self
-    def __bool__(self): return bool(self.val)
-    def __eq__(self, other): return isinstance(other, GaloisFieldElement) and self.val == other.val
+    def __neg__(self):
+        """Returns the additive inverse (-a)."""
+        return self.field.zero - self
+    def __bool__(self):
+        """Returns True if the element is not zero."""
+        return bool(self.val)
+    def __eq__(self, other):
+        """Checks equality between two field elements."""
+        return isinstance(other, GaloisFieldElement) and self.val == other.val
     def __repr__(self): return str(self.val)
     def __hash__(self): return hash(self.val)
 
@@ -62,62 +83,100 @@ class GaloisFieldElement:
 # ---------------------------------------------------------
 
 class Polynomial:
-    def __init__(self, coeffs):
+    """A polynomial over a field. The internal representation is entirely up to you."""
+    def __init__(self, coeffs): #contains solution
+        """
+        Initializes the polynomial.
+        coeffs: A list of coefficients from LOWEST to HIGHEST degree.
+        Example: [c_0, c_1, c_2] represents c_0 + c_1*x + c_2*x^2.
+        """
         if not coeffs:
             raise ValueError("Cannot initialize Polynomial with empty coefficients.")
-        self.coeffs = list(coeffs)
-        self._trim()
+        self._internal_coeffs = list(coeffs)
+        while len(self._internal_coeffs) > 1 and not self._internal_coeffs[-1]:
+            self._internal_coeffs.pop()
+        if not self._internal_coeffs:
+            self._internal_coeffs = [coeffs[0].field.zero]
 
-    @property
-    def base_field(self):
-        return self.coeffs[0].field
+    def degree(self): #contains solution
+        """Returns the degree of the polynomial."""
+        return len(self._internal_coeffs) - 1
 
-    def __bool__(self):
-        return len(self.coeffs) > 1 or bool(self.coeffs[0])
-
-    def _trim(self):
-        while len(self.coeffs) > 1 and not self.coeffs[0]:
-            self.coeffs.pop(0)
-        if not self.coeffs:
-            self.coeffs = [self.base_field.zero]
+    def __getitem__(self, power): #contains solution
+        """Returns the coefficient of x^power. Should safely return 0 if power > degree."""
+        if power < 0: raise IndexError("Negative powers not supported.")
+        if power > self.degree():
+            return self._internal_coeffs[0].field.zero
+        return self._internal_coeffs[power]
 
     def __add__(self, other): #contains solution
-        res = [a + b for a, b in zip_longest(reversed(self.coeffs), reversed(other.coeffs), fillvalue=self.base_field.zero)]
-        res.reverse()
+        """Adds two polynomials."""
+        max_deg = max(self.degree(), other.degree())
+        res = [self[i] + other[i] for i in range(max_deg + 1)]
         return Polynomial(res)
 
     def __sub__(self, other): #contains solution
-        res = [a - b for a, b in zip_longest(reversed(self.coeffs), reversed(other.coeffs), fillvalue=self.base_field.zero)]
-        res.reverse()
+        """Subtracts one polynomial from another."""
+        max_deg = max(self.degree(), other.degree())
+        res = [self[i] - other[i] for i in range(max_deg + 1)]
         return Polynomial(res)
 
     def __mul__(self, other): #contains solution
-        res = [self.base_field.zero] * (len(self.coeffs) + len(other.coeffs) - 1)
-        for i, a in enumerate(self.coeffs):
-            for j, b in enumerate(other.coeffs):
-                res[i+j] = res[i+j] + a * b
+        """Multiplies two polynomials."""
+        res = [self[0].field.zero] * (self.degree() + other.degree() + 1)
+        for i in range(self.degree() + 1):
+            for j in range(other.degree() + 1):
+                res[i+j] = res[i+j] + self[i] * other[j]
         return Polynomial(res)
 
     def __divmod__(self, other): #contains solution
+        """Divides two polynomials, returning (quotient, remainder)."""
         if not other: raise ZeroDivisionError()
-        dividend = list(self.coeffs)
-        divisor = other.coeffs
+        dividend = [self[i] for i in range(self.degree() + 1)]
+        divisor = [other[i] for i in range(other.degree() + 1)]
+        
         if len(dividend) < len(divisor):
-            return Polynomial([self.base_field.zero]), self
-        quotient = [self.base_field.zero] * (len(dividend) - len(divisor) + 1)
-        for i in range(len(quotient)):
-            if dividend[i]:
-                coef = dividend[i] / divisor[0]
+            return Polynomial([self[0].field.zero]), self
+            
+        quotient = [self[0].field.zero] * (len(dividend) - len(divisor) + 1)
+        for i in range(len(quotient) - 1, -1, -1):
+            if dividend[i + len(divisor) - 1]:
+                coef = dividend[i + len(divisor) - 1] / divisor[-1]
                 quotient[i] = coef
                 for j in range(len(divisor)):
                     dividend[i + j] = dividend[i + j] - coef * divisor[j]
         return Polynomial(quotient), Polynomial(dividend)
 
+    def __call__(self, x): #contains solution
+        """Evaluates the polynomial at a given value x."""
+        val = self[self.degree()]
+        for i in range(self.degree() - 1, -1, -1):
+            val = val * x + self[i]
+        return val
+
+    # --- API-driven boilerplate functions ---
+    
+    @property
+    def base_field(self):
+        """Returns the underlying field of the coefficients."""
+        return self[0].field
+
+    def __bool__(self):
+        """Returns True if the polynomial is not the zero polynomial."""
+        return self.degree() > 0 or bool(self[0])
+
     def __mod__(self, other):
+        """Returns the remainder of polynomial division."""
         _, rem = divmod(self, other)
         return rem
 
+    def __floordiv__(self, other):
+        """Returns the quotient of polynomial division."""
+        q, _ = divmod(self, other)
+        return q
+
     def __pow__(self, exponent, mod_poly=None):
+        """Raises the polynomial to an integer power using binary exponentiation."""
         res = Polynomial([self.base_field.one])
         base_pow = self
         while exponent > 0:
@@ -129,23 +188,19 @@ class Polynomial:
             exponent //= 2
         return res
 
-    def __call__(self, x): #contains solution
-        val = self.coeffs[0]
-        for c in self.coeffs[1:]:
-            val = val * x + c
-        return val
-
-    def __len__(self): return len(self.coeffs)
-    def __getitem__(self, idx): return self.coeffs[idx]
-
     def __eq__(self, other):
-        if isinstance(other, Polynomial): return self.coeffs == other.coeffs
-        return False
+        """Checks if two polynomials are mathematically equal."""
+        if not isinstance(other, Polynomial): return False
+        if self.degree() != other.degree(): return False
+        return all(self[i] == other[i] for i in range(self.degree() + 1))
 
-    def __repr__(self): return f"Poly({self.coeffs})"
-    def __hash__(self): return hash(tuple(self.coeffs))
-
-
+    def __repr__(self): 
+        """Returns a string representation of the polynomial coefficients."""
+        return f"Poly({[self[i] for i in range(self.degree() + 1)]})"
+        
+    def __hash__(self): 
+        """Computes a hash based on the polynomial coefficients."""
+        return hash(tuple(self[i] for i in range(self.degree() + 1)))
 
 # ---------------------------------------------------------
 # L3: Primitive Polynomial Search
@@ -153,7 +208,7 @@ class Polynomial:
 
 def is_primitive(poly): #contains solution
     """L3: Prove a polynomial of degree n is primitive over GF(p)."""
-    n = len(poly) - 1
+    n = poly.degree()
     p = poly.base_field.p
     
     order = (p ** n) - 1
@@ -167,7 +222,7 @@ def is_primitive(poly): #contains solution
     if temp > 1: factors.append(temp)
 
     zero = poly.base_field.zero
-    x = Polynomial([PrimeField(p).one, zero])
+    x = Polynomial([zero, PrimeField(p).one]) # Low-to-High: 0 + 1x
     one_poly = Polynomial([PrimeField(p).one])
 
     if pow(x, order, poly) != one_poly:
@@ -186,7 +241,7 @@ def is_primitive(poly): #contains solution
 class ExtensionField:
     _instances = {}
     def __new__(cls, mod_poly):
-        """Singeton pattern"""
+        """Singleton pattern"""
         if mod_poly not in cls._instances:
             inst = super().__new__(cls)
             inst._initialize(mod_poly)
@@ -195,16 +250,16 @@ class ExtensionField:
 
     def _initialize(self, mod_poly): #contains solution
         self.modulus = mod_poly
-        base_field = mod_poly.coeffs[0].field
-        self.alpha = GaloisFieldElement(Polynomial([base_field.one, base_field.zero]), self)
+        base_field = mod_poly[0].field
+        self.alpha = GaloisFieldElement(Polynomial([base_field.zero, base_field.one]), self) # Low-to-High: 0 + 1x
 
     @property
     def p(self): #contains solution
-        return self.modulus.coeffs[0].field.p
+        return self.modulus[0].field.p
 
     @property
     def n(self): #contains solution
-        return len(self.modulus) - 1
+        return self.modulus.degree()
 
     @property
     def size(self): #contains solution
@@ -212,12 +267,12 @@ class ExtensionField:
 
     @property
     def zero(self): #contains solution
-        base_field = self.modulus.coeffs[0].field
+        base_field = self.modulus[0].field
         return GaloisFieldElement(Polynomial([base_field.zero]), self)
 
     @property
     def one(self): #contains solution
-        base_field = self.modulus.coeffs[0].field
+        base_field = self.modulus[0].field
         return GaloisFieldElement(Polynomial([base_field.one]), self)
         
     def __call__(self, val):
@@ -238,7 +293,7 @@ def get_generator_poly(num_ec_bytes, field): #contains solution
     gen = Polynomial([field.one])
     for i in range(num_ec_bytes):
         root = -field.exp(i)
-        term = Polynomial([field.one, root])
+        term = Polynomial([root, field.one]) # Low-to-High: root + 1x
         gen = gen * term
     return gen
 
@@ -270,7 +325,7 @@ def pgz_error_locator(syndromes, field): #contains solution
             b.append(-syndromes[i + t])
         try:
             x = solve_linear(A, b)
-            return Polynomial(list(x) + [field.one])
+            return Polynomial([field.one] + list(reversed(x))) # Low-to-High: 1 + x_0 x + ... + x_{t-1} x^t
         except Exception:
             continue
 
@@ -286,7 +341,7 @@ def chien_search(err_loc, msg_len, field): #contains solution
     for i in range(msg_len):
         root = field.exp((field.size - 1 - i) % (field.size - 1))
         if not err_loc(root):
-            err_pos.append(msg_len - 1 - i)
+            err_pos.append(i)
     return err_pos
 
 def linear_error_magnitudes(syndromes, err_pos, msg_len, field): #contains solution
@@ -294,7 +349,7 @@ def linear_error_magnitudes(syndromes, err_pos, msg_len, field): #contains solut
     t = len(err_pos)
     if t == 0: return {}
 
-    X = [field.exp((msg_len - 1 - pos) % (field.size - 1)) for pos in err_pos]
+    X = [field.exp(pos) for pos in err_pos]
 
     A = []
     b = []

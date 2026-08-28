@@ -64,24 +64,24 @@ class LevelUI(BaseLevelUI):
             a_vals = [int(x.strip()) for x in self.ent_a.get().replace(",", " ").split()]
             b_vals = [int(x.strip()) for x in self.ent_b.get().replace(",", " ").split()]
             
-            a = tasks.Polynomial([utils.int_to_ext(v, gf) for v in a_vals])
-            b = tasks.Polynomial([utils.int_to_ext(v, gf) for v in b_vals])
+            a = tasks.Polynomial([utils.int_to_ext(v, gf) for v in reversed(a_vals)])
+            b = tasks.Polynomial([utils.int_to_ext(v, gf) for v in reversed(b_vals)])
             
-            a_tex = poly_to_latex(a_vals).strip('$')
-            b_tex = poly_to_latex(b_vals).strip('$')
+            a_tex = poly_to_latex(a_vals[::-1]).strip('$')
+            b_tex = poly_to_latex(b_vals[::-1]).strip('$')
             
             add_res = a + b
-            add_tex = poly_to_latex([utils.ext_to_int(c) for c in add_res.coeffs]).strip('$')
+            add_tex = poly_to_latex([utils.ext_to_int(add_res[i]) for i in range(add_res.degree() + 1)][::-1]).strip('$')
             
             sub_res = a - b
-            sub_tex = poly_to_latex([utils.ext_to_int(c) for c in sub_res.coeffs]).strip('$')
+            sub_tex = poly_to_latex([utils.ext_to_int(sub_res[i]) for i in range(sub_res.degree() + 1)][::-1]).strip('$')
             
             mul_res = a * b
-            mul_tex = poly_to_latex([utils.ext_to_int(c) for c in mul_res.coeffs]).strip('$')
+            mul_tex = poly_to_latex([utils.ext_to_int(mul_res[i]) for i in range(mul_res.degree() + 1)][::-1]).strip('$')
             
             try:
                 q, rem_res = divmod(a, b)
-                rem_tex = poly_to_latex([utils.ext_to_int(c) for c in rem_res.coeffs]).strip('$')
+                rem_tex = poly_to_latex([utils.ext_to_int(rem_res[i]) for i in range(rem_res.degree() + 1)][::-1]).strip('$')
             except ZeroDivisionError:
                 rem_tex = "\\mathrm{undefined}"
             

@@ -14,11 +14,15 @@ Division is analogous to long division of integers: repeatedly divide the highes
 \textbf{Task:} Build a single, universal \lstinline|Polynomial| class utilizing Python Duck-Typing.
 
 \textbf{Details:} 
-The Polynomial class must not contain any field-specific code. It simply holds a list of coefficients (highest power first, with leading zeroes strictly stripped) and relies entirely on the operators (\lstinline|+|, \lstinline|-|, \lstinline|*|, \lstinline|/|) provided by whatever objects it holds.
+The Polynomial class must not contain any field-specific code. It simply holds a list of coefficients (lowest power first) and relies entirely on the operators (\lstinline|+|, \lstinline|-|, \lstinline|*|, \lstinline|/|) provided by whatever objects it holds.
 \begin{itemize}
+    \item \lstinline|__init__|: Store the low-to-high coefficients. (You do not need \lstinline|_trim| if you use a dict).
+    \item \lstinline|degree|: Return the mathematical degree.
+    \item \lstinline|__getitem__|: Return the coefficient for $x^i$, safely returning 0 for $i > \text{degree}$.
+    \item \lstinline|__add__|, \lstinline|__sub__|: Implement polynomial addition and subtraction.
     \item \lstinline|__mul__|: Implement the double loop for cross-multiplication.
     \item \lstinline|__divmod__|: Implement polynomial long division. Return a tuple \lstinline|(quotient, remainder)|.
-    \item \lstinline|__call__|: Evaluate the polynomial at $x$. Use Horner's rule to evaluate in $O(n)$ time: $3x^3+2x^2+x+4 = ((3x+2)x+1)x+4$.
+    \item \lstinline|__call__|: Evaluate the polynomial at $x$. Use Horner's rule to evaluate in $O(n)$ time.
 \end{itemize}
 
 \begin{center}
@@ -26,11 +30,14 @@ The Polynomial class must not contain any field-specific code. It simply holds a
 \begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
 \toprule
 Method & Arguments & Returns \\ \midrule
+\_\_init\_\_ & \lstinline|self, coeffs: list| & \lstinline|None| \\
+degree & \lstinline|self| & \lstinline|int| \\
+\_\_getitem\_\_ & \lstinline|self, power: int| & \lstinline|FieldElement| \\
 \_\_add\_\_ & \lstinline|self, other| & \lstinline|Polynomial| \\
 \_\_sub\_\_ & \lstinline|self, other| & \lstinline|Polynomial| \\
 \_\_mul\_\_ & \lstinline|self, other| & \lstinline|Polynomial| \\
 \_\_divmod\_\_ & \lstinline|self, other| & \lstinline|tuple[Polynomial, Polynomial]| \\
-\_\_call\_\_ & \lstinline|self, x| & \lstinline|Any (Evaluated Field Element)| \\
+\_\_call\_\_ & \lstinline|self, x| & \lstinline|FieldElement| \\
 \bottomrule
 \end{tabularx}
 \end{center}

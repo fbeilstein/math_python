@@ -66,8 +66,8 @@ def interleave_blocks(data_bytes, version_specs, gf):
         msg_poly = tasks.Polynomial(msg_padded)
         
         q, rem = divmod(msg_poly, gen_poly)
-        diff = ec_per_block - len(rem.coeffs)
-        rem_padded = [0]*diff + [utils.ext_to_int(c) for c in rem.coeffs]
+        diff = ec_per_block - (rem.degree() + 1)
+        rem_padded = [0]*diff + [utils.ext_to_int(c) for c in rem[i] for i in range(rem.degree() + 1)]
             
         data_blocks.append(block_data)
         ec_blocks.append(rem_padded)

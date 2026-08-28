@@ -2,7 +2,7 @@ import tkinter as tk
 import sys
 import os
 import numpy as np
-import re
+import ast
 
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if base_dir not in sys.path:
@@ -10,6 +10,24 @@ if base_dir not in sys.path:
 
 import implementation_tasks as tasks
 from levels.base_level import BaseLevelUI
+
+class GFTransformer(ast.NodeTransformer):
+    def visit_Constant(self, node):
+        if isinstance(node.value, int):
+            return ast.Call(
+                func=ast.Name(id='GF', ctx=ast.Load()),
+                args=[ast.Constant(value=node.value)],
+                keywords=[]
+            )
+        return node
+        
+    def visit_BinOp(self, node):
+        left = self.visit(node.left)
+        if isinstance(node.op, ast.Pow):
+            right = node.right # Do not wrap exponent in GF
+        else:
+            right = self.visit(node.right)
+        return ast.BinOp(left=left, op=node.op, right=right)
 
 class LevelUI(BaseLevelUI):
     def setup_inputs(self):
@@ -42,8 +60,8 @@ class LevelUI(BaseLevelUI):
         
         if mode == "Calculator":
             tk.Label(self.input_frame, text="Expression:", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
-            self.ent_expr = tk.Entry(self.input_frame, width=15)
-            self.ent_expr.insert(0, "4 / 3")
+            self.ent_expr = tk.Entry(self.input_frame, width=25)
+            self.ent_expr.insert(0, "-2 * (3 + 5**-1)")
             self.ent_expr.pack(side=tk.LEFT, padx=3)
             self.ent_expr.bind("<Return>", lambda e: self.update_canvas())
             
@@ -54,15 +72,8 @@ class LevelUI(BaseLevelUI):
             self.ent_a.pack(side=tk.LEFT, padx=3)
             self.ent_a.bind("<KeyRelease>", lambda e: self.update_canvas())
             
-        tk.Button(self.input_frame, text="Render", command=self.update_canvas).pack(side=tk.LEFT, padx=10)
+        tk.Button(self.input_frame, text="Calculate", command=self.update_canvas).pack(side=tk.LEFT, padx=10)
         self.update_canvas()
-
-    def parse_expression(self, expr_str):
-        expr_str = expr_str.strip()
-        match = re.match(r"(\d+)\s*(\*\*|[\+\-\*\/])\s*(\d+)", expr_str)
-        if not match:
-            raise ValueError("Use 'a + b', 'a - b', 'a * b', 'a / b', or 'a ** b'.")
-        return int(match.group(1)), match.group(2), int(match.group(3))
 
     def draw_math(self):
         try:
@@ -75,41 +86,20 @@ class LevelUI(BaseLevelUI):
             mode = self.mode_var.get()
             
             if mode == "Calculator":
-                a_val, op, b_val = self.parse_expression(self.ent_expr.get())
-                a = field(a_val % p)
-                b = field(b_val % p)
-                exp = b_val
+                expr_str = self.ent_expr.get().strip()
+                try:
+                    tree = ast.parse(expr_str, mode='eval')
+                    tree = GFTransformer().visit(tree)
+                    ast.fix_missing_locations(tree)
+                    code = compile(tree, '<string>', 'eval')
+                    res = eval(code, {}, {'GF': field})
+                except Exception as e:
+                    raise ValueError(f"Invalid expression: {e}")
                 
+                expr_tex = expr_str.replace('%', '\\%')    
                 text = f"GF(${p}$) Arithmetic\n\n"
-                
-                if op == "+":
-                    res = a + b
-                    text += f"${a.val} + {b.val} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {a_val + b.val} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {res.val}$"
-                elif op == "-":
-                    res = a - b
-                    text += f"${a.val} - {b.val} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {a_val - b.val} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {res.val}$"
-                elif op == "*":
-                    res = a * b
-                    text += f"${a.val} \\times {b.val} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {a_val * b.val} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {res.val}$"
-                elif op == "/":
-                    if b.val == 0: raise ZeroDivisionError("Cannot divide by 0")
-                    res = a / b
-                    text += f"${a.val} \\div {b.val} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {a.val} \\times {b.val}^{{-1}} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {a.val} \\times {b.val}^{{{p}-2}} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {a.val} \\times {(b.val**(p-2))} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {a_val * (b.val**(p-2))} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {res.val}$"
-                elif op == "**":
-                    res = a ** exp
-                    text += f"${a.val}^{{{exp}}} \\ (\\mathrm{{mod}}\\ {p})$\n"
-                    text += f"$= {res.val}$"
+                text += f"${expr_tex} \\ (\\mathrm{{mod}}\\ {p})$\n"
+                text += f"$= {res.val}$"
                     
                 self.ax.text(0.5, 0.5, text, fontsize=24, ha='center', va='center', color='white')
                 
@@ -134,12 +124,12 @@ class LevelUI(BaseLevelUI):
             elif mode == "Inverse Mappings":
                 if p > 23: raise ValueError("Prime too large for nice mappings (p <= 23)")
                 
-                self.ax.set_xlim(-1, 5)
+                self.ax.set_xlim(-1, 7)
                 self.ax.set_ylim(-1, p)
                 self.ax.axis('off')
                 
                 self.ax.text(0.5, p, "Additive Inverses", color="white", fontsize=16, ha='center')
-                self.ax.text(3.5, p, "Multiplicative Inverses", color="white", fontsize=16, ha='center')
+                self.ax.text(5.5, p, "Multiplicative Inverses", color="white", fontsize=16, ha='center')
                 
                 for i in range(p):
                     add_inv = (-field(i)).val
@@ -157,10 +147,10 @@ class LevelUI(BaseLevelUI):
                         y1_m = p - 1 - i
                         y2_m = p - 1 - mul_inv
                         
-                        self.ax.text(3, y1_m, str(i), color="white", fontsize=14, ha='right', va='center')
-                        self.ax.text(4, y2_m, str(mul_inv), color="white", fontsize=14, ha='left', va='center')
+                        self.ax.text(5, y1_m, str(i), color="white", fontsize=14, ha='right', va='center')
+                        self.ax.text(6, y2_m, str(mul_inv), color="white", fontsize=14, ha='left', va='center')
                         
-                        self.ax.annotate("", xy=(3.8, y2_m), xytext=(3.2, y1_m),
+                        self.ax.annotate("", xy=(5.8, y2_m), xytext=(5.2, y1_m),
                                          arrowprops=dict(arrowstyle="->", color="#28a745", lw=1, alpha=0.6))
 
             elif mode == "Power Orbits":
@@ -182,6 +172,10 @@ class LevelUI(BaseLevelUI):
                 self.ax.set_title(f"Powers of {a.val} mod {p}", color="white", fontsize=18, pad=20)
                 
                 if a.val == 0:
+                    self.ax.annotate("", xy=(x[0], y[0]), xytext=(x[1], y[1]),
+                                     arrowprops=dict(arrowstyle="->", color="#ffc107", lw=2, shrinkA=15, shrinkB=15, connectionstyle="arc3,rad=-0.1"), zorder=1)
+                    self.ax.annotate("", xy=(x[0]+0.01, y[0]+0.01), xytext=(x[0], y[0]),
+                                     arrowprops=dict(arrowstyle="->", color="#ffc107", lw=2, shrinkA=15, shrinkB=15, connectionstyle="arc3,rad=3.0"), zorder=1)
                     return
                     
                 visited = []

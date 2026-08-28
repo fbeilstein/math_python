@@ -18,12 +18,12 @@ class TestLevel6(unittest.TestCase):
 
         gen = tasks.get_generator_poly(4, gf)
 
-        msg_poly = tasks.Polynomial(bytes_arr + [gf.zero]*4)
+        msg_poly = tasks.Polynomial([gf.zero]*4 + list(reversed(bytes_arr)))
         q, rem = divmod(msg_poly, gen)
 
-        diff = 4 - len(rem.coeffs)
-        rem_padded = [gf.zero]*diff + rem.coeffs
-        encoded = bytes_arr + rem_padded
+        diff = 4 - (rem.degree() + 1)
+        rem_padded = [rem[i] for i in range(rem.degree() + 1)] + [gf.zero]*diff
+        encoded = rem_padded + list(reversed(bytes_arr))
 
         corrupted = list(encoded)
         corrupted[1] = utils.int_to_ext(utils.ext_to_int(corrupted[1]) ^ 255, gf)
@@ -39,7 +39,7 @@ class TestLevel6(unittest.TestCase):
         for p_idx, mag in mags.items():
             corrupted[p_idx] = corrupted[p_idx] - mag
 
-        decoded_text = "".join(chr(utils.ext_to_int(c) % 256) for c in corrupted[:len(text)])
+        decoded_text = "".join(chr(utils.ext_to_int(c) % 256) for c in reversed(corrupted[4:]))
         self.assertEqual(decoded_text, text)
 
 if __name__ == '__main__':
