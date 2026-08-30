@@ -16,13 +16,14 @@ Division is analogous to long division of integers: repeatedly divide the highes
 \textbf{Details:} 
 The Polynomial class must not contain any field-specific code. It simply holds a list of coefficients (lowest power first) and relies entirely on the operators (\lstinline|+|, \lstinline|-|, \lstinline|*|, \lstinline|/|) provided by whatever objects it holds.
 \begin{itemize}
-    \item \lstinline|__init__|: Store the coefficients provided by argument \lstinline|coeffs|. These coefficients can be any type that supports the field operations. Thay are provided in \textbf{low to high} order $c_0, c_1, \ldots, c_n$, i.e. $P(x) = c_0 + c_1x + c_2x^2 + \ldots + c_nx^n$.
+    \item \lstinline|__init__|: Store the coefficients provided by argument \lstinline|coeffs|. These coefficients can be any type that supports the field operations. They are provided in \textbf{Low-to-High} order $c_0, c_1, \ldots, c_n$, i.e. $P(x) = c_0 + c_1x + c_2x^2 + \ldots + c_nx^n$. \textit{Note: We use internal Low-to-High ordering for our Python class because array index $i$ naturally matches the power $x^i$, making algorithms much easier to implement. However, \textbf{all UI outputs and the official ISO QR Code standard use High-to-Low} (highest degree first) for transmission.}
     \item \lstinline|degree|: Return the mathematical degree.
-    \item \lstinline|__getitem__|: Return the coefficient for $x^i$, safely returning 0 for $i > \text{degree}$.
+    \item \lstinline|__getitem__|: Return the coefficient for $x^i$, safely returning 0 for $i > \text{degree}$. Explicitly \lstinline|raise IndexError()| for negative powers.
     \item \lstinline|__add__|, \lstinline|__sub__|: Implement polynomial addition and subtraction.
     \item \lstinline|__mul__|: Implement the double loop for cross-multiplication.
     \item \lstinline|__divmod__|: Implement polynomial long division. Return a tuple \lstinline|(quotient, remainder)|.
     \item \lstinline|__call__|: Evaluate the polynomial at $x$. Use Horner's rule to evaluate in $O(n)$ time.
+    \item \textbf{Hint:} If an empty list of coefficients is provided to \lstinline|__init__|, explicitly \lstinline|raise ValueError()|. If division by a zero polynomial is attempted in \lstinline|__divmod__|, explicitly \lstinline|raise ZeroDivisionError()|.
 \end{itemize}
 
 \begin{center}
@@ -32,17 +33,20 @@ The Polynomial class must not contain any field-specific code. It simply holds a
 Method & Arguments & Returns \\ \midrule
 \_\_init\_\_ & \lstinline|self, coeffs: list| & \lstinline|None| \\
 degree & \lstinline|self| & \lstinline|int| \\
-\_\_getitem\_\_ & \lstinline|self, power: int| & \lstinline|FieldElement| \\
+\_\_getitem\_\_ & \lstinline|self, power: int| & \lstinline|GaloisFieldElement| \\
 \_\_add\_\_ & \lstinline|self, other: Polynomial| & \lstinline|Polynomial| \\
 \_\_sub\_\_ & \lstinline|self, other: Polynomial| & \lstinline|Polynomial| \\
 \_\_mul\_\_ & \lstinline|self, other: Polynomial| & \lstinline|Polynomial| \\
 \_\_divmod\_\_ & \lstinline|self, other: Polynomial| & \lstinline|tuple[Polynomial, Polynomial]| \\
-\_\_call\_\_ & \lstinline|self, x: FieldElement| & \lstinline|FieldElement| \\
+\_\_call\_\_ & \lstinline|self, x: GaloisFieldElement| & \lstinline|GaloisFieldElement| \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
 \subsubsection*{Experimentation part}
-\textbf{UI Guide:} Launch \lstinline|lab_dashboard.py|. This universal polynomial abstraction is the foundation that powers the entire interactive dashboard.
+\textbf{UI Guide:} Launch \lstinline|lab_dashboard.py| and navigate to Level 2. 
+You can type arbitrary polynomial expressions using Python syntax, representing polynomials as arrays of coefficients in High-to-Low order matching standard mathematical notation (e.g., \lstinline|[2, 0, 1]| represents $2x^2 + 1$). 
 
-\vspace{1cm}
+Use this to dynamically verify the "Freshman's Dream" (the Frobenius Endomorphism): in a field of characteristic $p$, $(A+B)^p = A^p + B^p$. 
+Set $p=3$ and calculate \lstinline|[1, 1] ** 3|. You will get exactly $x^3+1$. 
+Then set $p=5$ and calculate \lstinline|[1, 1] ** 5|. Watch how all intermediate binomial coefficients seamlessly collapse to $0$ modulo $p$, leaving only $x^5+1$!

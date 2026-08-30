@@ -61,15 +61,10 @@ class LevelUI(BaseLevelUI):
             for i in range(2, int(p**0.5) + 1):
                 if p % i == 0: return
                 
-            primitives = []
-            for coefs in itertools.product(range(p), repeat=n):
-                poly = [1] + list(coefs)
-                poly_obj = utils.make_poly(poly, p)
-                if tasks.is_primitive(poly_obj):
-                    primitives.append(poly)
+            primitives = utils.find_primitives(p, n)
             
             self.primitives_list = primitives
-            str_list = [poly_to_str(p) for p in primitives]
+            str_list = [poly_to_str(p[::-1]) for p in primitives]
             self.poly_combo['values'] = str_list
             if str_list:
                 self.poly_combo.current(0)
@@ -95,7 +90,7 @@ class LevelUI(BaseLevelUI):
             gf = tasks.ExtensionField(poly_obj)
             
             text = f"GF(${p}^{{{n}}}$) Exponential Cycle\n"
-            text += f"Modulo Primitive: {poly_to_latex(poly)}\n\n"
+            text += f"Modulo Primitive: {poly_to_latex(poly[::-1])}\n\n"
             
             for i in range(min(15, (p**n) - 1)):
                 val = utils.ext_to_int(gf.exp(i))

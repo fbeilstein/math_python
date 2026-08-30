@@ -37,22 +37,29 @@ class LevelUI(BaseLevelUI):
             msg = [ord(c) for c in msg_str]
             ec = int(self.ent_ec.get())
             
-            poly_obj = utils.make_poly([1, 0, 0, 0, 1, 1, 1, 0, 1], 2)
+            poly_obj = utils.make_poly([1, 0, 0, 0, 1, 1, 1, 0, 1][::-1], 2)
             gf = tasks.ExtensionField(poly_obj)
             gen = tasks.get_generator_poly(ec, gf)
             if not gen: raise NotImplementedError("get_generator_poly not implemented")
+            # 1. Reverse message for Low-to-High math
+            msg_poly = tasks.Polynomial([utils.int_to_ext(c, gf) for c in reversed(msg)])
+            shift = tasks.Polynomial([gf.zero] * ec + [gf.one])
+            shifted = msg_poly * shift
+            q, rem = divmod(shifted, gen)
             
-            msg_poly = tasks.Polynomial([gf.zero]*ec + [utils.int_to_ext(c, gf) for c in reversed(msg)])
-            q, rem = divmod(msg_poly, gen)
+            codeword_poly = shifted - rem
             
-            diff = ec - (rem.degree() + 1)
-            rem_padded = [rem[i] for i in range(rem.degree() + 1)] + [gf.zero]*diff
-            encoded = [utils.ext_to_int(c) for c in rem_padded] + list(reversed(msg))
+            # 2. Extract Low-to-High up to the exact expected degree
+            deg = len(msg) + ec - 1
+            coeffs_lth = [utils.ext_to_int(codeword_poly[i]) for i in range(deg + 1)]
+            
+            # 3. Reverse for High-to-Low UI (so message reads left-to-right)
+            encoded = coeffs_lth[::-1]
             
             text = "Reed-Solomon Encoding\n\n"
             text += f"Generator $g(x) = {poly_to_latex([utils.ext_to_int(gen[i]) for i in range(gen.degree() + 1)][::-1]).strip('$')}$\n\n"
             text += f"Message: {msg}\n"
-            text += f"Parity: {[utils.ext_to_int(c) for c in rem_padded][::-1]}\n"
+            text += f"Parity: {encoded[len(msg):]}\n"
             text += f"Encoded: {encoded}"
             
             self.ax.text(0.5, 0.5, text, fontsize=14, ha='center', va='center', color='white', wrap=True)

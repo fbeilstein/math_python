@@ -50,8 +50,8 @@ You must build the matrix $A$ and vector $b$ using the syndromes, then pass them
 \begin{itemize}
     \item Start with $t = \text{len(syndromes)} // 2$. Loop downwards to $1$.
     \item Build $A$ (a list of lists) and $b$ (a list) for the current $t$.
-    \item Use \lstinline|try/except| around \lstinline|solve_linear(A, b)|. If it raises an exception (singular matrix), \lstinline|continue| to the next smaller $t$.
-    \item If successful, construct and return the polynomial $\Lambda(x) = \Lambda_v x^v + \dots + \Lambda_1 x + 1$. Remember that \lstinline|solve_linear| returns $[\Lambda_v, \dots, \Lambda_1]$. You must append $1$ (\lstinline|field.one|) to the end of this list before passing it to the \lstinline|Polynomial| constructor.
+    \item Use \lstinline|try/except| around \lstinline|solve_linear(A, b)|. If it raises a \lstinline|ValueError| (singular matrix), \lstinline|continue| to the next smaller $t$.
+    \item If successful, construct and return the polynomial $\Lambda(x) = 1 + \Lambda_1 x + \dots + \Lambda_v x^v$. Remember that \lstinline|solve_linear| returns $[\Lambda_v, \dots, \Lambda_1]$. You must reverse this list and prepend $1$ (\lstinline|field.one|) to it before passing it to the \lstinline|Polynomial| constructor to satisfy the Low-to-High coefficient ordering.
 \end{itemize}
 
 \begin{center}

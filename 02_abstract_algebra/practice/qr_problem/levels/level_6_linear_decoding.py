@@ -43,11 +43,13 @@ class LevelUI(BaseLevelUI):
             msg = self.ent_msg.get()
             ec = int(self.ent_ec.get())
             
-            poly_obj = utils.make_poly([1, 0, 0, 0, 1, 1, 1, 0, 1], 2)
+            poly_obj = utils.make_poly([1, 0, 0, 0, 1, 1, 1, 0, 1][::-1], 2)
             gf = tasks.ExtensionField(poly_obj)
             
             msg_vals = [ord(c) for c in msg]
-            msg_poly = tasks.Polynomial([utils.int_to_ext(c, gf) for c in msg_vals])
+            
+            # 1. Reverse message for Low-to-High math
+            msg_poly = tasks.Polynomial([utils.int_to_ext(c, gf) for c in reversed(msg_vals)])
             
             gen = tasks.get_generator_poly(ec, gf)
             if not gen: raise NotImplementedError("get_generator_poly not implemented (L5)")
@@ -57,7 +59,13 @@ class LevelUI(BaseLevelUI):
             q, r = divmod(shifted, gen)
             
             codeword_poly = shifted - r
-            self.encoded_vals = [utils.ext_to_int(codeword_poly[i]) for i in range(codeword_poly.degree() + 1)]
+            
+            # 2. Extract Low-to-High up to exact expected degree
+            deg = len(msg_vals) + ec - 1
+            coeffs_lth = [utils.ext_to_int(codeword_poly[i]) for i in range(deg + 1)]
+            
+            # 3. Reverse for High-to-Low UI
+            self.encoded_vals = coeffs_lth[::-1]
             
             for widget in self.boxes_frame.winfo_children():
                 widget.destroy()
@@ -88,51 +96,58 @@ class LevelUI(BaseLevelUI):
         
         text = ""
         try:
-            corrupted = []
+            # User modifies High-to-Low array in UI
+            corrupted_raw = []
             for ent in self.byte_entries:
-                corrupted.append(int(ent.get()))
+                corrupted_raw.append(int(ent.get()))
                 
             ec = int(self.ent_ec.get())
             
-            poly_obj = utils.make_poly([1, 0, 0, 0, 1, 1, 1, 0, 1], 2)
+            poly_obj = utils.make_poly([1, 0, 0, 0, 1, 1, 1, 0, 1][::-1], 2)
             gf = tasks.ExtensionField(poly_obj)
+            
+            # Clamp values to valid GF(2^8) range [0, 255]
+            corrupted_htl = [v & 0xFF for v in corrupted_raw]
+            
+            # Reverse back to Low-to-High for math
+            corrupted_lth = corrupted_htl[::-1]
                         
-            msg_poly = tasks.Polynomial([utils.int_to_ext(c, gf) for c in corrupted])
+            msg_poly = tasks.Polynomial([utils.int_to_ext(c, gf) for c in corrupted_lth])
             syn = tasks.calculate_syndromes(msg_poly, ec, gf)
             if not syn: raise NotImplementedError("calculate_syndromes not implemented")
             syn_vals = [utils.ext_to_int(s) for s in syn]
             
-            text += f"Received: {corrupted}\n\n"
+            text += f"Received: {corrupted_htl}\n\n"
             text += f"Syndromes: {syn_vals}\n\n"
             
-            if all(s.val == 0 for s in syn):
+            if all(not bool(s) for s in syn):
                 text += "No errors detected!"
                 
-                msg_len = len(corrupted) - ec
-                decoded_chars = [chr(c) for c in corrupted[ec:]]
-                text += f"\n\nDecoded Message: \"{''.join(decoded_chars)}\""
+                # In Low-to-High array, message bytes are at the end [ec:]
+                # E.g. [p0, p1, p2, p3, o, l, l, e, H]. Reverse to get "Hello"
+                decoded_chars = [chr(c) for c in corrupted_lth[ec:]]
+                text += f"\n\nDecoded Message: \"{''.join(decoded_chars[::-1])}\""
             else:
                 err_loc = tasks.pgz_error_locator(syn, gf)
                 if not err_loc: raise NotImplementedError("pgz_error_locator not implemented")
                 text += f"Error Locator $\Lambda(x) = {poly_to_latex([utils.ext_to_int(err_loc[i]) for i in range(err_loc.degree() + 1)][::-1]).strip('$')}$\n\n"
                 
-                err_pos = tasks.chien_search(err_loc, len(corrupted), gf)
+                err_pos = tasks.chien_search(err_loc, len(corrupted_lth), gf)
                 if err_pos is None: raise NotImplementedError("chien_search not implemented")
                 text += f"Found roots at positions: {err_pos}\n\n"
                 
-                mags = tasks.linear_error_magnitudes(syn, err_pos, len(corrupted), gf)
+                mags = tasks.linear_error_magnitudes(syn, err_pos, len(corrupted_lth), gf)
                 if mags is None: raise NotImplementedError("linear_error_magnitudes not implemented")
                 mags_str = {k: utils.ext_to_int(v) for k, v in mags.items()}
                 text += f"Error Magnitudes: {mags_str}\n\n"
                 
                 for p_idx, mag in mags.items():
-                    corrupted[p_idx] = corrupted[p_idx] ^ utils.ext_to_int(mag)
+                    corrupted_lth[p_idx] = corrupted_lth[p_idx] ^ utils.ext_to_int(mag)
                     
-                text += f"Corrected: {corrupted}"
+                text += f"Corrected: {corrupted_lth[::-1]}"
                 
-                msg_len = len(corrupted) - ec
-                decoded_chars = [chr(c) for c in corrupted[ec:]]
-                text += f"\n\nRecovered Message: \"{''.join(decoded_chars)}\""
+                decoded_chars = [chr(c) for c in corrupted_lth[ec:]]
+                text += f"\n\nRecovered Message: \"{''.join(decoded_chars[::-1])}\""
             
             self.ax.text(0.5, 0.5, text, fontsize=14, ha='center', va='center', color='white', wrap=True)
             

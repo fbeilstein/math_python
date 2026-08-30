@@ -27,9 +27,11 @@ class PolyTransformer(ast.NodeTransformer):
             else:
                 gf_args.append(self.visit(elt))
                 
+        # Reverse gf_args here because Polynomial constructor expects Low-to-High,
+        # but the user provides High-to-Low lists in the UI (e.g. [2, 0, 1] for 2x^2 + 1)
         poly_call = ast.Call(
             func=ast.Name(id='Poly', ctx=ast.Load()),
-            args=[ast.List(elts=gf_args, ctx=ast.Load())],
+            args=[ast.List(elts=list(reversed(gf_args)), ctx=ast.Load())],
             keywords=[]
         )
         return poly_call

@@ -20,6 +20,8 @@ Number theory provides a shortcut to test this:
     \item Verify that $x^{m/q} \not\equiv 1 \pmod{f(x)}$ for all prime factors $q$.
 \end{enumerate}
 If both conditions hold, the polynomial is primitive.
+\textbf{Note:} A primitive polynomial for $GF(p^n)$ \textbf{must} have degree $n$.
+
 
 \subsubsection*{Implementation part}
 \textbf{Task:} Implement \lstinline|is_primitive| using the polynomial arithmetic you built in Level 2.
@@ -27,8 +29,8 @@ If both conditions hold, the polynomial is primitive.
 \textbf{Details:} You are translating the mathematical test above directly into code. 
 \begin{itemize}
     \item Use integer factorization to find all unique prime factors of $p^n - 1$.
-    \item Construct $x$ as \lstinline|Polynomial([field.one, field.zero])| and $1$ as \lstinline|Polynomial([field.one])|.
-    \item Use Python's built-in \lstinline|pow(base, exponent, modulus)|. Your \lstinline|Polynomial.__pow__| method from Level 2 should natively support the optional third \lstinline|modulus| argument, enabling rapid modular binary exponentiation!
+    \item Construct $x$ as \lstinline|Polynomial([field.zero, field.one])| and $1$ as \lstinline|Polynomial([field.one])|.
+    \item Use Python's built-in \lstinline|pow(base, exponent, modulus)|. The provided \lstinline|Polynomial.__pow__| boilerplate natively supports this optional third \lstinline|modulus| argument, enabling rapid modular binary exponentiation without evaluating massive intermediate polynomials.
 \end{itemize}
 
 \begin{center}

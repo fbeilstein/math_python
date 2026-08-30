@@ -59,14 +59,8 @@ class LevelUI(BaseLevelUI):
                 if p_val % i == 0: raise ValueError(f"p={p_val} is not prime!")
             if n_val < 1: raise ValueError("n must be >= 1")
             
-            primitives = []
-            import itertools
             import algebra_utils as utils
-            for coefs in itertools.product(range(p_val), repeat=n_val):
-                poly = [1] + list(coefs)
-                poly_obj = utils.make_poly(poly, p_val)
-                if tasks.is_primitive(poly_obj):
-                    primitives.append(poly)
+            primitives = utils.find_primitives(p_val, n_val)
             
             for w in self.scrollable_frame.winfo_children(): w.destroy()
             
@@ -91,7 +85,7 @@ class LevelUI(BaseLevelUI):
                 if i > 0 and i % 5 == 0:
                     row_frame = tk.Frame(self.scrollable_frame, bg="#1e1e1e")
                     row_frame.pack(fill=tk.X)
-                btn = tk.Button(row_frame, text=poly_to_str(poly), bg="#007acc", fg="white", font=("Arial", 10, "bold"),
+                btn = tk.Button(row_frame, text=poly_to_str(poly[::-1]), bg="#007acc", fg="white", font=("Arial", 10, "bold"),
                                 command=lambda p=poly: self.verify_primitive(p, p_val, n_val))
                 btn.pack(side=tk.LEFT, padx=4, pady=4)
                 
@@ -115,24 +109,24 @@ class LevelUI(BaseLevelUI):
                     factors.append(i)
                     while temp % i == 0: temp //= i
             if temp > 1: factors.append(temp)
-            d_tex = poly_to_latex(poly).strip('$')
+            d_tex = poly_to_latex(poly[::-1]).strip('$')
             
             text = f"Verification of Primitivity for ${d_tex}$ over GF(${p}^{{{n}}}$)\n\n"
             
             def format_div(k, is_order):
-                dividend = [1] + [0]*k
+                dividend = [0]*k + [1]
                 field = tasks.PrimeField(p)
                 div_poly = tasks.Polynomial([field(c) for c in dividend])
                 dsr_poly = tasks.Polynomial([field(c) for c in poly])
                 q_poly, r_poly = divmod(div_poly, dsr_poly)
                 q = [q_poly[i].val for i in range(q_poly.degree() + 1)]
                 r = [r_poly[i].val for i in range(r_poly.degree() + 1)]
-                q_tex = poly_to_latex(q).strip('$')
+                q_tex = poly_to_latex(q[::-1]).strip('$')
                 if len(q) > 4: 
-                    lead = q[0]
+                    lead = q[-1]
                     if lead == 1: q_tex = f"x^{{{len(q)-1}}} + \\dots + {q[-1]}"
                     else: q_tex = f"{lead}x^{{{len(q)-1}}} + \\dots + {q[-1]}"
-                r_tex = poly_to_latex(r).strip('$')
+                r_tex = poly_to_latex(r[::-1]).strip('$')
                 
                 if r_tex == "0":
                     if q_tex == "0": eq = f"$\\frac{{x^{{{k}}}}}{{{d_tex}}} = 0$"

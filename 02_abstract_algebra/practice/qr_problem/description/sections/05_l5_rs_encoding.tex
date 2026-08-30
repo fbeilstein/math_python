@@ -9,6 +9,8 @@ c(\alpha)=0, \quad c(\alpha^2)=0, \quad \ldots, \quad c(\alpha^{2t})=0
 \]
 where $t$ is the number of errors we wish to correct, requiring $2t$ parity symbols.
 
+The transmitted codeword is $(m_{k-1}, \ldots, m_0, p_{2t-1}, \ldots, p_0)$. \textit{Notice that the ISO QR Code standard transmits coefficients from High-to-Low degree. This ensures the text message characters are read first in natural left-to-right order, followed by the parity bytes. Our interactive UI dashboard strictly follows this High-to-Low ISO standard for all visual displays, even though your underlying Python engine computes everything Low-to-High.}
+
 To guarantee that $c(x)$ has these roots, we construct a generator polynomial $g(x)$ that inherently contains them as linear factors:
 \[
 g(x) = (x-\alpha^1)(x-\alpha^2)\cdots(x-\alpha^{2t})
@@ -34,7 +36,7 @@ You must construct the generator polynomial by iterative multiplication.
 \begin{itemize}
     \item Start with the identity polynomial $g(x) = 1$.
     \item Loop through $i$ from $0$ to $2t-1$ (where $2t$ is \lstinline|num_ec_bytes|). Note that the roots traditionally start at $\alpha^0$ or $\alpha^1$; we use $\alpha^i$ based on the loop index.
-    \item Multiply $g(x)$ by the linear factor $(x - \alpha^i)$, which translates to \lstinline|Polynomial([field.one, -field.exp(i)])|.
+    \item Multiply $g(x)$ by the linear factor $(x - \alpha^i)$. In our Low-to-High coefficient ordering, this translates to \lstinline|Polynomial([-field.exp(i), field.one])|.
 \end{itemize}
 The systematic encoding logic itself is already provided in the \lstinline|RSEncoder| wrapper class, relying on your polymorphic polynomial long division (\lstinline|__divmod__|).
 

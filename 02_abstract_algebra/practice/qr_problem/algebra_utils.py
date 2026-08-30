@@ -1,8 +1,20 @@
 import implementation_tasks as tasks
 
+import itertools
+
 def make_poly(coeffs, p):
     """Convert a list of integers into a Polynomial of GaloisFieldElements."""
     return tasks.Polynomial([tasks.PrimeField(p)(c) for c in coeffs])
+
+def find_primitives(p, n):
+    """L3: Brute force find all primitive polynomials of degree n over GF(p)."""
+    primitives = []
+    for coefs in itertools.product(range(p), repeat=n):
+        poly = list(coefs) + [1]
+        poly_obj = make_poly(poly, p)
+        if tasks.is_primitive(poly_obj):
+            primitives.append(poly)
+    return primitives
 
 def int_to_ext(val, field):
     """Convert an integer to an ExtFieldElement."""
@@ -23,7 +35,11 @@ def ext_to_int(element):
 
 
 def solve_linear(A, b):
-    """L7.1: Solve a linear system Ax = b using Gaussian Elimination."""
+    """L7.1: Solve a linear system Ax = b using Gaussian Elimination.
+    
+    Raises:
+        ValueError: If the matrix A is singular (no unique solution).
+    """
     A = [list(row) for row in A]
     b = list(b)
     size = len(b)
@@ -33,7 +49,7 @@ def solve_linear(A, b):
         while pivot_row < size and not A[pivot_row][i]:
             pivot_row += 1
         if pivot_row == size:
-            raise Exception("Singular matrix")
+            raise ValueError("Singular matrix")
 
         A[i], A[pivot_row] = A[pivot_row], A[i]
         b[i], b[pivot_row] = b[pivot_row], b[i]

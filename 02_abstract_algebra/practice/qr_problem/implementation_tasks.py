@@ -80,7 +80,7 @@ class GaloisFieldElement:
             GaloisFieldElement: The quotient modulo p.
 
         Raises:
-            ZeroDivisionError: If the divisor is the zero element.
+            ZeroDivisionError: If the divisor is the zero element. (Hint: explicitly use `raise ZeroDivisionError()`)
         """
         if not other: raise ZeroDivisionError()
         return self * (other ** (self.field.size - 2))
@@ -126,7 +126,13 @@ class Polynomial:
         """Initializes the polynomial with a list of coefficients.
 
         Args:
-            coeffs (list[FieldElement]): Coefficients in Low-to-High order (c_0, c_1, ..., c_n).
+            coeffs (list[GaloisFieldElement]): Coefficients in Low-to-High order (c_0, c_1, ..., c_n).
+                So coeffs[i] is the coefficient for x^i. (Note: This internal Low-to-High order 
+                is chosen because array index `i` naturally matches the polynomial degree `x^i`, 
+                making algorithms easier to write. The UI and ISO QR standards use High-to-Low.)
+            
+        Raises:
+            ValueError: If coeffs is empty. (Hint: explicitly use `raise ValueError()`)
         """
         if not coeffs:
             raise ValueError("Cannot initialize Polynomial with empty coefficients.")
@@ -140,7 +146,7 @@ class Polynomial:
         """Calculates the mathematical degree of the polynomial.
 
         Returns:
-            int: The highest power of x with a non-zero coefficient. Returns 0 for the zero polynomial.
+            int: The highest power of x with a non-zero coefficient. Returns 0 for the constant polynomials.
         """
         return len(self._internal_coeffs) - 1
 
@@ -151,7 +157,10 @@ class Polynomial:
             power (int): The power of x.
 
         Returns:
-            FieldElement: The coefficient of x^power, or zero if power exceeds the degree.
+            GaloisFieldElement: The coefficient of x^power, or zero if power exceeds the degree.
+            
+        Raises:
+            IndexError: If the power is negative. (Hint: explicitly use `raise IndexError()`)
         """
         if power < 0: raise IndexError("Negative powers not supported.")
         if power > self.degree():
@@ -209,7 +218,7 @@ class Polynomial:
             tuple[Polynomial, Polynomial]: A tuple containing (quotient, remainder).
 
         Raises:
-            ZeroDivisionError: If the divisor is the zero polynomial.
+            ZeroDivisionError: If the divisor is the zero polynomial. (Hint: explicitly use `raise ZeroDivisionError()`)
         """
         if not other: raise ZeroDivisionError()
         dividend = [self[i] for i in range(self.degree() + 1)]
@@ -231,10 +240,10 @@ class Polynomial:
         """Evaluates the polynomial at a given value using Horner's method.
 
         Args:
-            x (FieldElement): The value to substitute for x.
+            x (GaloisFieldElement): The value to substitute for x.
 
         Returns:
-            FieldElement: The evaluated result.
+            GaloisFieldElement: The evaluated result.
         """
         val = self[self.degree()]
         for i in range(self.degree() - 1, -1, -1):
@@ -432,7 +441,8 @@ def calculate_syndromes(message_poly, num_ec, field): #contains solution
 
 from algebra_utils import solve_linear
 # solve_linear(A, b) performs Gaussian Elimination over a field.
-# Use it to solve $G * x = y$ for $x$ over $GF(p^n)$. 
+# Use it to solve G * x = y for x over GF(p^n).
+# Note: It explicitly raises ValueError("Singular matrix") if the matrix is singular.
 
 
 def pgz_error_locator(syndromes, field): #contains solution
@@ -446,7 +456,7 @@ def pgz_error_locator(syndromes, field): #contains solution
         try:
             x = solve_linear(A, b)
             return Polynomial([field.one] + list(reversed(x))) # Low-to-High: 1 + x_0 x + ... + x_{t-1} x^t
-        except Exception:
+        except ValueError:
             continue
 
     return Polynomial([field.one])

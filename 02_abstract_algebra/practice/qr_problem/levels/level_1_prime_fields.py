@@ -169,6 +169,8 @@ class LevelUI(BaseLevelUI):
                     self.ax.text(x[i], y[i], str(i), ha='center', va='center', color='white', fontweight='bold', zorder=3)
                     
                 self.ax.set_aspect('equal')
+                self.ax.set_xlim(-1.5, 1.5)
+                self.ax.set_ylim(-1.5, 1.5)
                 self.ax.set_title(f"Powers of {a.val} mod {p}", color="white", fontsize=18, pad=20)
                 
                 if a.val == 0:

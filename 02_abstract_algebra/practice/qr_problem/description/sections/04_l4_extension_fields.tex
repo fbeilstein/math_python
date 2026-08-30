@@ -12,7 +12,7 @@ Notice that the multiplication routine conceptually performs $(a \cdot b) \pmod 
 
 \textbf{Details:} 
 \begin{itemize}
-    \item We define $\alpha$ as the polynomial $x$, which is simply \lstinline|Polynomial([field.one, field.zero])|.
+    \item We define $\alpha$ as the polynomial $x$, which is simply \lstinline|Polynomial([field.zero, field.one])| in our Low-to-High representation.
     \item \lstinline|exp(i)| computes $\alpha^i$. Because our \lstinline|GaloisFieldElement.__pow__| uses binary exponentiation and delegates to the underlying value type (which is a \lstinline|Polynomial| supporting \lstinline|__mod__|), this works seamlessly without generating giant precomputed $\log$/$\exp$ lookup tables!
     \item You must provide \lstinline|@property| methods for \lstinline|p| (characteristic), \lstinline|n| (degree), \lstinline|size| ($p^n$), and the \lstinline|zero|/\lstinline|one| identities. This defines the strict API contract that the dashboard relies on.
 \end{itemize}
@@ -31,6 +31,6 @@ exp & \lstinline|self, i: int| & \lstinline|GaloisFieldElement| \\
 \end{center}
 
 \subsubsection*{Experimentation part}
-\textbf{UI Guide:} Open \lstinline|lab_dashboard.py|. Verify that the elements are now polynomials modulo the primitive polynomial you selected.
+\textbf{UI Guide:} Open \lstinline|lab_dashboard.py|. Note that all polynomial inputs in the UI expect a comma-separated list of coefficients in High-to-Low order (e.g. \lstinline|2, 3| means $2x + 3$). Verify that the elements are now polynomials modulo the primitive polynomial you selected.
 
 \vspace{1cm}

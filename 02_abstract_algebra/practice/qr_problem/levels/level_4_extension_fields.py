@@ -58,7 +58,7 @@ class LevelUI(BaseLevelUI):
             p = int(self.ent_p.get())
             n = int(self.ent_n.get())
             poly = [int(x.strip()) for x in self.ent_poly.get().replace(",", " ").split()]
-            poly_obj = utils.make_poly(poly, p)
+            poly_obj = utils.make_poly(poly[::-1], p)
             gf = tasks.ExtensionField(poly_obj)
             
             a_vals = [int(x.strip()) for x in self.ent_a.get().replace(",", " ").split()]
@@ -67,8 +67,8 @@ class LevelUI(BaseLevelUI):
             a = tasks.Polynomial([utils.int_to_ext(v, gf) for v in reversed(a_vals)])
             b = tasks.Polynomial([utils.int_to_ext(v, gf) for v in reversed(b_vals)])
             
-            a_tex = poly_to_latex(a_vals[::-1]).strip('$')
-            b_tex = poly_to_latex(b_vals[::-1]).strip('$')
+            a_tex = poly_to_latex(a_vals).strip('$')
+            b_tex = poly_to_latex(b_vals).strip('$')
             
             add_res = a + b
             add_tex = poly_to_latex([utils.ext_to_int(add_res[i]) for i in range(add_res.degree() + 1)][::-1]).strip('$')

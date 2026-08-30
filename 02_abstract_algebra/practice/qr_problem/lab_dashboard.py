@@ -46,6 +46,11 @@ class QRDashboard(tk.Tk):
                   
         tk.Frame(self.sidebar, height=2, bg="gray").pack(fill=tk.X, padx=10, pady=10)
         
+        tk.Button(self.sidebar, text="🔄 Reload Student Code", font=("Arial", 12, "bold"), bg="#17a2b8", fg="white",
+                  command=lambda: self.launch_level(self.current_level if hasattr(self, 'current_level') else "level_1_prime_fields")).pack(pady=10, fill=tk.X, padx=10)
+        
+        tk.Frame(self.sidebar, height=2, bg="gray").pack(fill=tk.X, padx=10, pady=5)
+        
         tk.Button(self.sidebar, text="⭐ MAIN DEMO ⭐", font=("Arial", 12, "bold"), bg="#28a745", fg="white",
                   command=lambda: self.launch_level("main_demo")).pack(pady=5, fill=tk.X, padx=10)
                   
@@ -57,7 +62,13 @@ class QRDashboard(tk.Tk):
         if self.current_frame:
             self.current_frame.destroy()
             
+        self.current_level = module_name
+            
         try:
+            import implementation_tasks as tasks
+            import algebra_utils as utils
+            importlib.reload(tasks)
+            importlib.reload(utils)
             mod = importlib.import_module(f"levels.{module_name}")
             importlib.reload(mod)
             
