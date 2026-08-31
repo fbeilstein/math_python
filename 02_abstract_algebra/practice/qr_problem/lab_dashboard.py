@@ -22,7 +22,6 @@ class QRDashboard(tk.Tk):
             ("level_2_polynomials", "L2: Polynomial Math"),
             ("level_3_primitive", "L3: Primitive Search"),
             ("level_4_extension_fields", "L4: Extension Fields"),
-            ("level_4b_exponential_cycle", "L4b: Exp Cycle"),
             ("level_5_rs_encoding", "L5: RS Encoding"),
             ("level_6_linear_decoding", "L6-8: RS Decoding")
         ]

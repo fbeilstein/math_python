@@ -18,11 +18,13 @@ class LevelUI(BaseLevelUI):
         self.ent_p = tk.Entry(self.input_frame, width=5)
         self.ent_p.insert(0, "3")
         self.ent_p.pack(side=tk.LEFT, padx=5)
+        self.ent_p.bind("<Return>", lambda e: self.update_canvas())
         
         tk.Label(self.input_frame, text="Degree n:", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
         self.ent_n = tk.Entry(self.input_frame, width=5)
         self.ent_n.insert(0, "2")
         self.ent_n.pack(side=tk.LEFT, padx=5)
+        self.ent_n.bind("<Return>", lambda e: self.update_canvas())
         tk.Button(self.input_frame, text="Find Primitives", command=self.update_canvas).pack(side=tk.LEFT, padx=10)
         
         tk.Label(self.input_frame, text="⚠️ Warning: O(p^n) brute-force search. Keep p^n < 1000", fg="#ffcc00", bg="#1e1e1e").pack(side=tk.LEFT, padx=10)

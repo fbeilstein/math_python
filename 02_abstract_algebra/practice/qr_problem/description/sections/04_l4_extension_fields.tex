@@ -8,12 +8,12 @@ Instead of reducing integers modulo an integer, we reduce polynomials modulo a p
 Notice that the multiplication routine conceptually performs $(a \cdot b) \pmod m$. In a prime field, $a, b, m$ are integers. In an extension field, they are polynomials. Because of Python's dynamic typing (Duck Typing), the arithmetic operations implemented in \lstinline|GaloisFieldElement| do not need to change by a single line to support polynomials!
 
 \subsubsection*{Implementation part}
-\textbf{Task:} Complete the \lstinline|_initialize| setup method, the \lstinline|@property| fields, and the \lstinline|exp| method.
+\textbf{Task:} Complete the \lstinline|_initialize| setup method, and the \lstinline|@property| fields (including \lstinline|alpha|).
 
 \textbf{Details:} 
 \begin{itemize}
-    \item We define $\alpha$ as the polynomial $x$, which is simply \lstinline|Polynomial([field.zero, field.one])| in our Low-to-High representation.
-    \item \lstinline|exp(i)| computes $\alpha^i$. Because our \lstinline|GaloisFieldElement.__pow__| uses binary exponentiation and delegates to the underlying value type (which is a \lstinline|Polynomial| supporting \lstinline|__mod__|), this works seamlessly without generating giant precomputed $\log$/$\exp$ lookup tables!
+    \item We define $\alpha$ as the polynomial $x$, which is simply \lstinline|Polynomial([field.zero, field.one])| in our Low-to-High representation. 
+    \item You must implement \lstinline|alpha| as an explicit \lstinline|@property|. We do this so the UI can safely access \lstinline|field.alpha| without relying on you remembering to assign an instance variable in the constructor!
     \item You must provide \lstinline|@property| methods for \lstinline|p| (characteristic), \lstinline|n| (degree), \lstinline|size| ($p^n$), and the \lstinline|zero|/\lstinline|one| identities. This defines the strict API contract that the dashboard relies on.
 \end{itemize}
 
@@ -24,8 +24,7 @@ Notice that the multiplication routine conceptually performs $(a \cdot b) \pmod 
 Method & Arguments & Returns \\ \midrule
 \_initialize & \lstinline|self, mod_poly: Polynomial| & \lstinline|None| \\
 p, n, size & \lstinline|self| (\texttt{@property}) & \lstinline|int| \\
-zero, one & \lstinline|self| (\texttt{@property}) & \lstinline|GaloisFieldElement| \\
-exp & \lstinline|self, i: int| & \lstinline|GaloisFieldElement| \\
+zero, one, alpha & \lstinline|self| (\texttt{@property}) & \lstinline|GaloisFieldElement| \\
 \bottomrule
 \end{tabularx}
 \end{center}

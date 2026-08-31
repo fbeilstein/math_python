@@ -13,11 +13,23 @@ class PrimeField:
     def __new__(cls, p):
         if p not in cls._instances:
             inst = super().__new__(cls)
-            inst.p = p
-            inst.size = p
-            inst.modulus = p
+            inst._initialize(p)
             cls._instances[p] = inst
         return cls._instances[p]
+
+    def _initialize(self, p):
+        """Initializes the prime field with prime number p."""
+        self.modulus = p
+
+    @property
+    def p(self):
+        """Returns the prime characteristic of the field."""
+        return self.modulus
+
+    @property
+    def size(self):
+        """Returns the total number of elements in the field."""
+        return self.modulus
 
     @property
     def zero(self):
@@ -96,6 +108,11 @@ class GaloisFieldElement:
         Returns:
             GaloisFieldElement: The exponentiated result.
         """
+        if exponent < 0:
+            if self.val == self.field.zero.val:
+                raise ZeroDivisionError("division by zero")
+            exponent = (self.field.size - 2) * (- exponent) % (self.field.size - 1)
+            
         if exponent == 0: return self.field.one
         result = self.field.one
         base = self
@@ -112,7 +129,7 @@ class GaloisFieldElement:
         return bool(self.val)
     def __eq__(self, other):
         """Checks equality between two field elements."""
-        return isinstance(other, GaloisFieldElement) and self.val == other.val
+        return isinstance(other, GaloisFieldElement) and self.field == other.field and self.val == other.val
     def __repr__(self): return str(self.val)
     def __hash__(self): return hash(self.val)
 
@@ -350,8 +367,6 @@ class ExtensionField:
             mod_poly (Polynomial): The irreducible modulus polynomial generating the field.
         """
         self.modulus = mod_poly
-        base_field = mod_poly[0].field
-        self.alpha = GaloisFieldElement(Polynomial([base_field.zero, base_field.one]), self) # Low-to-High: 0 + 1x
 
     @property
     def p(self): #contains solution
@@ -400,19 +415,15 @@ class ExtensionField:
         base_field = self.modulus[0].field
         return GaloisFieldElement(Polynomial([base_field.one]), self)
         
+    @property
+    def alpha(self): #contains solution
+        """Returns the generator element x of the extension field."""
+        base_field = self.modulus[0].field
+        return GaloisFieldElement(Polynomial([base_field.zero, base_field.one]), self)
+        
     def __call__(self, val):
         return GaloisFieldElement(val, self)
 
-    def exp(self, i): #contains solution
-        """Computes alpha^i using binary exponentiation, where alpha is the generator.
-
-        Args:
-            i (int): The exponent.
-
-        Returns:
-            GaloisFieldElement: The field element representing alpha^i.
-        """
-        return self.alpha ** i
 
 
 
@@ -423,7 +434,7 @@ class ExtensionField:
 def get_generator_poly(num_ec_bytes, field): #contains solution
     gen = Polynomial([field.one])
     for i in range(num_ec_bytes):
-        root = -field.exp(i)
+        root = -(field.alpha ** i)
         term = Polynomial([root, field.one]) # Low-to-High: root + 1x
         gen = gen * term
     return gen
@@ -433,7 +444,7 @@ def get_generator_poly(num_ec_bytes, field): #contains solution
 # ---------------------------------------------------------
 
 def calculate_syndromes(message_poly, num_ec, field): #contains solution
-    return [message_poly(field.exp(i)) for i in range(num_ec)]
+    return [message_poly(field.alpha ** i) for i in range(num_ec)]
 
 # ---------------------------------------------------------
 # L7: RS Decoding II (Linear Algebra / PGZ Algorithm)
@@ -468,7 +479,7 @@ def pgz_error_locator(syndromes, field): #contains solution
 def chien_search(err_loc, msg_len, field): #contains solution
     err_pos = []
     for i in range(msg_len):
-        root = field.exp((field.size - 1 - i) % (field.size - 1))
+        root = field.alpha ** ((field.size - 1 - i) % (field.size - 1))
         if not err_loc(root):
             err_pos.append(i)
     return err_pos
@@ -477,7 +488,7 @@ def linear_error_magnitudes(syndromes, err_pos, msg_len, field): #contains solut
     t = len(err_pos)
     if t == 0: return {}
 
-    X = [field.exp(pos) for pos in err_pos]
+    X = [field.alpha ** pos for pos in err_pos]
 
     A = []
     b = []

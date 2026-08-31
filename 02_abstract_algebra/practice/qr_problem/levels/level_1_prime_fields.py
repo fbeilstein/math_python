@@ -45,7 +45,7 @@ class LevelUI(BaseLevelUI):
         self.ent_p = tk.Entry(self.dyn_frame, width=5)
         self.ent_p.insert(0, "7")
         self.ent_p.pack(side=tk.LEFT, padx=3)
-        self.ent_p.bind("<KeyRelease>", lambda e: self.update_canvas())
+        self.ent_p.bind("<Return>", lambda e: self.update_canvas())
 
         self.input_frame = tk.Frame(self.top_frame, bg="#1e1e1e")
         self.input_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10)
@@ -70,7 +70,7 @@ class LevelUI(BaseLevelUI):
             self.ent_a = tk.Entry(self.input_frame, width=5)
             self.ent_a.insert(0, "2")
             self.ent_a.pack(side=tk.LEFT, padx=3)
-            self.ent_a.bind("<KeyRelease>", lambda e: self.update_canvas())
+            self.ent_a.bind("<Return>", lambda e: self.update_canvas())
             
         tk.Button(self.input_frame, text="Calculate", command=self.update_canvas).pack(side=tk.LEFT, padx=10)
         self.update_canvas()

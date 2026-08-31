@@ -19,11 +19,13 @@ class LevelUI(BaseLevelUI):
         self.ent_msg = tk.Entry(f1, width=30)
         self.ent_msg.insert(0, "Hello")
         self.ent_msg.pack(side=tk.LEFT, padx=5)
+        self.ent_msg.bind("<Return>", lambda e: self.update_canvas())
         
         tk.Label(f1, text="EC Bytes:", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
         self.ent_ec = tk.Entry(f1, width=5)
         self.ent_ec.insert(0, "4")
         self.ent_ec.pack(side=tk.LEFT, padx=5)
+        self.ent_ec.bind("<Return>", lambda e: self.update_canvas())
         
         tk.Button(f1, text="Encode", command=self.update_canvas).pack(side=tk.LEFT, padx=10)
         self.update_canvas()

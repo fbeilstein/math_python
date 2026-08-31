@@ -14,10 +14,10 @@ class TestLevel3(unittest.TestCase):
         poly = utils.make_poly([1, 1, 1], 2)
         gf = tasks.ExtensionField(poly)
         # α^0 = 1, α^1 = α, α^2 = α+1 (since α^2+α+1=0 ⟹ α^2=α+1 in GF(2))
-        vals = [utils.ext_to_int(gf.exp(i)) for i in range(3)]
+        vals = [utils.ext_to_int(gf.alpha ** i) for i in range(3)]
         self.assertEqual(vals, [1, 2, 3])
         # α^3 = 1 (cyclic)
-        self.assertEqual(utils.ext_to_int(gf.exp(3)), 1)
+        self.assertEqual(utils.ext_to_int(gf.alpha ** 3), 1)
 
 if __name__ == '__main__':
     unittest.main()

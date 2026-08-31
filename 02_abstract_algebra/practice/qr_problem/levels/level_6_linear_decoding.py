@@ -19,11 +19,13 @@ class LevelUI(BaseLevelUI):
         self.ent_msg = tk.Entry(self.control_frame, width=20)
         self.ent_msg.insert(0, "Hello")
         self.ent_msg.pack(side=tk.LEFT, padx=5)
+        self.ent_msg.bind("<Return>", lambda e: self.encode_message())
         
         tk.Label(self.control_frame, text="EC Bytes:", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
         self.ent_ec = tk.Entry(self.control_frame, width=5)
         self.ent_ec.insert(0, "4")
         self.ent_ec.pack(side=tk.LEFT, padx=5)
+        self.ent_ec.bind("<Return>", lambda e: self.encode_message())
         
         tk.Button(self.control_frame, text="Encode Message", command=self.encode_message).pack(side=tk.LEFT, padx=10)
         
@@ -77,6 +79,7 @@ class LevelUI(BaseLevelUI):
                 ent = tk.Entry(self.boxes_frame, width=4, justify='center', font=("Courier", 14, "bold"))
                 ent.insert(0, str(val))
                 ent.pack(side=tk.LEFT, padx=2)
+                ent.bind("<Return>", lambda e: self.update_canvas())
                 self.byte_entries.append(ent)
                 
             self.ax.clear()
