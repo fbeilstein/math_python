@@ -30,7 +30,7 @@ The original message $c(x)$ completely vanishes because $\alpha^k$ are roots of 
 You must evaluate the received polynomial $r(x)$ at each of the roots of the generator polynomial.
 \begin{itemize}
     \item Loop through $i$ from $0$ to \lstinline|num_ec - 1|.
-    \item Call your generic polynomial evaluation method (\lstinline|__call__| with Horner's rule) on \lstinline|message_poly|, passing in \lstinline|field.exp(i)|.
+    \item Call your generic polynomial evaluation method (\lstinline|__call__| with Horner's rule) on \lstinline|message_poly|, passing in \lstinline|field.alpha ** i|.
     \item Return the list of resulting field elements.
 \end{itemize}
 

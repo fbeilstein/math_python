@@ -51,7 +51,7 @@ Notice that the matrix is purely built from powers of the roots $X_i$.
 
 \textbf{Details:} 
 \begin{itemize}
-    \item \lstinline|chien_search|: Loop over every position $i$ in the message (from $0$ to $msg\_len - 1$). The root candidate is $\alpha^{-i}$, which in our code corresponds to \lstinline|field.exp((field.size - 1 - i) % (field.size - 1))|. Evaluate the locator polynomial at this root. If it evaluates to zero (\lstinline|not err_loc(root)| using our duck-typed \lstinline|__bool__|), append $msg\_len - 1 - i$ to the list of error positions.
+    \item \lstinline|chien_search|: Loop over every position $i$ in the message (from $0$ to $msg\_len - 1$). The root candidate is $\alpha^{-i}$, which in our code corresponds to \lstinline|field.alpha ** -i|. Evaluate the locator polynomial at this root. If it evaluates to zero (\lstinline|not err_loc(root)| using our duck-typed \lstinline|__bool__|), append $msg\_len - 1 - i$ to the list of error positions.
     \item \lstinline|linear_error_magnitudes|: Build the Vandermonde matrix $A$ where $A_{k, i} = X_i^k$. The values $X_i$ are the roots $\alpha^{pos}$ corresponding to the positions found by Chien Search. Since we enforced $0^0 = 1$ and $0^k = 0$ in \lstinline|GaloisFieldElement.__pow__| during Level 1, you can simply write \lstinline|X[i] ** k| when building the matrix, and duck-typing will handle edge cases flawlessly!
 \end{itemize}
 
