@@ -270,28 +270,31 @@ The primitive polynomial used by QR codes: $x^8 + x^4 + x^3 + x^2 + 1$.
 
 ---
 
-# Representing Polynomials in Code
+# The Polymorphic Architecture
 
-For the practice problems, polynomials are **lists of coefficients from highest to lowest degree:**
+For the practice problems, polynomials are internally represented as **lists of coefficients from lowest to highest degree:**
+$$
+4 + x + 0x^2 + 2x^3 \quad\longleftrightarrow\quad \texttt{[4, 1, 0, 2]} \quad \text{(index } i \text{ is the coefficient for } x^i \text{)}
+$$
+(**Note:** for UI we use highest to lowest degree, i.e. `2, 0, 1, 4` for the above polynomial. You can reverse the list to get the UI representation if you need.)
 
-$$2x^3 + 0x^2 + x + 4 \quad\longleftrightarrow\quad \texttt{[2, 0, 1, 4]}$$
-
-Addition is elementwise (mod $p$). The tricky part is long division — you'll implement it yourself.
-
-Field elements of $GF(p^n)$ are represented as **integers** by treating coefficients as digits in base $p$:
-
-$$\alpha^2 + \alpha + 1 \quad\longleftrightarrow\quad 1 \cdot 2^2 + 1 \cdot 2^1 + 1 \cdot 2^0 = 7$$
-
-With log/exp tables, multiplication becomes:
+Instead of using hardcoded integer tables (like `log`/`exp`), we embrace a fully **polymorphic OOP architecture**. The `GaloisFieldElement` dynamically adapts its behavior depending on its underlying field:
 
 ```python
-def gf_mul(a, b, log_t, exp_t, q):
-    """Multiply in GF(q) using precomputed tables."""
-    if a == 0 or b == 0: return 0
-    return exp_t[(log_t[a] + log_t[b]) % (q - 1)]
+# 1. A Prime Field element (values are integers)
+f7 = PrimeField(7)
+a = GaloisFieldElement(3, f7)
+
+# 2. An Extension Field element (values are polynomials)
+# mod_poly = 2 + 0 x + 1 x^2 (irreducible over GF(7))
+mod_poly = Polynomial([GaloisFieldElement(2, f7), f7.zero, f7.one])
+gf49 = ExtensionField(mod_poly)
+
+poly_val = Polynomial([a, a, a]) # 3 + 3x + 3x^2
+b = GaloisFieldElement(poly_val, gf49)
 ```
 
-This one-liner is given — the challenge is building the tables themselves.
+Because finite fields share the exact same mathematical laws, `GaloisFieldElement` uses identical operator overloads (`__add__`, `__mul__`, `__truediv__`) for both structures. This is structural duck-typing at its finest!
 
 ---
 
