@@ -439,6 +439,29 @@ def get_generator_poly(num_ec_bytes, field): #contains solution
         gen = gen * term
     return gen
 
+def rs_encode(msg_poly, num_ec_bytes, field): #contains solution
+    """Performs systematic Reed-Solomon encoding.
+
+    Given a message polynomial m(x), produces a codeword c(x) that is
+    divisible by the generator polynomial g(x). The encoding procedure is:
+        1. Shift: multiply m(x) by x^{2t} to make room for parity bytes.
+        2. Divide: compute the remainder r(x) = m(x) * x^{2t} mod g(x).
+        3. Subtract: the codeword is c(x) = m(x) * x^{2t} - r(x).
+
+    Args:
+        msg_poly (Polynomial): The message polynomial in Low-to-High order.
+        num_ec_bytes (int): Number of error-correction parity bytes (2t).
+        field (ExtensionField): The extension field to operate over.
+
+    Returns:
+        Polynomial: The codeword polynomial c(x), divisible by g(x).
+    """
+    gen = get_generator_poly(num_ec_bytes, field)
+    shift = Polynomial([field.zero] * num_ec_bytes + [field.one])
+    shifted = msg_poly * shift
+    _, rem = divmod(shifted, gen)
+    return shifted - rem
+
 # ---------------------------------------------------------
 # L6: RS Decoding I (Syndromes)
 # ---------------------------------------------------------
@@ -479,7 +502,7 @@ def pgz_error_locator(syndromes, field): #contains solution
 def chien_search(err_loc, msg_len, field): #contains solution
     err_pos = []
     for i in range(msg_len):
-        root = field.alpha ** ((field.size - 1 - i) % (field.size - 1))
+        root = field.alpha ** (-i)
         if not err_loc(root):
             err_pos.append(i)
     return err_pos

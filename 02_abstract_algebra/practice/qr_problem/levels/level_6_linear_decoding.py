@@ -50,37 +50,52 @@ class LevelUI(BaseLevelUI):
             
             msg_vals = [ord(c) for c in msg]
             
-            # 1. Reverse message for Low-to-High math
+            # Reverse message for Low-to-High math, then encode
             msg_poly = tasks.Polynomial([utils.int_to_ext(c, gf) for c in reversed(msg_vals)])
+            codeword_poly = tasks.rs_encode(msg_poly, ec, gf)
             
-            gen = tasks.get_generator_poly(ec, gf)
-            if not gen: raise NotImplementedError("get_generator_poly not implemented (L5)")
-            
-            shift = tasks.Polynomial([gf.zero] * ec + [gf.one])
-            shifted = msg_poly * shift
-            q, r = divmod(shifted, gen)
-            
-            codeword_poly = shifted - r
-            
-            # 2. Extract Low-to-High up to exact expected degree
+            # Extract Low-to-High up to exact expected degree
             deg = len(msg_vals) + ec - 1
             coeffs_lth = [utils.ext_to_int(codeword_poly[i]) for i in range(deg + 1)]
             
-            # 3. Reverse for High-to-Low UI
+            # Reverse for High-to-Low UI
             self.encoded_vals = coeffs_lth[::-1]
             
             for widget in self.boxes_frame.winfo_children():
                 widget.destroy()
             self.byte_entries = []
             
-            tk.Label(self.boxes_frame, text="Codeword Bytes (tamper below to inject errors):", fg="#ffcc00", bg="#1e1e1e").pack(side=tk.LEFT, padx=5)
+            msg_len = len(msg_vals)
+            
+            # Label row
+            label_frame = tk.Frame(self.boxes_frame, bg="#1e1e1e")
+            label_frame.pack(fill=tk.X)
+            tk.Label(label_frame, text="Codeword Bytes (tamper below to inject errors):", fg="#ffcc00", bg="#1e1e1e").pack(side=tk.LEFT, padx=5)
+            
+            # Byte boxes row
+            boxes_row = tk.Frame(self.boxes_frame, bg="#1e1e1e")
+            boxes_row.pack(fill=tk.X, pady=2)
+            
+            # Message bytes label
+            tk.Label(boxes_row, text="MSG", fg="#28a745", bg="#1e1e1e", font=("Courier", 8)).pack(side=tk.LEFT, padx=(5, 0))
             
             for i, val in enumerate(self.encoded_vals):
-                ent = tk.Entry(self.boxes_frame, width=4, justify='center', font=("Courier", 14, "bold"))
+                # First msg_len bytes are message, rest are parity (in HTL order)
+                is_msg = i < msg_len
+                border_color = "#28a745" if is_msg else "#ff8c00"
+                
+                frame = tk.Frame(boxes_row, bg=border_color, padx=1, pady=1)
+                frame.pack(side=tk.LEFT, padx=1)
+                ent = tk.Entry(frame, width=4, justify='center', font=("Courier", 14, "bold"))
                 ent.insert(0, str(val))
-                ent.pack(side=tk.LEFT, padx=2)
+                ent.pack()
                 ent.bind("<Return>", lambda e: self.update_canvas())
                 self.byte_entries.append(ent)
+                
+                # Add separator between message and parity
+                if i == msg_len - 1:
+                    tk.Label(boxes_row, text="|", fg="#555", bg="#1e1e1e", font=("Courier", 16)).pack(side=tk.LEFT, padx=2)
+                    tk.Label(boxes_row, text="EC", fg="#ff8c00", bg="#1e1e1e", font=("Courier", 8)).pack(side=tk.LEFT, padx=(0, 2))
                 
             self.ax.clear()
             self.ax.axis('off')
@@ -112,6 +127,19 @@ class LevelUI(BaseLevelUI):
             # Clamp values to valid GF(2^8) range [0, 255]
             corrupted_htl = [v & 0xFF for v in corrupted_raw]
             
+            # Detect which bytes the user corrupted (compare to original)
+            msg_len = len(self.encoded_vals) - ec
+            changed_positions = []
+            for idx in range(len(self.encoded_vals)):
+                # Update input box color
+                ent = self.byte_entries[idx]
+                if idx < len(corrupted_htl) and corrupted_htl[idx] != self.encoded_vals[idx]:
+                    region = "MSG" if idx < msg_len else "EC"
+                    changed_positions.append((idx, self.encoded_vals[idx], corrupted_htl[idx], region))
+                    ent.config(fg="#ff4444")
+                else:
+                    ent.config(fg="black")
+            
             # Reverse back to Low-to-High for math
             corrupted_lth = corrupted_htl[::-1]
                         
@@ -120,8 +148,12 @@ class LevelUI(BaseLevelUI):
             if not syn: raise NotImplementedError("calculate_syndromes not implemented")
             syn_vals = [utils.ext_to_int(s) for s in syn]
             
-            text += f"Received: {corrupted_htl}\n\n"
-            text += f"Syndromes: {syn_vals}\n\n"
+            # Show original vs received with corruption markers
+            orig_str = str(self.encoded_vals)
+            recv_str = str(corrupted_htl)
+            text += f"Original:  {orig_str}\n"
+            text += f"Received:  {recv_str}\n"
+            text += f"\nSyndromes: {syn_vals}\n\n"
             
             if all(not bool(s) for s in syn):
                 text += "No errors detected!"
@@ -146,8 +178,9 @@ class LevelUI(BaseLevelUI):
                 
                 for p_idx, mag in mags.items():
                     corrupted_lth[p_idx] = corrupted_lth[p_idx] ^ utils.ext_to_int(mag)
-                    
-                text += f"Corrected: {corrupted_lth[::-1]}"
+                
+                corrected_htl = corrupted_lth[::-1]
+                text += f"Corrected: {corrected_htl[:msg_len]} | {corrected_htl[msg_len:]}"
                 
                 decoded_chars = [chr(c) for c in corrupted_lth[ec:]]
                 text += f"\n\nRecovered Message: \"{''.join(decoded_chars[::-1])}\""

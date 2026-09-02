@@ -52,6 +52,7 @@ You must build the matrix $A$ and vector $b$ using the syndromes, then pass them
     \item Build $A$ (a list of lists) and $b$ (a list) for the current $t$.
     \item Use \lstinline|try/except| around \lstinline|solve_linear(A, b)|. If it raises a \lstinline|ValueError| (singular matrix), \lstinline|continue| to the next smaller $t$.
     \item If successful, construct and return the polynomial $\Lambda(x) = 1 + \Lambda_1 x + \dots + \Lambda_v x^v$. Remember that \lstinline|solve_linear| returns $[\Lambda_v, \dots, \Lambda_1]$. You must reverse this list and prepend $1$ (\lstinline|field.one|) to it before passing it to the \lstinline|Polynomial| constructor to satisfy the Low-to-High coefficient ordering.
+    \item If the loop exhausts without success (every $t$ produced a singular matrix), return the trivial polynomial $\Lambda(x) = 1$, i.e.\ \lstinline|Polynomial([field.one])|. This constant polynomial has no roots, so the subsequent Chien Search will find zero error positions --- exactly the correct answer when no errors occurred.
 \end{itemize}
 
 \begin{center}

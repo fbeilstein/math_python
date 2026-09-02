@@ -5,17 +5,32 @@
 
 Instead of storing the message polynomial directly, we force the encoded codeword $c(x)$ to vanish at a predetermined set of points:
 \[
-c(\alpha)=0, \quad c(\alpha^2)=0, \quad \ldots, \quad c(\alpha^{2t})=0
+c(\alpha^0)=0, \quad c(\alpha^1)=0, \quad \ldots, \quad c(\alpha^{2t-1})=0
 \]
 where $t$ is the number of errors we wish to correct, requiring $2t$ parity symbols.
 
+To guarantee that $c(x)$ has these roots, we construct a \textbf{generator polynomial} $g(x)$ whose roots are exactly these points:
+\[
+g(x) = (x-\alpha^0)(x-\alpha^1)\cdots(x-\alpha^{2t-1})
+\]
+Any polynomial divisible by $g(x)$ will automatically vanish at all these roots.
+
+\paragraph{How do we verify $g(x)$?} We can check our generator polynomial by simply evaluating it at each expected root. If the construction is correct, every evaluation must yield zero:
+\[
+g(\alpha^0) \stackrel{?}{=} 0, \quad g(\alpha^1) \stackrel{?}{=} 0, \quad \ldots, \quad g(\alpha^{2t-1}) \stackrel{?}{=} 0
+\]
+
+\paragraph{Systematic Encoding}
+
 The transmitted codeword is $(m_{k-1}, \ldots, m_0, p_{2t-1}, \ldots, p_0)$. \textit{Notice that the ISO QR Code standard transmits coefficients from High-to-Low degree. This ensures the text message characters are read first in natural left-to-right order, followed by the parity bytes. Our interactive UI dashboard strictly follows this High-to-Low ISO standard for all visual displays, even though your underlying Python engine computes everything Low-to-High.}
 
-To guarantee that $c(x)$ has these roots, we construct a generator polynomial $g(x)$ that inherently contains them as linear factors:
-\[
-g(x) = (x-\alpha^1)(x-\alpha^2)\cdots(x-\alpha^{2t})
-\]
-Systematic encoding then shifts the message up by $2t$ positions and subtracts the remainder of the message modulo $g(x)$, ensuring the codeword is divisible by $g(x)$.
+To encode a message $m(x)$ of degree $k-1$ into a codeword $c(x)$ that is divisible by $g(x)$, we use \textbf{systematic encoding}:
+\begin{enumerate}
+    \item \textbf{Shift:} Multiply $m(x)$ by $x^{2t}$ to make room for the parity bytes at the low-degree positions.
+    \item \textbf{Divide:} Compute the remainder $r(x) = m(x) \cdot x^{2t} \pmod{g(x)}$ using polynomial long division.
+    \item \textbf{Subtract:} The codeword is $c(x) = m(x) \cdot x^{2t} - r(x)$.
+\end{enumerate}
+Since $m(x) \cdot x^{2t} = q(x) \cdot g(x) + r(x)$, subtracting the remainder gives $c(x) = q(x) \cdot g(x)$. The codeword is divisible by $g(x)$ by construction! The encoding reuses your polynomial \lstinline|__divmod__| from Level~2.
 
 \paragraph{Worked Example}
 Suppose we wish to correct $t=2$ errors, requiring $2t = 4$ parity symbols. The generator polynomial is:
@@ -29,16 +44,25 @@ c(x) = m(x)x^4 - r(x)
 By polynomial arithmetic, $c(x)$ is perfectly divisible by $g(x)$, guaranteeing that evaluating $c(x)$ at $\alpha^0, \dots, \alpha^3$ will yield zero.
 
 \subsubsection*{Implementation part}
-\textbf{Task:} Implement \lstinline|get_generator_poly|.
+\textbf{Tasks:} Implement \lstinline|get_generator_poly| and \lstinline|rs_encode|.
 
-\textbf{Details:} 
+\textbf{Details for get\_generator\_poly:} 
 You must construct the generator polynomial by iterative multiplication.
 \begin{itemize}
     \item Start with the identity polynomial $g(x) = 1$.
-    \item Loop through $i$ from $0$ to $2t-1$ (where $2t$ is \lstinline|num_ec_bytes|). Note that the roots traditionally start at $\alpha^0$ or $\alpha^1$; we use $\alpha^i$ based on the loop index.
-    \item Multiply $g(x)$ by the linear factor $(x - \alpha^i)$. In our Low-to-High coefficient ordering, this translates to \lstinline|Polynomial([-(field.alpha ** i), field.one])|.
+    \item Loop through $i$ from $0$ to $2t-1$ (where $2t$ is \lstinline|num_ec_bytes|).
+    \item Multiply $g(x)$ by the linear factor $(x - \alpha^i)$. In our Low-to-High coefficient ordering, this translates to \lstinline|Polynomial([-(field.alpha ** i), field.one])|. Your \lstinline|__neg__| and \lstinline|__pow__| from Level~1 handle the negation and exponentiation seamlessly.
 \end{itemize}
-The systematic encoding logic itself is already provided in the \lstinline|RSEncoder| wrapper class, relying on your polymorphic polynomial long division (\lstinline|__divmod__|).
+
+\textbf{Details for rs\_encode:}
+You must perform systematic encoding of the message polynomial.
+\begin{itemize}
+    \item First, get the generator polynomial $g(x)$ using \lstinline|get_generator_poly|.
+    \item Construct a shift polynomial $x^{2t}$. In Low-to-High order, this is a list of \lstinline|num_ec_bytes| zeros followed by a one: \lstinline|Polynomial([field.zero] * num_ec_bytes + [field.one])|.
+    \item Multiply the message polynomial by the shift polynomial to make room for the parity bytes.
+    \item Compute the remainder using polynomial \lstinline|divmod| with the generator polynomial.
+    \item Return the shifted polynomial minus the remainder.
+\end{itemize}
 
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
@@ -46,11 +70,12 @@ The systematic encoding logic itself is already provided in the \lstinline|RSEnc
 \toprule
 Function & Arguments & Returns \\ \midrule
 get\_generator\_poly & \lstinline|num_ec_bytes: int, field: ExtensionField| & \lstinline|Polynomial| \\
+rs\_encode & \lstinline|msg_poly: Polynomial, num_ec_bytes: int, field: ExtensionField| & \lstinline|Polynomial| \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
 \subsubsection*{Experimentation part}
-\textbf{UI Guide:} In the interactive dashboard, explore the RS Encoding tab. You can input text, watch it convert to a polynomial message, and see your \lstinline|get_generator_poly| construct the exact parity symbols needed to form the codeword.
+\textbf{UI Guide:} In the interactive dashboard, explore the RS Encoding tab. The UI displays a \textbf{Root Verification Table} that evaluates your generator polynomial at each expected root $\alpha^0, \ldots, \alpha^{2t-1}$. Every row must show zero --- this is a self-contained proof that your polynomial is correct, without needing to encode anything. Below the table, you can input text to watch the systematic encoding produce a codeword with message and parity bytes.
 
 \vspace{1cm}

@@ -43,28 +43,76 @@ class LevelUI(BaseLevelUI):
             gf = tasks.ExtensionField(poly_obj)
             gen = tasks.get_generator_poly(ec, gf)
             if not gen: raise NotImplementedError("get_generator_poly not implemented")
-            # 1. Reverse message for Low-to-High math
+            
+            # --- Root Verification Table ---
+            root_checks = []
+            all_zero = True
+            for i in range(ec):
+                root = gf.alpha ** i
+                val = gen(root)
+                val_int = utils.ext_to_int(val)
+                is_zero = not bool(val)
+                if not is_zero:
+                    all_zero = False
+                root_checks.append((i, val_int, is_zero))
+            
+            # --- Systematic Encoding ---
+            # Reverse message for Low-to-High math
             msg_poly = tasks.Polynomial([utils.int_to_ext(c, gf) for c in reversed(msg)])
-            shift = tasks.Polynomial([gf.zero] * ec + [gf.one])
-            shifted = msg_poly * shift
-            q, rem = divmod(shifted, gen)
+            codeword_poly = tasks.rs_encode(msg_poly, ec, gf)
             
-            codeword_poly = shifted - rem
-            
-            # 2. Extract Low-to-High up to the exact expected degree
+            # Extract Low-to-High up to the exact expected degree
             deg = len(msg) + ec - 1
             coeffs_lth = [utils.ext_to_int(codeword_poly[i]) for i in range(deg + 1)]
             
-            # 3. Reverse for High-to-Low UI (so message reads left-to-right)
+            # Reverse for High-to-Low UI (so message reads left-to-right)
             encoded = coeffs_lth[::-1]
             
-            text = "Reed-Solomon Encoding\n\n"
-            text += f"Generator $g(x) = {poly_to_latex([utils.ext_to_int(gen[i]) for i in range(gen.degree() + 1)][::-1]).strip('$')}$\n\n"
-            text += f"Message: {msg}\n"
-            text += f"Parity: {encoded[len(msg):]}\n"
-            text += f"Encoded: {encoded}"
+            # --- Render ---
+            gen_coeffs_htl = [utils.ext_to_int(gen[i]) for i in range(gen.degree() + 1)][::-1]
             
-            self.ax.text(0.5, 0.5, text, fontsize=14, ha='center', va='center', color='white', wrap=True)
+            text = "Reed-Solomon Encoding\n\n"
+            text += f"Generator $g(x) = {poly_to_latex(gen_coeffs_htl).strip('$')}$\n\n"
+            
+            # Root verification table
+            text += "Root Verification:\n"
+            for i, val_int, is_zero in root_checks:
+                sym = f"$\\alpha^{{{i}}}$" if i > 1 else ("$\\alpha$" if i == 1 else "$1$")
+                status = "$= 0$ ✓" if is_zero else f"$= {val_int}$ ✗"
+                text += f"  $g($  {sym}  $)$ {status}\n"
+            
+            if all_zero:
+                text += "All roots verified! ✓\n\n"
+            else:
+                text += "WARNING: Not all roots are zero! ✗\n\n"
+            
+            # Encoding result
+            text += f"Message: {msg}\n"
+            text += f"Parity:  {encoded[len(msg):]}\n"
+            text += f"Encoded: {encoded[:len(msg)]} | {encoded[len(msg):]}\n\n"
+            
+            # Codeword root verification
+            text += "Codeword Verification:\n"
+            cw_all_zero = True
+            for i in range(ec):
+                root = gf.alpha ** i
+                val = codeword_poly(root)
+                val_int = utils.ext_to_int(val)
+                is_zero = not bool(val)
+                if not is_zero:
+                    cw_all_zero = False
+                sym = f"$\\alpha^{{{i}}}$" if i > 1 else ("$\\alpha$" if i == 1 else "$1$")
+                status = "$= 0$ ✓" if is_zero else f"$= {val_int}$ ✗"
+                text += f"  $c($  {sym}  $)$ {status}\n"
+            
+            if cw_all_zero:
+                text += "Encoding verified! ✓"
+            else:
+                text += "WARNING: Codeword does not vanish at roots! ✗"
+            
+            color = 'white' if (all_zero and cw_all_zero) else '#ff6666'
+            self.ax.text(0.5, 0.5, text, fontsize=13, ha='center', va='center', 
+                        color=color, wrap=True, family='monospace')
             
         except Exception as e:
             self.ax.text(0.5, 0.5, f"Error: {e}", color="red", fontsize=14, ha='center', va='center')
