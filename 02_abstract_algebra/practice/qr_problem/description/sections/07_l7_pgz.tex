@@ -60,8 +60,8 @@ You must build the matrix $A$ and vector $b$ using the syndromes, then pass them
 \begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
 \toprule
 Function & Arguments & Returns \\ \midrule
-pgz\_error\_locator & \lstinline|syndromes: list, field: ExtensionField| & \lstinline|Polynomial| \\
-solve\_linear & \lstinline|A: list[list], b: list| & \lstinline|list| \\
+pgz\_error\_locator & \lstinline|syndromes: list[GaloisFieldElement], field: ExtensionField| & \lstinline|Polynomial| \\
+solve\_linear & \lstinline|A: list[list[GaloisFieldElement]], b: list[GaloisFieldElement]| & \lstinline|list[GaloisFieldElement]| \\
 \bottomrule
 \end{tabularx}
 \end{center}

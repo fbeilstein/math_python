@@ -1,13 +1,13 @@
-import implementation_tasks as tasks
-
 import itertools
 
 def make_poly(coeffs, p):
     """Convert a list of integers into a Polynomial of GaloisFieldElements."""
+    import implementation_tasks as tasks
     return tasks.Polynomial([tasks.PrimeField(p)(c) for c in coeffs])
 
 def find_primitives(p, n):
     """L3: Brute force find all primitive polynomials of degree n over GF(p)."""
+    import implementation_tasks as tasks
     primitives = []
     for coefs in itertools.product(range(p), repeat=n):
         poly = list(coefs) + [1]
@@ -18,6 +18,7 @@ def find_primitives(p, n):
 
 def int_to_ext(val, field):
     """Convert an integer to an ExtFieldElement."""
+    import implementation_tasks as tasks
     cs = []
     temp = val
     for _ in range(field.n):

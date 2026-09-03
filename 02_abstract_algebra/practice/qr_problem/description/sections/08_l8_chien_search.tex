@@ -52,7 +52,33 @@ Notice that the matrix is purely built from powers of the roots $X_i$.
 \textbf{Details:} 
 \begin{itemize}
     \item \lstinline|chien_search|: Loop over every position $i$ in the message (from $0$ to $msg\_len - 1$). The root candidate is simply \lstinline|field.alpha ** -i|. Your \lstinline|__pow__| from Level~1 already handles negative exponents natively via Fermat's Little Theorem, so no manual conversion is needed. Evaluate the locator polynomial at this root. If it evaluates to zero (\lstinline|not err_loc(root)| using our duck-typed \lstinline|__bool__|), append $i$ to the list of error positions.
-    \item \lstinline|linear_error_magnitudes|: Build the Vandermonde matrix $A$ where $A_{k, i} = X_i^k$. The values $X_i$ are the roots $\alpha^{pos}$ corresponding to the positions found by Chien Search. Since we enforced $0^0 = 1$ and $0^k = 0$ in \lstinline|GaloisFieldElement.__pow__| during Level~1, you can simply write \lstinline|X[i] ** k| when building the matrix, and duck-typing will handle edge cases flawlessly!
+    \item \lstinline|linear_error_magnitudes|: If no errors were found ($t = \text{len(err\_pos)} == 0$), return an empty list \lstinline|[]|. Otherwise, we must solve the system $H' Y = \vec{S}'$ to find the error magnitudes $Y_i$:
+\[
+\underbrace{
+\begin{bmatrix}
+X_1^0 & X_2^0 & \cdots & X_t^0 \\
+X_1^1 & X_2^1 & \cdots & X_t^1 \\
+\vdots & \vdots & \ddots & \vdots \\
+X_1^{t-1} & X_2^{t-1} & \cdots & X_t^{t-1}
+\end{bmatrix}
+}_{H'}
+\begin{bmatrix}
+Y_1 \\
+Y_2 \\
+\vdots \\
+Y_t
+\end{bmatrix}
+=
+\underbrace{
+\begin{bmatrix}
+S_0 \\
+S_1 \\
+\vdots \\
+S_{t-1}
+\end{bmatrix}
+}_{\vec{S}'}
+\]
+Here, $X_i = \alpha^{pos_i}$ for each position in \lstinline|err_pos|. Notice that the vector $\vec{S}'$ is simply the first $t$ syndromes. Build your matrix $H'$ and vector $\vec{S}'$, call \lstinline|solve_linear| on them to get the magnitudes $Y$, and simply return the list $Y$.
 \end{itemize}
 
 \begin{center}
@@ -60,8 +86,8 @@ Notice that the matrix is purely built from powers of the roots $X_i$.
 \begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
 \toprule
 Function & Arguments & Returns \\ \midrule
-chien\_search & \lstinline|err_loc: Polynomial, msg_len: int, field: ExtField| & \lstinline|list[int]| \\
-linear\_error\_magnitudes & \lstinline|syndromes: list, err_pos: list, msg_len, field| & \lstinline|dict| \\
+chien\_search & \lstinline|err_loc: Polynomial, msg_len: int, field: ExtensionField| & \lstinline|list[int]| \\
+linear\_error\_magnitudes & \lstinline|syndromes: list[GaloisFieldElement], err_pos: list[int], field: ExtensionField| & \lstinline|list[GaloisFieldElement]| \\
 \bottomrule
 \end{tabularx}
 \end{center}

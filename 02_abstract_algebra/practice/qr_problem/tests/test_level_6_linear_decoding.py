@@ -34,10 +34,10 @@ class TestLevel6(unittest.TestCase):
 
         err_pos = tasks.chien_search(err_loc, len(corrupted), gf)
 
-        mags = tasks.linear_error_magnitudes(syn, err_pos, len(corrupted), gf)
+        mags = tasks.linear_error_magnitudes(syn, err_pos, gf)
 
-        for p_idx, mag in mags.items():
-            corrupted[p_idx] = corrupted[p_idx] - mag
+        for i, pos in enumerate(err_pos):
+            corrupted[pos] = corrupted[pos] - mags[i]
 
         decoded_text = "".join(chr(utils.ext_to_int(c) % 256) for c in reversed(corrupted[4:]))
         self.assertEqual(decoded_text, text)

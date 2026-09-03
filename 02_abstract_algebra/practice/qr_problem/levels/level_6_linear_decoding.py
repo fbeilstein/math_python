@@ -171,13 +171,14 @@ class LevelUI(BaseLevelUI):
                 if err_pos is None: raise NotImplementedError("chien_search not implemented")
                 text += f"Found roots at positions: {err_pos}\n\n"
                 
-                mags = tasks.linear_error_magnitudes(syn, err_pos, len(corrupted_lth), gf)
-                if mags is None: raise NotImplementedError("linear_error_magnitudes not implemented")
-                mags_str = {k: utils.ext_to_int(v) for k, v in mags.items()}
+                Y_mags = tasks.linear_error_magnitudes(syn, err_pos, gf)
+                if Y_mags is None: raise NotImplementedError("linear_error_magnitudes not implemented")
+                
+                mags_str = {err_pos[i]: utils.ext_to_int(Y_mags[i]) for i in range(len(err_pos))}
                 text += f"Error Magnitudes: {mags_str}\n\n"
                 
-                for p_idx, mag in mags.items():
-                    corrupted_lth[p_idx] = corrupted_lth[p_idx] ^ utils.ext_to_int(mag)
+                for i, pos in enumerate(err_pos):
+                    corrupted_lth[pos] = corrupted_lth[pos] ^ utils.ext_to_int(Y_mags[i])
                 
                 corrected_htl = corrupted_lth[::-1]
                 text += f"Corrected: {corrected_htl[:msg_len]} | {corrected_htl[msg_len:]}"
@@ -187,8 +188,11 @@ class LevelUI(BaseLevelUI):
             
             self.ax.text(0.5, 0.5, text, fontsize=14, ha='center', va='center', color='white', wrap=True)
             
+        except NotImplementedError as e:
+            text += f"\n\n[Pending Task] {e}"
+            self.ax.text(0.5, 0.5, text, color="#ffcc00", fontsize=14, ha='center', va='center', wrap=True)
         except Exception as e:
-            text += f"\n\n[Stopped] Error: {e}"
-            self.ax.text(0.5, 0.5, text, color="red", fontsize=14, ha='center', va='center', wrap=True)
+            text += f"\n\n[Error] {type(e).__name__}: {e}"
+            self.ax.text(0.5, 0.5, text, color="#ff6666", fontsize=14, ha='center', va='center', wrap=True)
         
         self.canvas.draw()

@@ -507,21 +507,20 @@ def chien_search(err_loc, msg_len, field): #contains solution
             err_pos.append(i)
     return err_pos
 
-def linear_error_magnitudes(syndromes, err_pos, msg_len, field): #contains solution
+def linear_error_magnitudes(syndromes, err_pos, field): #contains solution
     t = len(err_pos)
-    if t == 0: return {}
+    if t == 0: return []
 
     X = [field.alpha ** pos for pos in err_pos]
 
-    A = []
-    b = []
+    H_prime = []
     for k in range(t):
         row = []
         for i in range(t):
             row.append(X[i] ** k)
-        A.append(row)
-        b.append(syndromes[k])
+        H_prime.append(row)
 
-    Y = solve_linear(A, b)
+    b = syndromes[:t]
+    Y = solve_linear(H_prime, b)
 
-    return {pos: Y[i] for i, pos in enumerate(err_pos)}
+    return Y

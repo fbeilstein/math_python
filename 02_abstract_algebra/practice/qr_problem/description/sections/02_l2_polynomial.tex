@@ -31,7 +31,7 @@ The Polynomial class must not contain any field-specific code. It simply holds a
 \begin{tabularx}{\textwidth}{@{} >{\bfseries}l X c @{}}
 \toprule
 Method & Arguments & Returns \\ \midrule
-\_\_init\_\_ & \lstinline|self, coeffs: list| & \lstinline|None| \\
+\_\_init\_\_ & \lstinline|self, coeffs: list[GaloisFieldElement]| & \lstinline|None| \\
 degree & \lstinline|self| & \lstinline|int| \\
 \_\_getitem\_\_ & \lstinline|self, power: int| & \lstinline|GaloisFieldElement| \\
 \_\_add\_\_ & \lstinline|self, other: Polynomial| & \lstinline|Polynomial| \\

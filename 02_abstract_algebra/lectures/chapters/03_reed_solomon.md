@@ -363,6 +363,55 @@ We have perfectly recovered the exact error vector $\vec{e} = [0, 0, 3, 0]^T$ us
 
 ---
 
+
+# Example: Magnitudes for Multiple Errors
+
+To see the full matrix structure for multiple errors, suppose we are in $GF(7)$ with primitive root $\alpha=3$ and a code capable of $t=2$ corrections. 
+
+After running Chien Search, we discover $v=2$ errors at indices $j_1=\textcolor{red}{1}$ and $j_2=\textcolor{blue}{4}$. 
+The column bases for our errors are $\textcolor{red}{\alpha^1=3}$ and $\textcolor{blue}{\alpha^4=4}$. 
+
+Assume our calculated full syndrome vector (which has $2t = 4$ elements) is:
+$\vec{S} = [\textcolor{magenta}{s_0}, \textcolor{green}{s_1}, s_2, s_3]^T = [\textcolor{magenta}{0}, \textcolor{green}{5}, 0, 3]^T \pmod 7$
+
+Because we found exactly $v=2$ errors, we **trim** $\vec{S}$ down to its first $v$ elements to form $\vec{S}'$. We only need these first 2 equations to solve for the $v=2$ unknown magnitudes $Y_1$ and $Y_2$: 
+$\vec{S}' = [\textcolor{magenta}{s_0}, \textcolor{green}{s_1}]^T = [\textcolor{magenta}{0}, \textcolor{green}{5}]^T$
+
+We construct the system:
+$$
+H' Y = 
+\begin{bmatrix}
+(\textcolor{red}{\alpha^1})^0 & (\textcolor{blue}{\alpha^4})^0 \\\\
+(\textcolor{red}{\alpha^1})^1 & (\textcolor{blue}{\alpha^4})^1 
+\end{bmatrix}
+\begin{bmatrix}
+Y_1 \\\\
+Y_2
+\end{bmatrix} = \begin{bmatrix}
+\textcolor{red}{1} & \textcolor{blue}{1} \\\\
+\textcolor{red}{3} & \textcolor{blue}{4}
+\end{bmatrix}
+\begin{bmatrix}
+Y_1 \\\\
+Y_2
+\end{bmatrix} = \begin{bmatrix}
+\textcolor{magenta}{0} \\\\
+\textcolor{green}{5}
+\end{bmatrix}  \pmod 7
+$$
+
+
+Solving this via standard Gaussian elimination:
+- Subtract $3 \times$ Row 1 from Row 2 to eliminate $Y_1$:
+  - New Row 2: $3 - 3(1) = 0$, $4 - 3(1) = 1$, $5 - 3(0) = 5$.
+  - This gives $Y_2 = 5$.
+- Substitute $Y_2 = 5$ into Row 1:
+  - $1 \cdot Y_1 + 1 \cdot (5) = 0 \implies Y_1 = -5 \equiv 2 \pmod 7$.
+
+We have successfully recovered both error magnitudes $Y_1=2$ and $Y_2=5$ simultaneously!
+
+---
+
 # The Engineering Reality: Decoder Algorithms
 
 The mathematical derivations we just performed form the foundation of all Reed-Solomon decoders. However, in industrial applications, engineers optimize these steps for silicon (ASICs):

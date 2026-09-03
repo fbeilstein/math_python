@@ -60,6 +60,7 @@ class LevelUI(BaseLevelUI):
             # Reverse message for Low-to-High math
             msg_poly = tasks.Polynomial([utils.int_to_ext(c, gf) for c in reversed(msg)])
             codeword_poly = tasks.rs_encode(msg_poly, ec, gf)
+            if not codeword_poly: raise NotImplementedError("rs_encode not implemented")
             
             # Extract Low-to-High up to the exact expected degree
             deg = len(msg) + ec - 1
@@ -114,7 +115,11 @@ class LevelUI(BaseLevelUI):
             self.ax.text(0.5, 0.5, text, fontsize=13, ha='center', va='center', 
                         color=color, wrap=True, family='monospace')
             
+        except NotImplementedError as e:
+            text += f"\n\n[Pending Task] {e}"
+            self.ax.text(0.5, 0.5, text, color="#ffcc00", fontsize=14, ha='center', va='center', wrap=True)
         except Exception as e:
-            self.ax.text(0.5, 0.5, f"Error: {e}", color="red", fontsize=14, ha='center', va='center')
+            text += f"\n\n[Error] {type(e).__name__}: {e}"
+            self.ax.text(0.5, 0.5, text, color="#ff6666", fontsize=14, ha='center', va='center', wrap=True)
         
         self.canvas.draw()
