@@ -36,6 +36,8 @@ class PolyTransformer(ast.NodeTransformer):
         )
         return poly_call
 
+    visit_Tuple = visit_List
+
 class LevelUI(BaseLevelUI):
     def setup_inputs(self):
         tk.Label(self.top_frame, text="Expression:", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
@@ -77,7 +79,20 @@ class LevelUI(BaseLevelUI):
             except Exception as e:
                 raise ValueError(f"Invalid expression: {e}")
                 
-            expr_tex = expr_str.replace('%', '\\%')
+            import re
+            def replace_array_with_poly(match):
+                try:
+                    val = ast.literal_eval(match.group(0))
+                    if isinstance(val, (list, tuple)) and all(isinstance(x, int) for x in val):
+                        tex = poly_to_latex(list(val)).strip('$')
+                        if not tex: tex = "0"
+                        return f"({tex})"
+                except:
+                    pass
+                return match.group(0)
+                
+            expr_tex = re.sub(r'\[[\d\s,]+\]|\([\d\s,]+\)', replace_array_with_poly, expr_str)
+            expr_tex = expr_tex.replace('%', '\\%').replace('*', '\\cdot ').replace('divmod', '\\mathrm{divmod}')
             text = f"GF(${p}$) Polynomial Arithmetic\n\n"
             text += f"${expr_tex} \\ (\\mathrm{{mod}}\\ {p})$\n"
             

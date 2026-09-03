@@ -160,7 +160,18 @@ class LevelUI(BaseLevelUI):
                     raise ValueError(f"Invalid expression: {e}")
                 
                 import re
-                expr_tex = re.sub(r'\*\*(-?\d+)', r'^{\1}', expr_str)
+                def replace_array_with_poly(match):
+                    try:
+                        val = ast.literal_eval(match.group(0))
+                        if isinstance(val, (list, tuple)) and all(isinstance(x, int) for x in val):
+                            tex = poly_to_latex(list(val)).strip('$')
+                            if not tex: tex = "0"
+                            return f"({tex})"
+                    except:
+                        pass
+                    return match.group(0)
+                expr_tex = re.sub(r'\[[\d\s,]+\]|\([\d\s,]+\)', replace_array_with_poly, expr_str)
+                expr_tex = re.sub(r'\*\*(-?\d+)', r'^{\1}', expr_tex)
                 expr_tex = expr_tex.replace('%', '\\%').replace('*', '\\cdot ')
                 
                 res_coeffs = [res.val[i].val for i in range(res.val.degree() + 1)]

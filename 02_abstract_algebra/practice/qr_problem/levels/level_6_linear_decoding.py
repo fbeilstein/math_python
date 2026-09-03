@@ -64,6 +64,9 @@ class LevelUI(BaseLevelUI):
             for widget in self.boxes_frame.winfo_children():
                 widget.destroy()
             self.byte_entries = []
+            self.true_err_labels = []
+            self.arrow_labels = []
+            self.dec_mag_labels = []
             
             msg_len = len(msg_vals)
             
@@ -76,26 +79,56 @@ class LevelUI(BaseLevelUI):
             boxes_row = tk.Frame(self.boxes_frame, bg="#1e1e1e")
             boxes_row.pack(fill=tk.X, pady=2)
             
-            # Message bytes label
-            tk.Label(boxes_row, text="MSG", fg="#28a745", bg="#1e1e1e", font=("Courier", 8)).pack(side=tk.LEFT, padx=(5, 0))
+            lbl_v_frame = tk.Frame(boxes_row, bg="#1e1e1e")
+            lbl_v_frame.pack(side=tk.LEFT, padx=(5, 0))
+            tk.Label(lbl_v_frame, text="MSG", fg="#28a745", bg="#1e1e1e", font=("Courier", 8), pady=10).pack(side=tk.TOP)
             
             for i, val in enumerate(self.encoded_vals):
                 # First msg_len bytes are message, rest are parity (in HTL order)
                 is_msg = i < msg_len
                 border_color = "#28a745" if is_msg else "#ff8c00"
+                poly_idx = len(self.encoded_vals) - 1 - i
                 
-                frame = tk.Frame(boxes_row, bg=border_color, padx=1, pady=1)
-                frame.pack(side=tk.LEFT, padx=1)
-                ent = tk.Entry(frame, width=4, justify='center', font=("Courier", 14, "bold"))
+                v_frame = tk.Frame(boxes_row, bg="#1e1e1e")
+                v_frame.pack(side=tk.LEFT, padx=1)
+                
+                # Top: Entry box
+                frame1 = tk.Frame(v_frame, bg=border_color, padx=1, pady=1)
+                frame1.pack(side=tk.TOP)
+                ent = tk.Entry(frame1, width=4, justify='center', font=("Courier", 14, "bold"))
                 ent.insert(0, str(val))
                 ent.pack()
-                ent.bind("<Return>", lambda e: self.update_canvas())
+                ent.bind("<KeyRelease>", lambda e: self.update_canvas())
                 self.byte_entries.append(ent)
                 
-                # Add separator between message and parity
+                # Index under Entry
+                tk.Label(v_frame, text=str(poly_idx), fg="#888", bg="#1e1e1e", font=("Courier", 8)).pack(side=tk.TOP)
+                
+                tk.Label(v_frame, text="", bg="#1e1e1e", font=("Courier", 2)).pack(side=tk.TOP)
+                
+                # True error (no border, blends with background when 0)
+                err_lbl = tk.Label(v_frame, text="0", width=4, font=("Courier", 14, "bold"), bg="#1e1e1e", fg="#555")
+                err_lbl.pack(side=tk.TOP)
+                self.true_err_labels.append(err_lbl)
+                
+                # Arrows and Decoded Magnitude
+                arr_lbl = tk.Label(v_frame, text=" ", font=("Courier", 14, "bold"), fg="red", bg="#1e1e1e")
+                arr_lbl.pack(side=tk.TOP)
+                self.arrow_labels.append(arr_lbl)
+                
+                dec_mag_lbl = tk.Label(v_frame, text=" ", font=("Courier", 14, "bold"), fg="red", bg="#1e1e1e")
+                dec_mag_lbl.pack(side=tk.TOP)
+                self.dec_mag_labels.append(dec_mag_lbl)
+                
+                # Add separators
                 if i == msg_len - 1:
-                    tk.Label(boxes_row, text="|", fg="#555", bg="#1e1e1e", font=("Courier", 16)).pack(side=tk.LEFT, padx=2)
-                    tk.Label(boxes_row, text="EC", fg="#ff8c00", bg="#1e1e1e", font=("Courier", 8)).pack(side=tk.LEFT, padx=(0, 2))
+                    sep_v_frame = tk.Frame(boxes_row, bg="#1e1e1e")
+                    sep_v_frame.pack(side=tk.LEFT, padx=2)
+                    tk.Label(sep_v_frame, text="|", fg="#555", bg="#1e1e1e", font=("Courier", 16)).pack(side=tk.TOP)
+                    
+                    ec_v_frame = tk.Frame(boxes_row, bg="#1e1e1e")
+                    ec_v_frame.pack(side=tk.LEFT, padx=(0, 2))
+                    tk.Label(ec_v_frame, text="EC", fg="#ff8c00", bg="#1e1e1e", font=("Courier", 8), pady=10).pack(side=tk.TOP)
                 
             self.ax.clear()
             self.ax.axis('off')
@@ -114,31 +147,37 @@ class LevelUI(BaseLevelUI):
         
         text = ""
         try:
-            # User modifies High-to-Low array in UI
-            corrupted_raw = []
-            for ent in self.byte_entries:
-                corrupted_raw.append(int(ent.get()))
+            # Reset UI labels
+            for arr_lbl, dec_lbl in zip(self.arrow_labels, self.dec_mag_labels):
+                arr_lbl.config(text=" ")
+                dec_lbl.config(text=" ")
                 
+            # User modifies High-to-Low array in UI
+            corrupted_htl = []
+            for idx in range(len(self.encoded_vals)):
+                ent = self.byte_entries[idx]
+                err_lbl = self.true_err_labels[idx]
+                try:
+                    c_val = int(ent.get()) & 0xFF
+                    corrupted_htl.append(c_val)
+                    true_err = c_val ^ self.encoded_vals[idx]
+                    err_lbl.config(text=str(true_err))
+                    
+                    if true_err != 0:
+                        ent.config(fg="#ff4444")
+                        err_lbl.config(bg="black", fg="white")
+                    else:
+                        ent.config(fg="black")
+                        err_lbl.config(bg="#1e1e1e", fg="#555")
+                except ValueError:
+                    # Fallback for invalid text while typing
+                    corrupted_htl.append(self.encoded_vals[idx])
+                    err_lbl.config(text="?", bg="#1e1e1e", fg="#555")
+                    ent.config(fg="black")
+                    
             ec = int(self.ent_ec.get())
-            
             poly_obj = utils.make_poly([1, 0, 0, 0, 1, 1, 1, 0, 1][::-1], 2)
             gf = tasks.ExtensionField(poly_obj)
-            
-            # Clamp values to valid GF(2^8) range [0, 255]
-            corrupted_htl = [v & 0xFF for v in corrupted_raw]
-            
-            # Detect which bytes the user corrupted (compare to original)
-            msg_len = len(self.encoded_vals) - ec
-            changed_positions = []
-            for idx in range(len(self.encoded_vals)):
-                # Update input box color
-                ent = self.byte_entries[idx]
-                if idx < len(corrupted_htl) and corrupted_htl[idx] != self.encoded_vals[idx]:
-                    region = "MSG" if idx < msg_len else "EC"
-                    changed_positions.append((idx, self.encoded_vals[idx], corrupted_htl[idx], region))
-                    ent.config(fg="#ff4444")
-                else:
-                    ent.config(fg="black")
             
             # Reverse back to Low-to-High for math
             corrupted_lth = corrupted_htl[::-1]
@@ -165,13 +204,22 @@ class LevelUI(BaseLevelUI):
             else:
                 err_loc = tasks.pgz_error_locator(syn, gf)
                 if not err_loc: raise NotImplementedError("pgz_error_locator not implemented")
-                text += f"Error Locator $\Lambda(x) = {poly_to_latex([utils.ext_to_int(err_loc[i]) for i in range(err_loc.degree() + 1)][::-1]).strip('$')}$\n\n"
+                text += f"Error Locator $\\Lambda(x) = {poly_to_latex([utils.ext_to_int(err_loc[i]) for i in range(err_loc.degree() + 1)][::-1]).strip('$')}$\n\n"
                 
                 err_pos = tasks.chien_search(err_loc, len(corrupted_lth), gf)
                 if err_pos is None: raise NotImplementedError("chien_search not implemented")
                 text += f"Found roots at positions: {err_pos}\n\n"
                 
                 Y_mags = tasks.linear_error_magnitudes(syn, err_pos, gf)
+                
+                # Draw arrows for discovered error positions
+                for i, pos in enumerate(err_pos):
+                    idx_htl = len(self.encoded_vals) - 1 - pos
+                    if 0 <= idx_htl < len(self.arrow_labels):
+                        self.arrow_labels[idx_htl].config(text="↑")
+                        if Y_mags is not None and i < len(Y_mags):
+                            self.dec_mag_labels[idx_htl].config(text=str(utils.ext_to_int(Y_mags[i])))
+                            
                 if Y_mags is None: raise NotImplementedError("linear_error_magnitudes not implemented")
                 
                 mags_str = {err_pos[i]: utils.ext_to_int(Y_mags[i]) for i in range(len(err_pos))}
@@ -181,7 +229,7 @@ class LevelUI(BaseLevelUI):
                     corrupted_lth[pos] = corrupted_lth[pos] ^ utils.ext_to_int(Y_mags[i])
                 
                 corrected_htl = corrupted_lth[::-1]
-                text += f"Corrected: {corrected_htl[:msg_len]} | {corrected_htl[msg_len:]}"
+                text += f"Corrected: {corrected_htl}"
                 
                 decoded_chars = [chr(c) for c in corrupted_lth[ec:]]
                 text += f"\n\nRecovered Message: \"{''.join(decoded_chars[::-1])}\""
