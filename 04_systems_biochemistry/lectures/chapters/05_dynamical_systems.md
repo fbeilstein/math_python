@@ -1,5 +1,4 @@
 
-
 :::titlepage
 [[title]]
 Chapter 5: Dynamical Systems, Synergetics & Catastrophe Theory
@@ -21,7 +20,7 @@ $$ \dot{x} = f(x,y), \qquad \dot{y} = g(x,y) $$
 2. **Compute the Jacobian matrix:**
 $$
 \mathbf{J} = \begin{pmatrix}
-\frac{\partial f}{\partial x} & \frac{\partial f}{\partial y} \\
+\frac{\partial f}{\partial x} & \frac{\partial f}{\partial y} \\\\
 \frac{\partial g}{\partial x} & \frac{\partial g}{\partial y}
 \end{pmatrix}\bigg|_{(x^\star,y^\star)}
 $$
@@ -44,7 +43,6 @@ where $\tau = \operatorname{Tr}(\mathbf{J})$ and $\Delta = \det(\mathbf{J})$.
 
 :::
 
-
 ---
 
 # Phase Portraits & Fixed Point Classification
@@ -53,7 +51,7 @@ A dynamical system $\dot{\mathbf{x}} = \mathbf{f}(\mathbf{x})$ is fully describe
 
 $$
 \mathbf{J} = \begin{pmatrix}
-\frac{\partial f_1}{\partial x_1} & \frac{\partial f_1}{\partial x_2} \\
+\frac{\partial f_1}{\partial x_1} & \frac{\partial f_1}{\partial x_2} \\\\
 \frac{\partial f_2}{\partial x_1} & \frac{\partial f_2}{\partial x_2}
 \end{pmatrix}\bigg|_{\mathbf{x}^*}
 $$
