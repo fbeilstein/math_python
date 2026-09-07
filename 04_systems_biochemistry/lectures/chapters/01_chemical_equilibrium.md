@@ -290,8 +290,9 @@ $$
 This is a constant in aqueous solutions, albeit a very, very small one. 
 This means that, if we know the hydronium ion concentration, we also know the hydroxide concentration and vice versa since the product of the two concentrations always equals $10^{-14}$.
 
-**NOTE:** $\text{p}K\_{\text{w}} = -\log(K\_{\text{w}}) = \text{pH} + \text{pOH}$
-$\text{pH} + \text{pOH} = 14$
+**NOTE:** 
+* $\text{p}K\_{\text{w}} = -\log(K\_{\text{w}}) = \text{pH} + \text{pOH}$
+* $\text{pH} + \text{pOH} = 14$
 
 ---
 
@@ -314,7 +315,7 @@ where $\ce{AH}$ is an acid and $\ce{A-}$ is its conjugate base and $\ce{B}$ is a
 * We will always suppose water as a solvent (concentration much greater)
 * $[\ce{H3O+}]$ and $[\ce{H+}]$ will be used interchangeably
 * pH-meter measures concentration of $\ce{H+}$
-* NOTE: $[\ce{H+}][\ce{OH-}] = 10^-14$
+* NOTE: $[\ce{H+}][\ce{OH-}] = 10^{-14}$
 
 ---
 
