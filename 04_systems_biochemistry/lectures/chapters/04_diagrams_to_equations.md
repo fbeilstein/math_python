@@ -10,57 +10,48 @@ Chapter 4: Translating Network Diagrams to ODEs
 
 To translate biological schematics into rigorous mathematical models, we must follow strict translation rules. Every node represents a **state variable** (a chemical species whose concentration changes over time), and every edge (arrow) represents a **kinetic term** in the differential equation.
 
-:::matrix {cols="50/50"}
-[[0,0]]
-### 1. Solid Arrows (Mass Transfer)
-Solid arrows represent actual chemical transformations or mass flow. They directly consume reactants ($-$) and produce products ($+$).
-- $\ce{A -> B}$: Irreversible conversion.
-- $\ce{A <=> B}$: Reversible conversion.
-- $\ce{\emptyset -> A}$: Zero-order synthesis (from an infinite pool).
-- $\ce{A -> \emptyset}$: First-order degradation / clearance.
+* We will use simple letter to designate chemical "small" substances, while squaring enzymes that perform catalysis.
+* We will use $V$ over errow to show simple influx/efflux.
+* We will use $k$ over arrow to show reaction of certain order.
 
-[[0,1]]
-### 2. Dashed Arrows (Regulation)
-Dashed arrows represent flow of *information*, not mass. They modify the rates of solid arrows without being consumed themselves.
-- $A \dashrightarrow B \text{ (or } + \text{)}$: **Activation** (Positive feedback / allosteric promotion).
-- $A \dashv B \text{ (or } - \text{)}$: **Inhibition** (Negative feedback / repression).
-:::
+
+## Simple Chemistry
+
+| Diagram | Explanation | Mathematical Implication (ODE Summand) |
+| --- | --- | --- |
+| ![](./images/diagrams/simple_influx.svg){width=50} | Simple Influx | Constant zero-order generation $+V$ |
+
+---
+# The Graphical Language of Systems Biology
+## Enzyme Catalysis
+
+| Diagram | Explanation | Mathematical Implication (ODE Summand) |
+| --- | --- | --- |
+| ![](./images/diagrams/basic_catalysis.svg){width=50} | Basic enzyme catalysis | Standard Michaelis-Menten. $\displaystyle + \frac{k[E_{tot}][S]}{K_M + [S]}$ |
+| ![](./images/diagrams/hill_kinetics.svg){width=50} | Hill Kinetics | Sigmoidal dynamics for cooperativity. $\displaystyle + \frac{k[E_{tot}][S]^n}{K_M^n + [S]^n}$ |
+| ![](./images/diagrams/competitive.svg){width=50} | Inhibition | $type$ = competitive: &nbsp; $\displaystyle + \frac{k[E_{tot}][S]}{K_M\left(1 + \frac{[I]}{K_i}\right) + [S]}$<br>  $type$ = uncompetitive: &nbsp; $\displaystyle + \frac{k[E_{tot}][S]}{K_M + [S]\left(1 + \frac{[I]}{K_i}\right)}$<br> $type$ = non-competitive: &nbsp; $\displaystyle + \frac{k[E_{tot}][S]}{\left(K_M + [S]\right)\left(1 + \frac{[I]}{K_i}\right)}$|
 
 ---
 
-# How to Read a Diagram: Systematic Algorithm
+# The Graphical Language of Systems Biology
+## Bimolecular Reaction
 
-Given any network diagram, follow these steps to write down the ODE for species $X$:
+| Diagram | Explanation | Mathematical Implication (ODE Summand) |
+| --- | --- | --- |
+| ![](./images/diagrams/simple_mass_action.svg){width=50} | Simple Mass Action | Stoichiometric coefficients become exponential powers $+k[S_1]^n[S_2]^m$ | 
+| ![](./images/diagrams/multi.svg){width=50} | **ternary**: forms central complex before catalysis;<br><br> **ping-pong** or double-displacement: first product leaves before second substrate binds;<br><br> **independent**: substrates bind without influencing each other. | $type$ = ternary: &nbsp; $\displaystyle + \frac{k[E_{tot}][S_1][S_2]}{K_{M1}K_{M2} + K_{M2}[S_1] + K_{M1}[S_2] + [S_1][S_2]}$<br><br>  $type$ = ping-pong: &nbsp; $\displaystyle + \frac{k[E_{tot}][S_1][S_2]}{K_{M2}[S_1] + K_{M1}[S_2] + [S_1][S_2]}$<br><br> $type$ = independent: &nbsp; $\displaystyle + k[E_{tot}] \left(\frac{[S_1]}{K_{M1}+[S_1]}\right) \left(\frac{[S_2]}{K_{M2}+[S_2]}\right)$ |
 
-:::matrix {cols="50/50"}
-[[0,0]]
-### Step-by-step procedure
+---
 
-1. **List all solid arrows involving $X$.**
-   - Arrow *into* $X$ → **positive** term in $dX/dt$.
-   - Arrow *out of* $X$ → **negative** term in $dX/dt$.
-2. **Determine the rate law** for each solid arrow:
-   - From $\emptyset$: zero-order ($V_{in}$).
-   - First-order decay: $k \cdot [X]$.
-   - Bimolecular: $k \cdot [A][B]$.
-   - Saturating (enzyme): $V_{max} [S] / (K_m + [S])$.
-3. **Apply regulatory modifiers.** For each dashed arrow landing on the reaction:
-   - **Activator** $A$: multiply the rate by $[A]$, or by a Hill function $[A]^n/(K^n + [A]^n)$.
-   - **Inhibitor** $I$: multiply by $1/(1 + ([I]/K)^n)$.
-4. **Sum all terms** to get $dX/dt$.
+# The Graphical Language of Systems Biology
+## Allosteric Regulation
 
-[[0,1]]
-### Quick reference
-
-| Diagram Element | ODE Contribution to $dX/dt$ |
-|-----------------|----------------------------|
-| $\emptyset \to X$ | $+V_{in}$ |
-| $X \to \emptyset$ | $-k_{out}[X]$ |
-| $A + X \to P$ | $-k[A][X]$ |
-| $\emptyset \to X$ with activator $A$ | $+k \cdot [A]$ |
-| $\emptyset \to X$ with repressor $I$ | $+\frac{V_0}{1+([I]/K)^n}$ |
-| $X \to P$ via enzyme $E$ | $-\frac{V_{max}[X]}{K_m + [X]}$ |
-:::
+| Diagram | Explanation | Mathematical Implication (ODE Summand) |
+| --- | --- | --- |
+| ![](./images/diagrams/enzyme_activated.svg){width=50} | Enzyme Activated | Allosteric modifier increases activity. $\displaystyle + \frac{k[E_{tot}][S]}{K_M + [S]} \left(1 + \frac{[A]}{K_a}\right)$ |
+| ![](./images/diagrams/enzyme_inhibited.svg){width=50} | Enzyme Inhibited | Allosteric modifier restricts activity. $\displaystyle + \frac{k[E_{tot}][S]}{K_M + [S]} \frac{1}{\left(1 + \frac{[I]}{K_i}\right)}$ |
+| ![](./images/diagrams/exclusive_modifiers.svg){width=50} | Exclusive Modifiers | Modifiers compete for the same physical state. $\displaystyle + \frac{k[E_{tot}][S]}{K_M + [S]} \cdot \frac{1 + \frac{[A]}{K_a}}{1 + \frac{[A]}{K_a} + \frac{[I]}{K_i}}$ |
+| ![](./images/diagrams/independent_modifiers.svg){width=50} | Independent Modifiers | Modifiers bind distinctly. $\displaystyle + \frac{k[E_{tot}][S]}{K_M + [S]} \left(1 + \frac{[A]}{K_a}\right) \frac{1}{\left(1 + \frac{[I]}{K_i}\right)}$ |
 
 ---
 
