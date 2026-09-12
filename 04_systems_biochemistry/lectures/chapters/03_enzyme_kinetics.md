@@ -331,6 +331,40 @@ $$
 
 ---
 
+# The Hill Function: Derivation & Interpretation
+
+The Hill function arises from cooperative ligand binding. If a protein has $n$ identical, perfectly cooperative binding sites for a ligand $L$:
+
+:::matrix {cols="50/50"}
+[[0,0]]
+### Derivation
+The all-or-nothing binding equilibrium is:
+$$ P + nL \rightleftharpoons PL_n, \qquad K_d = \frac{[P][L]^n}{[PL_n]} $$
+
+The fraction of occupied protein:
+$$ \theta = \frac{[PL_n]}{[P]+[PL_n]} = \frac{[L]^n}{K_d + [L]^n} = \frac{[L]^n}{K^n + [L]^n} $$
+
+where $K = K_d^{1/n}$ is the **half-saturation constant** ($\theta = 0.5$ when $[L] = K$).
+
+[[0,1]]
+### Key properties
+
+| $n$ | Shape | Biological meaning |
+|-----|-------|--------------------|
+| 1 | Michaelis-Menten hyperbola | No cooperativity |
+| 2–4 | Sigmoidal | Moderate cooperativity |
+| $\gg 1$ | Step function | Ultra-switch |
+
+The Hill function unifies Michaelis-Menten kinetics ($n=1$) and Boolean logic ($n \to \infty$). Real biological switches (hemoglobin, lac operon) typically have $n \approx 2$–$4$.
+
+**Activation form:** $\displaystyle \frac{[A]^n}{K^n + [A]^n}$
+
+**Repression form:** $\displaystyle \frac{K^n}{K^n + [I]^n} = \frac{1}{1 + ([I]/K)^n}$
+:::
+
+
+---
+
 # Activity regulation
 
 **1. Allosteric Control.** Allosteric proteins contain distinct regulatory sites and multiple functional sites. The binding of small signal molecules at regulatory sites controls the activity of these proteins. Moreover, allosteric proteins show the property of cooperativity: activity at one functional site affects the activity at others. 

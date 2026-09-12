@@ -189,7 +189,7 @@ After the meal $2.5\times 10^{-11} \text{M}$.
 
 **Receptor signals are transduced inside the cell in one of three ways to initiate actions inside the cell:**
 
-1. Exchange of GDP for GTP by GTP-binding proteins (G proteins) on the cytoplasmic side of the plasma membrane, which leads to generation of second messengers, including cAMP, phospholipid breakdown products, and Ca2+.
+1. Exchange of GDP for GTP by GTP-binding proteins (G proteins) on the cytoplasmic side of the plasma membrane, which leads to generation of second messengers, including cAMP, phospholipid breakdown products, and $\ce{Ca^2+}$.
 2. Receptor-mediated activation of phosphorylation cascades that in turn trigger activation of various enzymes. This is the action of the receptor tyrosine kinases. Protein kinases and protein phosphatases act as
 effectors.
 3. Conformation changes that open ion channels or recruit proteins into nuclear transcription complexes.

@@ -61,7 +61,7 @@ $$
 ### The Trace-Determinant Plane
 The eigenvalues $\lambda_{1,2}$ of a $2 \times 2$ Jacobian are:
 $$ 
-\lambda = \frac{\tau \pm \sqrt{\tau^2 - 4\Delta}}{2} 
+\lambda_{1,2} = \frac{\tau \pm \sqrt{\tau^2 - 4\Delta}}{2} 
 $$
 where $\tau = \operatorname{Tr}(\mathbf{J}) = J_{11} + J_{22}$ and $\Delta = \det(\mathbf{J}) = J_{11}J_{22} - J_{12}J_{21}$.
 

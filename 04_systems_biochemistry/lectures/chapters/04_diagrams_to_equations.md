@@ -11,8 +11,6 @@ Chapter 4: Translating Network Diagrams to ODEs
 To translate biological schematics into rigorous mathematical models, we must follow strict translation rules. Every node represents a **state variable** (a chemical species whose concentration changes over time), and every edge (arrow) represents a **kinetic term** in the differential equation.
 
 * We will use simple letter to designate chemical "small" substances, while squaring enzymes that perform catalysis.
-* We will use $V$ over errow to show simple influx/efflux.
-* We will use $k$ over arrow to show reaction of certain order.
 
 
 ## Simple Chemistry
@@ -20,6 +18,9 @@ To translate biological schematics into rigorous mathematical models, we must fo
 | Diagram | Explanation | Mathematical Implication (ODE Summand) |
 | --- | --- | --- |
 | ![](./images/diagrams/simple_influx.svg){width=290px} | Simple Influx | Constant zero-order generation $+V$ |
+|  ![](./images/diagrams/simple_efflux.svg){width=290px} | Simple Efflux | Constant zero-order removal $-V$ |
+|  ![](./images/diagrams/simple_decay.svg){width=290px} | Simple Decay | First-order decay of $X$ equal $-k[X]$ |
+
 
 ---
 # The Graphical Language of Systems Biology
@@ -62,7 +63,7 @@ The simplest biochemical model: a species $X$ is produced at a constant rate and
 :::matrix {cols="50/50"}
 [[0,0]]
 ### Schematic Diagram
-![](./images/diagrams/rule1a_open_system.svg) {width="80%"}
+![](./images/diagrams/synt_decay.svg) {width="80%"}
 
 [[0,1]]
 ### ODE Translation
@@ -115,7 +116,7 @@ A repressor molecule $I$ can *suppress* the synthesis of a species. The Hill fun
 :::matrix {cols="50/50"}
 [[0,0]]
 ### Schematic Diagram
-![](./images/diagrams/rule3b_repression.svg) {width="80%"}
+![](./images/diagrams/hill_inhibition.svg) {width="80%"}
 
 (Inhibitor $I$ blocks the production of $X$ via a dashed $\dashv$ arrow.)
 
@@ -133,39 +134,6 @@ The **Hill coefficient** $n$ is the key parameter controlling the *sharpness* of
 
 ---
 
-# The Hill Function: Derivation & Interpretation
-
-The Hill function arises from cooperative ligand binding. If a protein has $n$ identical, perfectly cooperative binding sites for a ligand $L$:
-
-:::matrix {cols="50/50"}
-[[0,0]]
-### Derivation
-The all-or-nothing binding equilibrium is:
-$$ P + nL \rightleftharpoons PL_n, \qquad K_d = \frac{[P][L]^n}{[PL_n]} $$
-
-The fraction of occupied protein:
-$$ \theta = \frac{[PL_n]}{[P]+[PL_n]} = \frac{[L]^n}{K_d + [L]^n} = \frac{[L]^n}{K^n + [L]^n} $$
-
-where $K = K_d^{1/n}$ is the **half-saturation constant** ($\theta = 0.5$ when $[L] = K$).
-
-[[0,1]]
-### Key properties
-
-| $n$ | Shape | Biological meaning |
-|-----|-------|--------------------|
-| 1 | Michaelis-Menten hyperbola | No cooperativity |
-| 2–4 | Sigmoidal | Moderate cooperativity |
-| $\gg 1$ | Step function | Ultra-switch |
-
-The Hill function unifies Michaelis-Menten kinetics ($n=1$) and Boolean logic ($n \to \infty$). Real biological switches (hemoglobin, lac operon) typically have $n \approx 2$–$4$.
-
-**Activation form:** $\frac{[A]^n}{K^n + [A]^n}$
-
-**Repression form:** $\frac{K^n}{K^n + [I]^n} = \frac{1}{1 + ([I]/K)^n}$
-:::
-
----
-
 # Example 4: Covalent Modification (Goldbeter-Koshland)
 
 When a protein flips between inactive ($W$) and active ($W^{\star}$) states via phosphorylation, the total protein is conserved: $[W]_{tot} = [W] + [W^{\star}]$.
@@ -173,7 +141,7 @@ When a protein flips between inactive ($W$) and active ($W^{\star}$) states via 
 :::matrix {cols="50/50"}
 [[0,0]]
 ### Schematic Diagram
-![](./images/diagrams/rule4_goldbeter.svg) {width="80%"}
+![](./images/diagrams/goldbeter_koshland.svg) {width="100%"}
 We track the active fraction $y = [W^{\star}] / [W]_{tot}$.
 
 [[0,1]]

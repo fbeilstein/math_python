@@ -227,7 +227,7 @@ In addition to the strategy involving binding energy, enzymes commonly employ on
 
 3. **Catalysis by Approximation.** Many reactions have two distinct substrates, including four classes of hydrolases. In such cases, the reaction rate may be considerably enhanced by bringing the two substrates together along a single binding surface on an enzyme.
 
-4. **Metal Ion Catalysis.** Metal ions can function catalytically in several ways. For instance, a metal ion may facilitate the formation of nucleophiles such as hydroxide ion by direct coordination (Zn2+ carbonic anhydrase). Alternatively, a metal ion may serve as an electrophile, stabilizing a negative charge on a reaction intermediate (Mg2+ in EcoRV). Finally, a metal ion may serve as a bridge between enzyme and substrate, increasing the binding energy and holding the substrate in a conformation
+4. **Metal Ion Catalysis.** Metal ions can function catalytically in several ways. For instance, a metal ion may facilitate the formation of nucleophiles such as hydroxide ion by direct coordination ($\ce{Zn^2+}$carbonic anhydrase). Alternatively, a metal ion may serve as an electrophile, stabilizing a negative charge on a reaction intermediate (M$\ce{Mg^+ }$in EcoRV). Finally, a metal ion may serve as a bridge between enzyme and substrate, increasing the binding energy and holding the substrate in a conformation
 appropriate for catalysis (almost all ATPases).
 
 
