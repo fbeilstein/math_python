@@ -135,20 +135,20 @@ Signal transduction pathways ultimately lead to activation (or in some cases inh
 :::matrix{cols="50/50"}
 [[0,0]]
 $$
-\mathrm{R} + \mathrm{L} \overset{k\_{\mathrm{off}}}{\underset{k\_{\mathrm{on}}}{\leftrightharpoons}} \mathrm{R} * \mathrm{L}
+\mathrm{R} + \mathrm{L} \overset{k\_{\mathrm{off}}}{\underset{k\_{\mathrm{on}}}{\leftrightharpoons}} \mathrm{RL}
 $$
 $$
-[\mathrm{R}][\mathrm{L}] k\_{\mathrm{on}} = [\mathrm{R} * \mathrm{L}] k\_{\mathrm{off}}
+[\mathrm{R}][\mathrm{L}] k\_{\mathrm{on}} = [\mathrm{RL}] k\_{\mathrm{off}}
 $$
 $$
-K_{\mathrm{d}} = \frac{[\mathrm{R}][\mathrm{L}]}{[\mathrm{R} * \mathrm{L}]}
+K_{\mathrm{d}} = \frac{[\mathrm{R}][\mathrm{L}]}{[\mathrm{RL}]}
 $$
 
 * Resembles Michaelis-Menten kinetics (think why).
 * $K_d$ (**dissociation constant**) is  the lower the ligand concentration required to bind $50\%$ of the cell-surface receptors.
-* Example (to feel the numbers): $K_d$ for insulin in liver $1.4\times 10^{-10} \text{M}$. 
-The normal concentration of insulin in the blood is about $5\times 10^{-12} \text{M}$. 
-After the meal $2.5\times 10^{-11} \text{M}$.
+* Example (to feel the numbers): $K_d$ for insulin in liver $1.4\times 10^{-10} \text{ M}$. 
+The normal concentration of insulin in the blood is about $5\times 10^{-12} \text{ M}$. 
+After the meal $2.5\times 10^{-11} \text{ M}$.
 [[0,1]]
 ![](./images/signaling/slide_17_img_18.png){width=100}
 :::
