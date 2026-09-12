@@ -154,16 +154,15 @@ When a trajectory crosses the fold from inside, the system undergoes a **catastr
 ---
 
 # Interactive Cusp Surface
-<iframe src="./demos/cusp_surface.html" width="100%" height="60%" style="border:1px solid #ccc; border-radius: 8px;"></iframe>
+<iframe src="./demos/cusp_surface.html" width="100%" height="80%" style="border:1px solid #ccc; border-radius: 8px;"></iframe>
 
 ---
 
 # Spatial Synergetics & Turing Patterns
 
-Alan Turing (1952) proved that **reaction-diffusion** systems can spontaneously break spatial symmetry. If an activator diffuses slowly and an inhibitor diffuses rapidly, a homogeneous state can become unstable to spatial perturbations.
-
-:::matrix {cols="50/50"}
+:::matrix {cols="60/40"}
 [[0,0]]
+Alan Turing (1952) proved that **reaction-diffusion** systems can spontaneously break spatial symmetry. If an activator diffuses slowly and an inhibitor diffuses rapidly, a homogeneous state can become unstable to spatial perturbations.
 ### The Schnakenberg Model
 A minimal activator-inhibitor reaction-diffusion system:
 $$ \frac{\partial u}{\partial t} = a - u + u^2 v + D_u \nabla^2 u $$
@@ -183,7 +182,8 @@ Condition 3 strictly requires $D_v \gg D_u$.
 [[0,1]]
 ### Dispersion Relation & Pattern Formation
 Consider perturbations $\sim e^{\sigma t + ikx}$. The growth rate $\sigma(k)$ is the largest eigenvalue of:
-$$ \mathbf{J}(k) = \mathbf{J}_0 - k^2 \mathbf{D} = \begin{pmatrix} f_u - D_u k^2 & f_v \\ g_u & g_v - D_v k^2 \end{pmatrix} $$
+$$ 
+\mathbf{J}(k) = \mathbf{J}_0 - k^2 \mathbf{D} = \begin{pmatrix} f_u - D_u k^2 & f_v \\\\ g_u & g_v - D_v k^2 \end{pmatrix} $$
 
 If $\sigma(k) > 0$ for some band of wavenumbers $k$, spatial patterns grow spontaneously from noise.
 
