@@ -47,7 +47,7 @@ where $\tau = \operatorname{Tr}(\mathbf{J})$ and $\Delta = \det(\mathbf{J})$.
 
 # Phase Portraits & Fixed Point Classification
 
-A dynamical system $\dot{\mathbf{x}} = \mathbf{f}(\mathbf{x})$ is fully described by its vector field. Near any fixed point $\mathbf{x}^*$ (where $\mathbf{f}(\mathbf{x}^*) = 0$), the behavior is determined by the **Jacobian matrix**:
+A dynamical system $\dot{\mathbf{x}} = \mathbf{f}(\mathbf{x})$ is fully described by its vector field. Near any fixed point $\mathbf{x}^\*$ (where $\mathbf{f}(\mathbf{x}^\*) = 0$), the behavior is determined by the **Jacobian matrix**:
 
 $$
 \mathbf{J} = \begin{pmatrix}
@@ -60,7 +60,9 @@ $$
 [[0,0]]{.dense}
 ### The Trace-Determinant Plane
 The eigenvalues $\lambda_{1,2}$ of a $2 \times 2$ Jacobian are:
-$$ \lambda = \frac{\tau \pm \sqrt{\tau^2 - 4\Delta}}{2} $$
+$$ 
+\lambda = \frac{\tau \pm \sqrt{\tau^2 - 4\Delta}}{2} 
+$$
 where $\tau = \operatorname{Tr}(\mathbf{J}) = J_{11} + J_{22}$ and $\Delta = \det(\mathbf{J}) = J_{11}J_{22} - J_{12}J_{21}$.
 
 | Condition | Type |
