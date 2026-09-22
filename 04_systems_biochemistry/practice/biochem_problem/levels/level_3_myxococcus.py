@@ -24,7 +24,7 @@ class Level3Myxococcus:
         self.s_sig.label.set_color('white')
         self.s_sig.valtext.set_color('white')
         
-        self.line_frz, = self.ax.plot([], [], 'r-', label='Frz')
+        self.line_frzf, = self.ax.plot([], [], 'r-', label='FrzF')
         self.line_frzcd, = self.ax.plot([], [], 'g-', label='FrzCD')
         self.line_frze, = self.ax.plot([], [], 'b-', label='FrzE')
         self.ax.legend(facecolor='#252526', edgecolor='white', labelcolor='white', loc='upper right')
@@ -41,7 +41,7 @@ class Level3Myxococcus:
         # Test student function
         self.student_func = None
         try:
-            res = implementation_tasks.frz_pathway_rhs(self.state, 0.0, 0.0)
+            res = implementation_tasks.frz_pathway_rhs(self.state[0], self.state[1], self.state[2], 0.0, 0.0)
             if res is not None and len(res) == 3:
                 self.student_func = implementation_tasks.frz_pathway_rhs
                 self.dashboard.log("Successfully loaded student frz_pathway_rhs.")
@@ -56,11 +56,13 @@ class Level3Myxococcus:
         dt = 0.5
         sig = self.s_sig.val
         
-        func = self.student_func if self.student_func else implementation_tasks.frz_pathway_rhs
+        def wrapper(state, t, sig):
+            func = self.student_func if self.student_func else implementation_tasks.frz_pathway_rhs
+            return func(state[0], state[1], state[2], t, sig)
             
         t_span = np.linspace(self.current_t, self.current_t + dt, 2)
         try:
-            sol = odeint(func, self.state, t_span, args=(sig,))
+            sol = odeint(wrapper, self.state, t_span, args=(sig,))
             self.state = sol[-1].tolist()
         except Exception as e:
             self.dashboard.log(f"Integration error: {e}", color="#f44747")
@@ -78,7 +80,7 @@ class Level3Myxococcus:
             self.y_data[1].pop(0)
             self.y_data[2].pop(0)
             
-        self.line_frz.set_data(self.t_data, self.y_data[0])
+        self.line_frzf.set_data(self.t_data, self.y_data[0])
         self.line_frzcd.set_data(self.t_data, self.y_data[1])
         self.line_frze.set_data(self.t_data, self.y_data[2])
         

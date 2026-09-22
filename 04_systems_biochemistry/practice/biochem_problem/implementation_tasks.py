@@ -83,17 +83,19 @@ def analyze_inhibition(S_array: np.ndarray, V_no_inh: np.ndarray, V_with_inh: np
         
     return Km_true, Vmax_true, type_str, calc_Ki
 
-def frz_pathway_rhs(state: list, t: float, external_signal: float) -> list: #contains solution
+def frz_pathway_rhs(FrzF: float, FrzCD: float, FrzE: float, t: float, external_signal: float) -> list: #contains solution
     """
     Problem 3: Myxococcus xanthus C-signal pathway.
     
     Arguments:
-    - state (list): [Frz, FrzCD, FrzE] relative concentrations.
+    - FrzF (float): FrzF relative concentration.
+    - FrzCD (float): FrzCD relative concentration.
+    - FrzE (float): FrzE relative concentration.
     - t (float): Current time.
     - external_signal (float): Additive modifier to k_bar_0.
     
     Returns:
-    - derivatives (list): [dFrz, dFrzCD, dFrzE]
+    - derivatives (list): [dFrzF, dFrzCD, dFrzE]
 
     Parameters:
     - you can use the following parameters: 
@@ -108,20 +110,19 @@ def frz_pathway_rhs(state: list, t: float, external_signal: float) -> list: #con
     K0, K1, K2 = 0.005, 0.005, 0.005
     Kbar0, Kbar1, Kbar2 = 0.01, 0.005, 0.005
     
-    Frz, FrzCD, FrzE = state
-    
-    dFrz = k0 * (1 - FrzE) * (1 - Frz) / (1 - Frz + K0) - kbar0 * Frz / (Frz + Kbar0)
-    dFrzCD = kbar1 * (1 - FrzCD) / (1 - FrzCD + Kbar1) - k1 * (1 - Frz) * FrzCD / (FrzCD + K1)
+    dFrzF = k0 * (1 - FrzE) * (1 - FrzF) / (1 - FrzF + K0) - kbar0 * FrzF / (FrzF + Kbar0)
+    dFrzCD = kbar1 * (1 - FrzCD) / (1 - FrzCD + Kbar1) - k1 * (1 - FrzF) * FrzCD / (FrzCD + K1)
     dFrzE = kbar2 * (1 - FrzE) / (1 - FrzE + Kbar2) - k2 * (1 - FrzCD) * FrzE / (FrzE + K2)
     
-    return [dFrz, dFrzCD, dFrzE]
+    return [dFrzF, dFrzCD, dFrzE]
 
-def glycolysis_rhs(state: list, t: float, Km: float) -> list: #contains solution
+def glycolysis_rhs(G: float, ATP: float, t: float, Km: float) -> list: #contains solution
     """
     Problem 4: Yeast Glycolysis feedback loop (Bier model) RHS.
     
     Arguments:
-    - state (list): [G, ATP] concentrations.
+    - G (float): Glucose concentration.
+    - ATP (float): ATP concentration.
     - t (float): Current time.
     - Km (float): Michaelis constant.
     
@@ -133,7 +134,6 @@ def glycolysis_rhs(state: list, t: float, Km: float) -> list: #contains solution
     Vin = 0.36, k1 = 0.02, kp = 6.0
     """
     Vin, k1, kp = 0.36, 0.02, 6.0
-    G, ATP = state
     dG = Vin - k1 * G * ATP
     dATP = 2 * k1 * G * ATP - kp * ATP / (ATP + Km)
     return [dG, dATP]
@@ -157,15 +157,16 @@ def glycolysis_fixed_point(Km: float) -> tuple: #contains solution
     G_eq = Vin / (k1 * ATP_eq)
     return (G_eq, ATP_eq)
 
-def bioswitch_rhs(state: list, t: float, S: float) -> list: #contains solution
+def bioswitch_rhs(R: float, E: float, t: float, V: float) -> list: #contains solution
     """
     Problem 5: Bio-switch with Mutual Activation (Goldbeter-Koshland).
     Return the derivatives [dR/dt, dE/dt] for the zero-order ultrasensitivity switch.
     
     Arguments:
-    - state (list): Current state [R, E].
+    - R (float): Current Response concentration.
+    - E (float): Current Enzyme concentration.
     - t (float): Current time.
-    - S (float): External stimulus S(t).
+    - V (float): External stimulus V(t).
     
     Returns:
     - list: [dR/dt, dE/dt]
@@ -175,16 +176,17 @@ def bioswitch_rhs(state: list, t: float, S: float) -> list: #contains solution
     - k_E0 = 0.8, k_E1 = 0.01
     - K0 = 0.01, K1 = 0.01
     - E_tot = 0.5
+    - X = 1.0
     """
-    R, E = state
     kR0, kR1 = 0.22, 0.001
     kE0, kE1 = 0.8, 0.01
     K0, K1 = 0.01, 0.01
     E_tot = 0.5
+    X = 1.0
     
     Ep = E_tot - E
-    dR = kR0 * Ep + S - kR1 * R
-    dE = kE0 * Ep / (Ep + K0) - kE1 * R * E / (E + K1)
+    dR = kR0 * Ep + V - kR1 * R
+    dE = kE0 * X * Ep / (Ep + K0) - kE1 * R * E / (E + K1)
     
     return [dR, dE]
 

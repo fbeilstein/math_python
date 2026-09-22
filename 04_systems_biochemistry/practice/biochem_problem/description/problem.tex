@@ -114,24 +114,71 @@ Use the Michaelis-Menten derivations to write down the Lineweaver-Burk equations
 \section*{Problem 3: Myxococcus xanthus C-signal pathway}
 
 \subsubsection*{Mathematical part}
+
+\textbf{Task 1: Relative Kinetics.} 
+Let $x = [\text{S}]/[\text{S}]_{tot}$ and $x^* = [\text{S}^*]/[\text{S}]_{tot}$ represent the relative concentrations of the unmodified and modified forms of a signaling protein. 
+By mass conservation, $x + x^* = 1$. 
+Consider reaction
+\begin{center}
+	\includesvg[width=0.5\textwidth]{images/problem_3}
+\end{center}
+under action of some enzyme.
+Rewrite the standard Michaelis-Menten rate law 
+$$
+v = \frac{V_{max}[\text{S}]}{K_m + [\text{S}]}
+$$ 
+in terms of the relative concentration $x$. Show that dividing the overall rate by $[\text{S}]_{tot}$ yields the apparent relative rate equation:
+$$
+\frac{dx^*}{dt} = \frac{k \cdot x}{K + x}
+$$
+where $k = V_{max}/[\text{S}]_{tot}$ is the apparent maximum rate constant, and $K = K_m/[\text{S}]_{tot}$ is the apparent relative Michaelis constant.
+
+\textbf{Task 2: System of ODEs.} 
 The Frz signaling cascade:
 \begin{center}
-\includegraphics[width=0.7\textwidth]{images/myxococcus_diagram.jpg}
+	\includegraphics[width=0.7\textwidth]{images/myxococcus_diagram.jpg}
 \end{center}
-Translate this diagram into a system of three ODEs for the relative concentrations of Frz, FrzCD, and FrzE. Each species is regulated by saturating (Goldbeter-Koshland-type) kinetics of the form:
-$$ \frac{k \cdot [\text{substrate}]}{K_m + [\text{substrate}]} $$
-Include the \lstinline|external_signal| parameter as an additive modifier to $\bar{k}_0$.
+
+\textbf{Diagram conventions:} In biochemical diagrams, notations like \ce{-P} (phosphorylation), \ce{-CH3} or \ce{Me} (methylation), or a superscript star ($*$) denote the \textbf{modified} state ($x^*$). The absence of these symbols denotes the \textbf{unmodified} state ($x$).
+
+Translate the signaling diagram into a system of three ODEs for the \textbf{relative} concentrations of FrzF, FrzCD, and FrzE. Each species is regulated by opposing saturating (Goldbeter-Koshland-type) kinetics derived in Task 1. 
+
+The constants map to the specific target species being regulated, as shown in the table below:
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{r | c | c | c}
+\toprule
+\textbf{Symbol} & $k_0$, $K_0$ & $k_1$, $K_1$ & $k_2$, $K_2$ \\ \midrule
+\textbf{Target Species} & FrzF $\rightarrow$ FrzF* & FrzCD $\rightarrow$ FrzCD\ce{-Me} & FrzE $\rightarrow$ FrzE\ce{-P} \\ \midrule
+\textbf{Code Parameters} & \lstinline|k0, K0| & \lstinline|k1, K1| & \lstinline|k2, K2| \\
+\bottomrule
+\textbf{Symbol} & $\bar{k}_0$, $\bar{K}_0$ & $\bar{k}_1$, $\bar{K}_1$ & $\bar{k}_2$, $\bar{K}_2$ \\ \midrule
+\textbf{Target Species} & FrzF* $\rightarrow$ FrzF & FrzCD\ce{-Me} $\rightarrow$ FrzCD & FrzE\ce{-P} $\rightarrow$ FrzE \\ \midrule
+\textbf{Code Parameters} & \lstinline|kbar0, Kbar0| & \lstinline|kbar1, Kbar1| & \lstinline|kbar2, Kbar2| \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+	\item Let $k_i$ and $K_i$ (without bar) represent the apparent rate constant and relative Michaelis constant for the \textbf{forward modification} (e.g., methylation or phosphorylation) $x \rightarrow x^*$ respectively.
+	\item Let $\bar{k}_i$ and $\bar{K}_i$ (with bar) represent the apparent rate constant and relative Michaelis constant for the \textbf{reverse demodification} (e.g., demethylation or dephosphorylation) $x^* \rightarrow x$ respectively.
+\end{itemize}
+
+
+\textbf{Note:} The numerical parameters provided in the code comments are already the apparent relative constants. You do not need to scale them further.
+
+\textbf{Note:} Include the \lstinline|external_signal| parameter as an additive modifier to $\bar{k}_0$.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} a function \lstinline|frz_pathway_rhs(state, t, external_signal)|.
+\textbf{Implement:} a function \lstinline|frz_pathway_rhs(FrzF, FrzCD, FrzE, t, external_signal)|.
 
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c | c}
+\begin{tabular}{r | c | c | c | c | c | c}
 \toprule
-\textbf{Symbol} & $[Frz, FrzCD, FrzE]$ & $t$ & $S$ & $[dFrz, dFrzCD, dFrzE]$ \\ \midrule
-\textbf{Argument} & \lstinline|state| & \lstinline|t| & \lstinline|external_signal| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list[float]| & \lstinline|float| & \lstinline|float| & \lstinline|list[float]| \\
+\textbf{Symbol} & $FrzF$ & $FrzCD$ & $FrzE$ & $t$ & $S$ & $[dFrzF, dFrzCD, dFrzE]$ \\ \midrule
+\textbf{Argument} & \lstinline|FrzF| & \lstinline|FrzCD| & \lstinline|FrzE| & \lstinline|t| & \lstinline|external_signal| & \lstinline|return| \\ \midrule
+\textbf{Type} & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|list[float, float, float]| \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -141,29 +188,34 @@ Include the \lstinline|external_signal| parameter as an additive modifier to $\b
 \section*{Problem 4: Saccharomyces cerevisiae Glycolytic Oscillations}
 
 \subsubsection*{Mathematical part}
-The yeast glycolysis feedback loop (Bier-Bakker-Westerhoff model):
-\begin{center}
-\includegraphics[width=0.55\textwidth]{images/glycolysis_bier.png}
-\end{center}
-The reaction network consists of three processes:
-\begin{enumerate}
-    \item \textbf{Glucose influx:} External glucose enters the cell at constant rate $V_{in}$.
-    \item \textbf{Phosphofructokinase (PFK):} Glucose is phosphorylated by ATP with rate $k_1 \cdot G \cdot ATP$. Each glucose consumed produces \textbf{two} ATP molecules.
-    \item \textbf{ATP consumption:} ATP is consumed by downstream metabolism with Michaelis-Menten kinetics: $k_p \cdot ATP / (ATP + K_m)$.
-\end{enumerate}
+The yeast glycolysis feedback loop (Bier-Bakker-Westerhoff model) consists of three phenomenological processes:
+
+\begin{itemize}
+    \item \textbf{Glucose influx:} External glucose enters the cell at a constant zero-order rate $V_{in}$.
+    $$ \emptyset\ce{->[V_{in}] G} $$
+    
+    \item \textbf{Autocatalytic Glycolysis (PFK step):} Glucose is phosphorylated by ATP with rate $k_1 \cdot G \cdot ATP$. In this simplified model, the entire payoff phase of glycolysis is lumped into this step, yielding a \emph{net production} of 2 ATP per glucose consumed.
+    $$ \ce{G + ATP ->[k_1] 3 ATP} $$
+    \emph{(Note: Consuming 1 ATP and producing 3 yields a net of +2 ATP, take this into account when constructing the differential equation).}
+    
+    \item \textbf{ATP consumption:} ATP is consumed by downstream metabolism with saturating Michaelis-Menten kinetics.
+    \begin{center}
+    	\includesvg[width=0.5\textwidth]{images/ATP_ADP}
+    \end{center}
+\end{itemize}
 
 \textbf{Task:} Write the ODEs for $G$ and $ATP$. Use parameters $V_{in} = 0.36$, $k_1 = 0.02$, $k_p = 6.0$. Analytically solve for the fixed point $(G_{eq}, ATP_{eq})$ by setting $dG/dt = 0$ and $dATP/dt = 0$.
 
 \textbf{Hint:} The feedback arrow from ATP to the PFK reaction means that ATP is both a \emph{substrate} (consumed) and a \emph{product} (produced) of that reaction step. This autocatalytic feedback is what generates the oscillations.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} functions \lstinline|glycolysis_rhs(state, t, Km)|
+\textbf{Implement:} functions \lstinline|glycolysis_rhs(G, ATP, t, Km)|
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c | c}
+\begin{tabular}{r | c | c | c | c | c}
 \toprule
-\textbf{Argument} & \lstinline|state| & \lstinline|t| & \lstinline|Km| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list[float]| & \lstinline|float| & \lstinline|float| & \lstinline|list[float]| \\
+\textbf{Argument} & \lstinline|G| & \lstinline|ATP| & \lstinline|t| & \lstinline|Km| & \lstinline|return| \\ \midrule
+\textbf{Type} & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|list[float, float]| \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -184,31 +236,38 @@ and \lstinline|glycolysis_fixed_point(Km)|.
 \section*{Problem 5: Bio-switch with Mutual Activation}
 
 \subsubsection*{Mathematical part}
-The Goldbeter-Koshland zero-order ultrasensitivity mutual activation switch:
+\textbf{Subproblem (Infinite Supply Limit):} If the diagram shows production from an empty set ($\emptyset$) that means an infinite supply of precursor substrate.
+
+If this reaction is catalyzed by an enzyme with Michaelis-Menten parameters $K_M$ and $k$, find the rate of reaction (find limit $[S] \to \infty$ for typical Michaelis-Menten).
+Show that it does not depend on $K_M$.
+
+\textbf{The main task:} The Goldbeter-Koshland zero-order ultrasensitivity mutual activation switch is
 \begin{center}
-\includegraphics[width=0.55\textwidth]{images/bioswitch_gk.png}
+  \includesvg[width=0.8\textwidth]{images/problem_5}
 \end{center}
-The network topology features a Response $R$ and an Enzyme $E$ that mutually activate each other, forming a true bistable positive feedback loop. In the presence of a transient stimulus $S(t)$:
+Write the ODEs for $R$ and $E$. Use parameters: $k_{R0} = 0.22$, $k_{R1} = 0.001$, $k_{E0} = 0.8$, $k_{E1} = 0.01$, $K_0 = 0.01$, $K_1 = 0.01$, $E_{tot} = 0.5$.
+
+
+\textbf{Why this is interesting:} The network topology features a Response $R$ and an Enzyme $E$ that mutually activate each other, forming a true bistable positive feedback loop. In the presence of a transient stimulus $V(t)$:
 \begin{itemize}
-    \item $R$ is produced at a basal rate proportional to the active (phosphorylated) enzyme $E_p = [E]_{tot} - [E]$, plus the stimulus $S(t)$.
+    \item $R$ is produced at a basal rate catalyzed by the active enzyme $E_p$. Since the precursor supply is infinite ($\emptyset$), the rate is linear with respect to $E_p$: $k_{R0} \cdot E_p$. This is supplemented by the external stimulus $V(t)$.
     \item $R$ degrades linearly at rate $k_{R1} [R]$.
     \item $R$ acts as a kinase, phosphorylating the inactive enzyme $E \to E_p$ with Michaelis-Menten kinetics.
-    \item A constitutive phosphatase dephosphorylates $E_p \to E$.
+    \item A constitutive phosphatase $X$ (with constant concentration $[X]=1$) dephosphorylates $E_p \to E$ with Michaelis-Menten kinetics.
 \end{itemize}
 
 Because the Michaelis constants $K_0, K_1$ are extremely small compared to $E_{tot}$, the enzyme operates in the zero-order saturated regime. This generates the steep ultrasensitive response necessary for biochemical memory (hysteresis).
 
-\textbf{Task:} Write the ODEs for $R$ and $E$. Use parameters: $k_{R0} = 0.22$, $k_{R1} = 0.001$, $k_{E0} = 0.8$, $k_{E1} = 0.01$, $K_0 = 0.01$, $K_1 = 0.01$, $E_{tot} = 0.5$.
 
 \subsubsection*{Implementation part}
-\textbf{Implement:} a function \lstinline|bioswitch_rhs(state, t, S)| that returns the derivatives \lstinline|[dR/dt, dE/dt]|.
+\textbf{Implement:} a function \lstinline|bioswitch_rhs(R, E, t, V)| that returns the derivatives \lstinline|[dR/dt, dE/dt]|.
 
 \begin{center}
 \renewcommand{\arraystretch}{2.0}
-\begin{tabular}{r | c | c | c | c}
+\begin{tabular}{r | c | c | c | c | c}
 \toprule
-\textbf{Argument} & \lstinline|state| & \lstinline|t| & \lstinline|S| & \lstinline|return| \\ \midrule
-\textbf{Type} & \lstinline|list[float]| & \lstinline|float| & \lstinline|float| & \lstinline|list[float]| \\
+\textbf{Argument} & \lstinline|R| & \lstinline|E| & \lstinline|t| & \lstinline|V| & \lstinline|return| \\ \midrule
+\textbf{Type} & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|list[float, float]| \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -219,22 +278,29 @@ Because the Michaelis constants $K_0, K_1$ are extremely small compared to $E_{t
 
 \subsubsection*{Mathematical part}
 
-\begin{center}
-\includegraphics[width=0.45\textwidth]{images/cusp_cell_cycle.png}
-\end{center}
+The cell cycle checkpoint is governed by the interplay between Cyclin and Wee1 kinase. We can build a phenomenological model directly from the following effective rates. 
 
-The cell cycle checkpoint is governed by the interplay between Cyclin and Wee1 kinase. We can build a phenomenological model directly from the network scheme:
-\begin{enumerate}
-    \item Cyclin drives the production of active Cdc2 ($C$).
-    \item Wee1 interacts with $C$ to create an autocatalytic-like splitting effect (rate proportional to $Wee1 \cdot C$).
-    \item $C$ undergoes a high-order self-inhibition (cubic degradation, $-C^3$).
-\end{enumerate}
+\textbf{Note loud and clear:} This is a topological normal form (the canonical cusp catastrophe), not a set of elementary mass-action reactions! The variables $Cyclin$ and $Wee1$ act as mathematical bifurcation control parameters (the normal and splitting factors, respectively), not physical enzymatic rate constants.
 
-Assuming all rate constants are exactly $1.0$, derive the governing differential equation for $C$.
+\begin{itemize}
+    \item \textbf{Production (Normal factor):} Cyclin drives the basal production of active Cdc2 ($C$). This is mathematically modeled as a zero-order influx where the rate $V_1$ is directly parameterized by the Cyclin concentration.
+    $$ \emptyset\ce{->[V] C} $$
 
-The equilibrium manifold is a folded surface in $(Wee1, Cyclin, C)$ space. When a trajectory crosses the fold boundary, the system undergoes a \textbf{catastrophic jump} to the other stable branch.
+    \item \textbf{Autocatalysis (Splitting factor):} Wee1 interacts with $C$ to create a positive feedback loop. This is modeled as an autocatalytic influx where the rate $V_2$ is proportional to $C$, with Wee1 acting as the apparent rate coefficient.
+    $$ \ce{C ->[k] 2C}$$
 
-\textbf{Task:} Find the steady-state concentration(s) of $C$. You should get a cubic polynomial, there may be up to 3 real roots (bistability). To account for \textbf{hysteresis} (biochemical memory), your function must evaluate all roots and return the real root that is \emph{closest} to the system's current state.
+    \item \textbf{Degradation:} $C$ undergoes a phenomenological high-order, nonlinear self-inhibition.
+    $$ \ce{3C ->[1] \emptyset}$$
+\end{itemize}
+
+Derive the differential equation for $[C]$.
+The equilibrium manifold is a folded surface in $(k, V, C)$ space.
+When a trajectory crosses the fold boundary, the system undergoes a \textbf{catastrophic jump} to the other stable branch.
+
+
+\textbf{Task:} Find the steady-state concentration(s) of $C_\text{stable}$.
+You should get a cubic polynomial, there may be up to 3 real roots (bistability). 
+To account for \textbf{hysteresis} (biochemical memory), your function must evaluate all roots and return the real root that is \emph{closest} to the system's current state $C_\text{current}$.
 
 \subsubsection*{Implementation part}
 \textbf{Implement:} a function \lstinline|cell_cycle_steady_state(cyclin, wee1, current_C)| that returns the closest stable real root.
@@ -243,6 +309,7 @@ The equilibrium manifold is a folded surface in $(Wee1, Cyclin, C)$ space. When 
 \renewcommand{\arraystretch}{2.0}
 \begin{tabular}{r | c | c | c | c}
 \toprule
+\textbf{Symbol} & $V$ & $k$ & $C_\text{current}$ & $C_\text{stable}$ \\ \midrule
 \textbf{Argument} & \lstinline|cyclin| & \lstinline|wee1| & \lstinline|current_C| & \lstinline|return| \\ \midrule
 \textbf{Type} & \lstinline|float| & \lstinline|float| & \lstinline|float| & \lstinline|float| \\
 \bottomrule

@@ -10,14 +10,13 @@ import implementation_tasks as tasks
 
 class TestLevel4Glycolysis(unittest.TestCase):
     def test_glycolysis_rhs(self):
-        state = [1.0, 2.0]
         Km = 10.0
         Vin = 0.36; k1 = 0.02; kp = 6.0
         
         dG = Vin - k1*1.0*2.0
         dATP = 2*k1*1.0*2.0 - kp*2.0/(2.0+Km)
         
-        res = tasks.glycolysis_rhs(state, 0.0, Km)
+        res = tasks.glycolysis_rhs(1.0, 2.0, 0.0, Km)
         self.assertAlmostEqual(res[0], dG, places=4)
         self.assertAlmostEqual(res[1], dATP, places=4)
 

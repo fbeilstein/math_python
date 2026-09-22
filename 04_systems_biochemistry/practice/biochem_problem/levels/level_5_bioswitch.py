@@ -68,7 +68,7 @@ class Level5Bioswitch:
         # Load Student Function
         self.student_func = None
         try:
-            res = implementation_tasks.bioswitch_rhs([0.0, 0.5], 0.0, 0.0)
+            res = implementation_tasks.bioswitch_rhs(0.0, 0.5, 0.0, 0.0)
             if res is not None and len(res) == 2:
                 self.student_func = implementation_tasks.bioswitch_rhs
                 self.dashboard.log("Successfully loaded student bioswitch_rhs.")
@@ -97,11 +97,12 @@ class Level5Bioswitch:
             # Integrate ODE
             t_R = np.linspace(0, 60000, 600)
             
-            func = self.student_func if self.student_func else _rhs
-            
             def wrapper(state, t):
                 S_t = self._gaussian(t)
-                return func(state, t, S_t)
+                if self.student_func:
+                    return self.student_func(state[0], state[1], t, S_t)
+                else:
+                    return _rhs(state, t, S_t)
                 
             try:
                 sol = odeint(wrapper, [0.0, 0.5], t_R, rtol=1e-6, atol=1e-8)

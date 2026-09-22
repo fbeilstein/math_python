@@ -21,9 +21,9 @@ class TestLevel3Myxococcus(unittest.TestCase):
         K0=0.005; K1=0.005; K2=0.005
         Kbar0=0.01; Kbar1=0.005; Kbar2=0.005
         
-        # dFrz = 1.0*(0.5)*(0.5)/(0.505) - 0.18*0.5/(0.51)
+        # dFrzF = 1.0*(0.5)*(0.5)/(0.505) - 0.18*0.5/(0.51)
         # = 0.25/0.505 - 0.09/0.51 = 0.495049 - 0.17647 = 0.318579
-        dFrz = k0*(1-0.5)*(1-0.5)/(1-0.5+K0) - kbar0*0.5/(0.5+Kbar0)
+        dFrzF = k0*(1-0.5)*(1-0.5)/(1-0.5+K0) - kbar0*0.5/(0.5+Kbar0)
         
         # dFrzCD = 2.0*0.5/0.505 - 4.0*0.5*0.5/0.505
         # = 1/0.505 - 1/0.505 = 0
@@ -32,9 +32,9 @@ class TestLevel3Myxococcus(unittest.TestCase):
         # dFrzE = 2.0*0.5/0.505 - 4.0*0.5*0.5/0.505 = 0
         dFrzE = kbar2*(1-0.5)/(1-0.5+Kbar2) - k2*(1-0.5)*0.5/(0.5+K2)
         
-        res = tasks.frz_pathway_rhs(state, 0.0, signal)
+        res = tasks.frz_pathway_rhs(state[0], state[1], state[2], 0.0, signal)
         
-        self.assertAlmostEqual(res[0], dFrz, places=4)
+        self.assertAlmostEqual(res[0], dFrzF, places=4)
         self.assertAlmostEqual(res[1], dFrzCD, places=4)
         self.assertAlmostEqual(res[2], dFrzE, places=4)
 
