@@ -21,3 +21,5 @@ __pycache__/
 *.lof
 *.lot
 
+# svg package generated files
+svg-inkscape/
