@@ -39,7 +39,7 @@ cd "$release_dir"
 if [ -d "description" ]; then
     if [ -f "description/problem.tex" ]; then
         echo "Compiling problem.tex to PDF..."
-        (cd description && pdflatex -interaction=nonstopmode problem.tex > /dev/null 2>&1 && pdflatex -interaction=nonstopmode problem.tex > /dev/null 2>&1)
+        (cd description && pdflatex --shell-escape -interaction=nonstopmode problem.tex > /dev/null 2>&1 && pdflatex --shell-escape -interaction=nonstopmode problem.tex > /dev/null 2>&1)
         if [ -f "description/problem.pdf" ]; then
             mv description/problem.pdf ./
         else
