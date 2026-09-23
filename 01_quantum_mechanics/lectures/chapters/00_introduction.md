@@ -5,17 +5,25 @@
 * Magnetism is impossible in classical physics (we need spins)
 * The color of objects (and fluorescence) is the result of quantum mechanics
 
+## Devices Using Quantum Effects
+| Device | Quantum Effect | Key Physics |
+|--------|---------------|-------------|
+| **Laser** | Stimulated emission | Population inversion, coherent photons |
+| **LED** | Electron-hole recombination | Bandgap determines color |
+| **Scanning Tunneling Microscope** | Quantum tunneling | $I \propto e^{-2\kappa d}$ → atomic resolution |
+| **MRI** | Nuclear spin precession | Larmor frequency in magnetic field |
+| **Flash memory** | Fowler-Nordheim tunneling | Electrons through oxide barrier |
+| **Atomic clock** | Hyperfine transitions | Cs-133: 9,192,631,770 Hz defines the second |
+| **Solar cell** | Photoelectric effect | Photon → electron-hole pair |
+| **Electron microscope** | de Broglie wavelength | $\lambda \ll$ visible light → nm resolution |
 
-# Before Quantum Mechanics
-
-* Light = waves in ether
-* Particles = tiny balls that respect Newton’s laws
+**Before Quantum Mechanics:** Light = waves in ether, Particles = tiny balls that respect Newton’s laws.
 
 ---
 
 # Charge electroscope, negative charge
 
-![youtube](NtYMyqBqq2w){left="5%" top="13%" width="90%"}
+![youtube](NtYMyqBqq2w){left="5%" width="90%"}
 
 ---
 
@@ -84,14 +92,12 @@ nickel metal, displayed a diffraction pattern. This confirmed the hypothesis of 
 ---
 
 :::matrix { cols="50/50" rows="50/50" height="100%"}
-
 [[0, 0]] ![youtube](B5IPU19nMks)
 [[0, 1]] ![youtube](MBnNhsRlMK8)
 [[1, 0]] ![youtube](62hyKVwuoXk)
 [[1, 1]] <p style="padding-left: 20px;">We describe particle with a wave-function. Absolute values squared
 defines the probability to find the particle somewhere. Wave-function may have nodes where particle cannot
 be found.</p>
-
 :::
 
 ---
@@ -135,13 +141,11 @@ Notice the violet-bluish tint.
 ![](./assets/slide_15_img_13.png){height=80% center}
 
 ---
-
 # Elitzur–Vaidman bomb tester
 
 ![](./assets/slide_17_img_15.png){height=90% center}
 
 ---
-
 ## The Stern-Gerlach experiment demonstrated that the spatial orientation of angular momentum is quantized.
 
 :::matrix { cols="50/50" rows="50/50" width="100%" height="80%"}
@@ -162,7 +166,6 @@ Notice the violet-bluish tint.
 ![](./assets/slide_19_img_19.png){width=90% center}
 
 ---
-
 # Key messages:
 
 * Particles have certain internal property called "spin"
@@ -175,25 +178,21 @@ result of the measurement
 $-\frac{1}{2}$ also called "spin up" and "spin down".
 
 ---
-
 # Photon Spin
 
 ![youtube](fX2sZzBUH_Y){left="5%" top="13%" width="90%"}
 
 ---
-
 # Photon Spin
 
 ![youtube](kPi7Uv2HphQ){left="5%" top="13%" width="90%"}
 
 ---
-
 # Photon Spin
 
 ![youtube](zTioGdT80y4){left="5%" top="13%" width="90%"}
 
 ---
-
 # Photon Spin
 
 <iframe src="demos/three_polarizers.html" style="width: 100%; height: 65vh; border: 1px solid #666; border-radius: 8px; margin-bottom: 0px;"></iframe>

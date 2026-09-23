@@ -68,21 +68,29 @@
 
         /* Math Dashboard */
         #math-dashboard {
-            height: 150px;
-            background: rgba(20, 20, 20, 0.8);
-            border-top: 1px solid #444;
-            padding: 10px;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.85);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 15px 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 15px;
             font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            width: max-content;
+            max-width: 90%;
         }
 
         body.light-theme #math-dashboard {
-            background: rgba(240, 240, 240, 0.9);
-            border-top: 1px solid #ccc;
+            background: rgba(240, 240, 240, 0.95);
+            border: 1px solid #ccc;
         }
 
         .math-section {
@@ -183,7 +191,7 @@
                     <span class="slider-round"></span>
                 </label>
                 <span id="filter-label"
-                    style="font-size: 14px; font-weight: bold; width: 80px; color: #F44336;">Attenuator</span>
+                    style="font-size: 14px; font-weight: bold; width: 80px; color: #F44336;">Removed</span>
             </div>
             <div class="control-row" id="angle-row" style="opacity: 0.5; pointer-events: none;">
                 <label>Rotation Angle $\theta$:</label>
@@ -191,9 +199,7 @@
                 <span id="angle-display" style="width: 30px; text-align: right;">45&deg;</span>
             </div>
             <div style="font-size: 11px; color: #aaa; margin-top: 5px; width: 300px;">
-                <b>Paradox:</b> Turn on the Polarizer and drag the slider. A simple attenuator only scales the wave,
-                meaning the final horizontal filter blocks everything. A polarizer <i>rotates</i> the state vector,
-                allowing light to pass!
+                <b>Paradox:</b> With only two crossed polarizers (Vertical and Horizontal), no light passes. Insert a third polarizer in the middle and rotate it &mdash; suddenly light passes through!
             </div>
         </div>
         <canvas id="simCanvas"></canvas>
@@ -319,13 +325,13 @@
                 el_f2Symb.innerHTML = "$\\hat{P}$";
                 if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el_f2Symb]);
             } else {
-                m00 = 1 / Math.SQRT2;
+                m00 = 1;
                 m01 = 0;
                 m10 = 0;
-                m11 = 1 / Math.SQRT2;
-                el_f2Title.innerHTML = "Filter 2 ($\\hat{A}$)";
+                m11 = 1;
+                el_f2Title.innerHTML = "Filter 2 (None)";
                 if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el_f2Title]);
-                el_f2Symb.innerHTML = "$\\hat{A}$";
+                el_f2Symb.innerHTML = "$\\hat{I}$";
                 if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el_f2Symb]);
             }
 
@@ -360,12 +366,12 @@
         filterToggle.addEventListener('change', (e) => {
             isPolarizer = e.target.checked;
             if (isPolarizer) {
-                filterLabel.innerText = "Polarizer";
+                filterLabel.innerText = "Inserted";
                 filterLabel.style.color = "#2196F3";
                 angleRow.style.opacity = "1";
                 angleRow.style.pointerEvents = "auto";
             } else {
-                filterLabel.innerText = "Attenuator";
+                filterLabel.innerText = "Removed";
                 filterLabel.style.color = "#F44336";
                 angleRow.style.opacity = "0.5";
                 angleRow.style.pointerEvents = "none";
@@ -536,8 +542,6 @@
             drawFilter(ctx, pF1.x, pF1.y, 'P', 0); // Vertical
             if (isPolarizer) {
                 drawFilter(ctx, pF2.x, pF2.y, 'P', thetaDeg * Math.PI / 180);
-            } else {
-                drawFilter(ctx, pF2.x, pF2.y, 'A', 0);
             }
             drawFilter(ctx, pF3.x, pF3.y, 'P', Math.PI / 2); // Horizontal
 
@@ -568,11 +572,11 @@
                 i2 = i1 * (v2_0 * v2_0 + v2_1 * v2_1); // which is i1 * cos^2(theta)
                 angle2 = Math.atan2(v2_1, v2_0);
             } else {
-                // Attenuator: 1/sqrt(2) scaling.
-                v2_0 = (1 / Math.SQRT2) * v1_0;
-                v2_1 = (1 / Math.SQRT2) * v1_1;
-                i2 = i1 * 0.5;
-                angle2 = Math.atan2(v2_1, v2_0); // which is 0 (Vertical)
+                // Identity
+                v2_0 = v1_0;
+                v2_1 = v1_1;
+                i2 = i1;
+                angle2 = Math.atan2(v2_1, v2_0);
             }
 
             // Normalize v2 for drawing the arrow angle correctly if it's an attenuator, 
