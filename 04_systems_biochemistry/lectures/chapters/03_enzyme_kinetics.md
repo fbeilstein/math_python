@@ -330,7 +330,6 @@ $$
 :::
 
 ---
-
 # The Hill Function: Derivation & Interpretation
 
 The Hill function arises from cooperative ligand binding. If a protein has $n$ identical, perfectly cooperative binding sites for a ligand $L$:
@@ -379,7 +378,6 @@ The Hill function unifies Michaelis-Menten kinetics ($n=1$) and Boolean logic ($
 
 
 ---
-
 # Biochemical systems theory, BST
 
 **For curious mind**:

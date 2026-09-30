@@ -5,13 +5,7 @@ Chapter 4: Translating Network Diagrams to ODEs
 :::
 
 ---
-
 # The Graphical Language of Systems Biology
-
-To translate biological schematics into rigorous mathematical models, we must follow strict translation rules. Every node represents a **state variable** (a chemical species whose concentration changes over time), and every edge (arrow) represents a **kinetic term** in the differential equation.
-
-* We will use simple letter to designate chemical "small" substances, while squaring enzymes that perform catalysis.
-
 
 ## Simple Chemistry
 
@@ -20,7 +14,7 @@ To translate biological schematics into rigorous mathematical models, we must fo
 | ![](./images/diagrams/simple_influx.svg){width=290px} | Simple Influx | Constant zero-order generation $+V$ |
 |  ![](./images/diagrams/simple_efflux.svg){width=290px} | Simple Efflux | Constant zero-order removal $-V$ |
 |  ![](./images/diagrams/simple_decay.svg){width=290px} | Simple Decay | First-order decay of $X$ equal $-k[X]$ |
-
+|  ![](./images/diagrams/simple_inhibition.svg){width=290px} | Simple Inhibition | Hill kinetics $\frac{k[S]K^n}{K^n + [I]^n}$. If no $n$ provided --- $n=1$. If $V$ instead of $k$ --- $\frac{VK^n}{K^n + [I]^n}$
 
 ---
 # The Graphical Language of Systems Biology
@@ -107,8 +101,6 @@ $$ \frac{d[X]}{dt} = + \frac{V_{max}[S]}{K_M + [S]} $$
 :::
 
 ---
-
-
 # Example 3: Hill-Type Repression
 
 A repressor molecule $I$ can *suppress* the synthesis of a species. The Hill function models the switch-like shutoff characteristic of cooperative binding.
@@ -123,7 +115,7 @@ A repressor molecule $I$ can *suppress* the synthesis of a species. The Hill fun
 [[0,1]]
 ### ODE Translation
 **Hill-type repression:**
-$$ \frac{d[X]}{dt} = V_0 \frac{1}{1 + \left(\frac{[I]}{K}\right)^n} - k_d [X] $$
+$$ \frac{d[X]}{dt} = \frac{V K^n}{K^n + [I]^n} - k_d [X] $$
 
 - $n = 1$: Hyperbolic (gradual) shutoff.
 - $n = 2$: Sigmoidal shutoff.

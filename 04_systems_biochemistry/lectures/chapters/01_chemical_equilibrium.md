@@ -213,7 +213,7 @@ $$
 
 # Temperature and Le Châtelier's principle
 
-![youtube](z_iLK7gm_fo){width=90}
+![youtube](z_iLK7gm_fo){width=90 left=5}
 
 ---
 
