@@ -52,8 +52,6 @@ Consider the files given.
 \end{tabularx}
 \end{center}
 
-\textbf{Prerequisites:} Install \lstinline|numpy| and \lstinline|scipy| before starting.
-
 Run the file \lstinline|lab_dashboard.py|. You should see the main window.
 
 Now use any editor to open the file \lstinline|implementation_tasks.py|. You should see API for functions you should implement.
@@ -94,6 +92,14 @@ Use Henderson-Hasselbalch to find the pH.
 
 \subsubsection*{Mathematical part}
 Use the Michaelis-Menten derivations to write down the Lineweaver-Burk equations for Competitive, Uncompetitive, and Noncompetitive inhibition. Show how the apparent $K_m^{app}$ and $V_{max}^{app}$ are modified by the inhibitor concentration $[I]$ and the inhibition constant $K_i$.
+$$
+\begin{aligned}
+\frac{1}{V_0} = \frac{K_M}{V_{\text{max}}} \cdot \frac{1}{[S]} + \frac{1}{V_{\text{max}}} & \rightarrow & \text{No Inhibition}\\
+\frac{1}{V_0} = \frac{1}{V_{\text{max}}} + \frac{K_{\text{M}}}{V_{\text{max}}} \left( 1 + \frac{[\text{I}]}{K_i} \right) \left( \frac{1}{[\text{S}]} \right) & \rightarrow & \text{Competitive Inhibitor}\\
+\frac{1}{V_0} = \frac{K_{\text{M}}}{V_{\text{max}}} \frac{1}{[\text{S}]} + \frac{1}{V_{\text{max}}} \left( 1 + \frac{[\text{I}]}{K_{\text{i}}} \right) & \rightarrow & \text{Uncompetitive Inhibitor}\\
+\frac{1}{V_0} = \left( \frac{K_M}{V_{\max}} \frac{1}{[\text{S}]} + \frac{1}{V_{\max}}\right) \left(1 + \frac{[\text{I}]}{K_i}\right) & \rightarrow & \text{Noncompetitive Inhibitor}\\
+\end{aligned}
+$$
 
 \subsubsection*{Implementation part}
 \textbf{Implement:} a function \lstinline|analyze_inhibition(S_array, V_no_inh, V_with_inh, I_conc)|. Perform linear regression on both datasets to find the true and apparent $K_m$ and $V_{max}$. Classify the inhibition type based on the slopes/intercepts, and back-calculate $K_i$.
@@ -125,13 +131,13 @@ Consider reaction
 under action of some enzyme.
 Rewrite the standard Michaelis-Menten rate law 
 $$
-v = \frac{V_{max}[\text{S}]}{K_m + [\text{S}]}
+v = \frac{V_{max}[\text{S}]}{K_m + [\text{S}]}; \quad V_{max} = k_{cat} [\text{E}]
 $$ 
-in terms of the relative concentration $x$. Show that dividing the overall rate by $[\text{S}]_{tot}$ yields the apparent relative rate equation:
+in terms of the relative concentration $x$ and relative enzyme concentration $e$. Show that dividing the overall rate by $[\text{S}]_{tot}$ yields the apparent relative rate equation:
 $$
 \frac{dx^*}{dt} = \frac{k \cdot x}{K + x}
 $$
-where $k = V_{max}/[\text{S}]_{tot}$ is the apparent maximum rate constant, and $K = K_m/[\text{S}]_{tot}$ is the apparent relative Michaelis constant.
+where $k = k_{cat}[\text{E}]_{tot}/[\text{S}]_{tot}$ is the apparent maximum rate constant, and $K = K_m/[\text{S}]_{tot}$ is the apparent relative Michaelis constant.
 
 \textbf{Task 2: System of ODEs.} 
 The Frz signaling cascade:
